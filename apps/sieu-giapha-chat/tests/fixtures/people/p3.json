@@ -1,0 +1,16 @@
+{
+  "birth": "1950",
+  "burial": "",
+  "death": "",
+  "deathLunar": "",
+  "fatherId": "p1",
+  "gender": "m",
+  "motherId": "p2",
+  "name": "Lê Văn Minh",
+  "notes": "",
+  "residence": "Hà Nội",
+  "sample": true,
+  "spouseIds": [
+    "p4"
+  ]
+}

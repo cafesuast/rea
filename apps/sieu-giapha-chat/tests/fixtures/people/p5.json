@@ -1,0 +1,16 @@
+{
+  "birth": "1955",
+  "burial": "",
+  "death": "",
+  "deathLunar": "",
+  "fatherId": "p1",
+  "gender": "f",
+  "motherId": "p2",
+  "name": "Lê Thị Hoa",
+  "notes": "",
+  "residence": "Nam Định",
+  "sample": true,
+  "spouseIds": [
+    "p6"
+  ]
+}

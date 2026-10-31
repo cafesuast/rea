@@ -1,0 +1,16 @@
+{
+  "birth": "1984",
+  "burial": "",
+  "death": "",
+  "deathLunar": "",
+  "fatherId": "p3",
+  "gender": "f",
+  "motherId": "p4",
+  "name": "Lê Thị Mai",
+  "notes": "",
+  "residence": "Đà Nẵng",
+  "sample": true,
+  "spouseIds": [
+    "p12"
+  ]
+}
