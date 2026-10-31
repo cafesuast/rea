@@ -5,7 +5,7 @@
 1. **Gia phả**: cây gia phả có chat, ngày giỗ âm lịch, cách xưng hô, nhập từ ảnh và sách, đặt gia phả song song với lịch sử Việt Nam.
 2. **Siêu Từ Điển**: từ điển Việt – Anh 10 tầng (Fact / Inference / Unknown), bài học tiếng Việt, sách lớp 1–12 tự soạn theo chủ đề chương trình 2018, khóa tiếng Anh giao tiếp từ số 0.
 
-Giao diện dùng màu Zalo, kiểu chat và menu gọn của Claude.
+Giao diện tối giản theo tông màu Apple, icon kiểu iPhone, kiểu chat và menu gọn của Claude. Mọi trang luôn có thanh tìm kiếm (thư viện, AI, Google Drive) và nút + mở 6 cách nhập.
 
 **Mới dùng?** Đọc [HUONG-DAN.md](HUONG-DAN.md). Trong app, bấm nút **?** trên cùng để mở hướng dẫn có đọc to (🔊) từng đoạn.
 
@@ -21,6 +21,14 @@ Giao diện dùng màu Zalo, kiểu chat và menu gọn của Claude.
 | 📜 / 📚 | Dòng họ & Lịch sử, gia phả họ Lê | Bài học, sách lớp 1–12 |
 | 😊 | Dễ dùng (ô hình lớn cho người cao tuổi) | Dễ dùng · Tiếng Anh giao tiếp |
 | 💾 / 📒 | Sao lưu JSON, xuất GEDCOM | Sổ tay, xuất .md / .zip |
+
+## Tài khoản, bot và gia phả riêng
+
+- **Đăng nhập** bằng chính tài khoản Claude của người xem, không có mật khẩu riêng.
+- **Mỗi tài khoản một bot.** Mỗi ngày, khi chủ tài khoản mở app, bot kiểm chứng đề xuất của các bot khác và đề xuất từ mới, sự kiện lịch sử mới (có nguồn). Một mục chỉ vào thư viện chung khi có ít nhất 2 bot khác xác nhận đúng và không bot nào báo sai. Biên tập viên có thể duyệt tay.
+- **Gia phả riêng 🔒** lưu ở `data/users/<id>/fam/people`, chỉ chủ tài khoản đọc được, kể cả chủ app cũng không đọc được.
+- **Gia phả dòng họ chung 👪**: khi chia sẻ từ gia phả riêng, app ẩn 4 đời gần nhất và người còn sống, không đưa số điện thoại, nơi ở, ghi chú lên. Nút “Rà soát riêng tư” tìm và chuyển người vi phạm về gia phả riêng.
+- **Nút ✨** ở mọi trang: làm mới dữ liệu, AI bổ sung chi tiết, đồng bộ Drive, cho bot chạy, tìm trong thư viện, hỏi AI, tìm trong Google Drive.
 
 ## 6 cách nhập ở mọi chỗ nhập liệu
 
@@ -47,6 +55,8 @@ Thư viện tải từ CDN: html2pdf.js 0.10.1 (xuất PDF sách lớp) và pdf.
 | `clan` | Từ điển gia phả họ Lê (INDEX-LE, FULL-LE 10 tầng) |
 | `gpsources` | Bản chép lại từ ảnh và tài liệu gia phả |
 | `deep`, `books` | Bài học sâu và sách lớp 1–12 do Claude soạn, lưu lại để mở lần sau |
+| `bots`, `botx` | Hồ sơ bot (mỗi người chỉ sửa bot của mình) và các đề xuất cùng phiếu kiểm chứng |
+| `histv` | Sự kiện lịch sử đã được các bot kiểm chứng |
 | `data/users/<id>` | Sổ tay, tiến độ học và phả hệ 19 đời riêng của từng người |
 
 Tiến độ khóa tiếng Anh (chuỗi ngày, XP, thẻ ôn) lưu trên trình duyệt (`localStorage`).
@@ -66,11 +76,12 @@ Cần Node 18+ và Playwright có Chromium (`npm i -D playwright && npx playwrig
 node tests/run-all.cjs
 ```
 
-Có 6 bộ kiểm thử, mỗi bộ chạy ở khổ máy tính (1280 px) và điện thoại (390 px):
+Có 7 bộ kiểm thử, mỗi bộ chạy ở khổ máy tính (1280 px) và điện thoại (390 px):
 
 | Bộ kiểm thử | Phạm vi |
 |---|---|
 | `giapha-clan` | Nhúng cây gia phả, đồng bộ từ điển họ Lê từ Drive (giả lập), cây triều Lê |
+| `accounts` | Bot của 3 tài khoản kiểm chéo rồi đưa vào thư viện, gia phả riêng, chia sẻ ẩn 4 đời, menu ✨, thanh tìm kiếm |
 | `guide` | Trang hướng dẫn: lời chào lần đầu, đủ 5 nhóm nội dung, đọc to, nút ? |
 | `english-course` | Đủ 5 bước của một bài, luyện tập, nói với Claude (giả lập và kịch bản dự phòng), ôn thẻ |
 | `import-and-history` | Nhập gia phả từ ảnh và văn bản, nối cha mẹ và vợ chồng, phát hiện trùng, dòng thời gian song song lịch sử |

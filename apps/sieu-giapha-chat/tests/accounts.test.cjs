@@ -47,4 +47,5 @@ await p.screenshot({path:`a-${nm}-mine.png`});
 await p.click('#upBtn');await p.waitForTimeout(150);const items=await p.evaluate(()=>[...document.querySelectorAll('#upMenu [data-up]')].map(b=>b.dataset.up).join(','));
 await p.screenshot({path:`a-${nm}-up.png`});await p.fill('#upQ','Cụ');await p.click('[data-upq="lib"]');await p.waitForTimeout(150);
 const hits=await p.evaluate(()=>document.querySelectorAll('#upRes [data-uppp]').length);if(!hits)throw new Error('lib search');
+await p.keyboard.press('Escape');await p.click('#gsPlus');await p.waitForTimeout(100);const six=await p.evaluate(()=>document.querySelectorAll('#gsSix [data-gssix]').length);if(six!==6)throw new Error('search bar + menu '+six);
 console.log(nm,'pend',pend,JSON.stringify(st),'pub',pub.length,'menu',items,'sw',await p.evaluate(()=>document.documentElement.scrollWidth),'errs',JSON.stringify(errs));await ctx.close()}await b.close()})().catch(e=>{console.log('Error',e.message);process.exit(1)});

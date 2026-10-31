@@ -499,6 +499,63 @@ label.btn{cursor:pointer}
 .botnet{display:flex;flex-direction:column;gap:8px}.bn{display:flex;gap:10px;align-items:center}.bn img{width:36px;height:36px;border-radius:50%}.bn small{display:block;color:var(--muted)}.bn.me b{color:var(--accent)}
 .main{position:relative}
 @media (max-width:760px){.top{gap:4px}.top .icon-btn{width:32px;min-width:32px;height:32px}.acctchip .an{display:none}.acctchip{padding:1px;min-height:32px}.acctchip .av{width:28px;height:28px}.top [data-view="look"].icon-btn{display:none}}
+
+/* ===== Tông Apple, tối giản ===== */
+:root{--bg:#f2f2f7; --panel:#ffffff; --panel-2:#eeeef3; --line:#e5e5ea; --fg:#1c1c1e; --muted:#6e6e73; --accent:#007aff; --accent-ink:#ffffff; --accent-soft:#e6f0ff;
+  --bubble-me:#007aff; --bubble-ai:#e9e9eb; --chat-bg:#ffffff; --think:#f2f2f7; --seg-on:#ffffff; --bar:rgba(255,255,255,.78);
+  --fact:#248a3d; --fact-bg:#e4f6e8; --inf:#9a5b00; --inf-bg:#fff3dc; --unk:#d70015; --unk-bg:#ffe5e7; --ok:#34c759; --danger:#ff3b30;
+  --male:#007aff; --female:#ff2d55; --line-tree:#c7c7cc; --warn:#ff9500; --shadow:0 1px 2px rgba(0,0,0,.04),0 4px 14px rgba(0,0,0,.05);
+  --font:-apple-system,BlinkMacSystemFont,"SF Pro Text","Be Vietnam Pro","Helvetica Neue",system-ui,sans-serif;}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#000000; --panel:#1c1c1e; --panel-2:#2c2c2e; --line:#38383a; --fg:#f5f5f7; --muted:#98989f; --accent:#0a84ff; --accent-ink:#ffffff; --accent-soft:#0b2a4f;
+  --bubble-me:#0a84ff; --bubble-ai:#262629; --chat-bg:#000000; --think:#1c1c1e; --seg-on:#636366; --bar:rgba(28,28,30,.78);
+  --fact:#30d158; --fact-bg:#10301a; --inf:#ffd60a; --inf-bg:#332b06; --unk:#ff6961; --unk-bg:#3a1414; --ok:#30d158; --danger:#ff453a;
+  --male:#0a84ff; --female:#ff375f; --line-tree:#48484a; --warn:#ff9f0a; --shadow:none; color-scheme:dark;}}
+:root[data-theme="dark"]{--bg:#000000; --panel:#1c1c1e; --panel-2:#2c2c2e; --line:#38383a; --fg:#f5f5f7; --muted:#98989f; --accent:#0a84ff; --accent-ink:#ffffff; --accent-soft:#0b2a4f;
+  --bubble-me:#0a84ff; --bubble-ai:#262629; --chat-bg:#000000; --think:#1c1c1e; --seg-on:#636366; --bar:rgba(28,28,30,.78);
+  --fact:#30d158; --fact-bg:#10301a; --inf:#ffd60a; --inf-bg:#332b06; --unk:#ff6961; --unk-bg:#3a1414; --ok:#30d158; --danger:#ff453a;
+  --male:#0a84ff; --female:#ff375f; --line-tree:#48484a; --warn:#ff9f0a; --shadow:none; color-scheme:dark;}
+body{-webkit-font-smoothing:antialiased;letter-spacing:-.01em}
+.gl{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.appi{width:28px;height:28px;border-radius:7px;background:var(--ai);display:grid;place-items:center;flex:none;box-shadow:inset 0 0 0 .5px rgba(0,0,0,.06)}
+.appi .gl{width:17px;height:17px;stroke:#fff;stroke-width:2.1}
+.side{background:var(--bg);border-right:0}
+.nav{height:42px;color:var(--fg);font-weight:500;border-radius:10px;gap:12px;padding:0 8px}
+.nav:hover{background:var(--panel-2)}
+.nav.on{background:var(--accent);color:#fff}.nav.on .count{background:rgba(255,255,255,.25);color:#fff}
+.nav .nl{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.navh{letter-spacing:0;text-transform:none;font-size:13px;color:var(--muted);font-weight:600;padding:14px 8px 4px}.navh span{display:none}
+.top{background:var(--bar);-webkit-backdrop-filter:saturate(180%) blur(20px);backdrop-filter:saturate(180%) blur(20px);border-bottom:.5px solid var(--line);height:54px}
+.top h1{font-weight:600}
+.top [data-view="look"].icon-btn{display:none}
+.icon-btn{color:var(--accent);border-radius:999px}.icon-btn:hover{background:var(--panel-2)}
+.secsw{background:var(--panel-2);border-radius:9px;padding:2px}
+.secsw button{border-radius:7px;color:var(--fg);font-weight:500}
+.secsw button.on{background:var(--seg-on);color:var(--fg);font-weight:600;box-shadow:0 1px 3px rgba(0,0,0,.12),0 0 0 .5px rgba(0,0,0,.04)}
+.card{border:0;border-radius:14px;box-shadow:var(--shadow)}
+.btn{border-radius:12px;font-weight:600}.btn.primary{background:var(--accent);color:#fff}.btn.ghost{background:var(--panel-2);border-color:transparent;color:var(--accent)}
+.chip{border:0;background:var(--panel-2);color:var(--fg)}.chip.on{background:var(--accent);color:#fff}
+.bubble{border:0;border-radius:18px 18px 18px 6px}
+.msg.me .bubble{background:var(--bubble-me);color:#fff;border-radius:18px 18px 6px 18px}.msg.me .bubble a{color:#fff}
+.composer{background:var(--bar);-webkit-backdrop-filter:blur(20px);backdrop-filter:blur(20px);border-top:.5px solid var(--line)}
+.box{border-radius:22px;border-color:var(--line)}
+.tabbar{background:var(--bar);-webkit-backdrop-filter:saturate(180%) blur(20px);backdrop-filter:saturate(180%) blur(20px);border-top:.5px solid var(--line)}
+.tabbar button{color:var(--muted);font-weight:500}.tabbar button.on{color:var(--accent)}.tabbar .gl.tbi{width:25px;height:25px}
+.menu{border:0;border-radius:14px;box-shadow:0 10px 40px rgba(0,0,0,.18),0 0 0 .5px rgba(0,0,0,.06)}
+.ghi{background:var(--panel);border:0;box-shadow:var(--shadow)}
+.dtabs{background:var(--panel-2);border-radius:9px;padding:2px}.dtabs button.on{background:var(--seg-on);color:var(--fg)}
+.add-main{border-radius:12px}
+/* thanh tìm kiếm + nhập liệu luôn có */
+.gsbar{flex:none;padding:8px 16px;background:var(--bg);position:relative}
+.gsf{display:flex;align-items:center;gap:4px;max-width:720px;margin:0 auto;background:var(--panel);border-radius:999px;padding:4px;box-shadow:var(--shadow),0 0 0 .5px var(--line)}
+.gsf:focus-within{box-shadow:0 0 0 3px var(--accent-soft),0 0 0 1px var(--accent)}
+.gsf input{flex:1;min-width:0;border:0;background:transparent;font:inherit;font-size:15px;color:var(--fg);height:36px;outline:none;padding:0 4px}
+.gsf input::-webkit-search-cancel-button{display:none}
+.gsb{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;color:var(--muted);flex:none}.gsb:hover{background:var(--panel-2);color:var(--fg)}
+.gsb.plus{background:var(--panel-2);color:var(--fg)}.gsb.ai{color:var(--accent)}.gsb.rec{color:var(--danger)}
+.gsi{color:var(--muted);display:grid;place-items:center;padding-left:4px}
+.gssix{position:absolute;left:16px;top:52px;width:min(320px,calc(100vw - 32px));z-index:80}
+.upmenu.asdrop{top:112px;left:50%;right:auto;transform:translateX(-50%);width:min(720px,calc(100vw - 32px))}
+@media (max-width:760px){#gpbar .lg{display:none}.gsbar{padding:6px 10px}.upmenu.asdrop{top:104px}}
 </style>
 
 <div class="app" id="app">
@@ -530,6 +587,7 @@ label.btn{cursor:pointer}
       <button class="icon-btn" id="a11yBtn" title="Trợ năng và môi trường" aria-label="Trợ năng và môi trường"><svg viewBox="0 0 24 24"><circle cx="12" cy="4.5" r="1.8"/><path d="M5 8.5l7 1.5 7-1.5M12 10v4.5M12 14.5l-3.5 6M12 14.5l3.5 6"/></svg></button>
       <button class="icon-btn" data-view="look" title="Tra cứu" aria-label="Tra cứu"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg></button>
     </header>
+    <div class="gsbar" id="gsBar"><form id="gsForm" class="gsf" role="search"><button type="button" id="gsPlus" class="gsb plus" aria-label="Thêm dữ liệu: 6 cách nhập" aria-haspopup="menu"><svg class="gl" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button><span class="gsi" aria-hidden="true"><svg class="gl" viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6"/><path d="M15 15l5 5"/></svg></span><input id="gsQ" type="search" enterkeyhint="search" autocomplete="off" placeholder="Tìm kiếm hoặc hỏi AI" aria-label="Tìm kiếm"><button type="button" id="gsMic" class="gsb" aria-label="Nói để tìm"><svg class="gl" viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="3.5" width="6" height="11" rx="3"/><path d="M5.5 11.5a6.5 6.5 0 0 0 13 0M12 18v2.5"/></svg></button><button type="button" id="gsAi" class="gsb ai" aria-label="Hỏi AI" title="Hỏi AI"><svg class="gl" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/></svg></button></form><div class="menu gssix" id="gsSix" role="menu" hidden></div></div>
     <div class="menu upmenu" id="upMenu" role="menu" hidden></div>
     <div class="ghi" id="guideHi" hidden role="note"><span aria-hidden="true">👋</span><div><b>Lần đầu dùng?</b> Xem hướng dẫn 5 bước, có đọc to.</div><button class="btn primary sm helpgo">📘 Xem</button><button class="btn ghost sm" id="ghiNo">Để sau</button></div>
 
@@ -2319,7 +2377,7 @@ function rootsClan(){const rows=clanRows(),ents=clanEntries(),f=fold(cq).trim(),
 
 /* ---- view Gia phả: GIAPHA chat đầy đủ trong shadow DOM ---- */
 function gpBar(){const b=$("#gpbar");if(!b)return;
-  b.innerHTML=`<div class="seg" role="tablist" aria-label="Nguồn gia phả"><button data-gpsrc="mine" class="${gpSrc==="mine"?"on":""}">🔒 Gia phả riêng</button><button data-gpsrc="fam" class="${gpSrc==="fam"?"on":""}">👪 Dòng họ chung</button><button data-gpsrc="le" class="${gpSrc==="le"?"on":""}">Cây triều Lê${lineCount?` (${lineCount})`:""}</button></div>
+  b.innerHTML=`<div class="seg" role="tablist" aria-label="Nguồn gia phả"><button data-gpsrc="mine" class="${gpSrc==="mine"?"on":""}">🔒 <span class="lg">Gia phả </span>riêng</button><button data-gpsrc="fam" class="${gpSrc==="fam"?"on":""}">👪 Dòng họ<span class="lg"> chung</span></button><button data-gpsrc="le" class="${gpSrc==="le"?"on":""}"><span class="lg">Cây </span>triều Lê${lineCount?` (${lineCount})`:""}</button></div>
   <span class="src">${gpSrc==="le"?(lineCount?"Dữ liệu lịch sử từ Drive (Wikidata). Xem và tra cứu, nên sửa ở tệp gốc.":clanBusy?esc(clanMsg):"Chưa có dữ liệu."):gpSrc==="mine"?(acct.uid?"Chỉ mình bạn xem được. Chia sẻ lên dòng họ sẽ ẩn 4 đời gần nhất.":"Chế độ khách: đăng nhập trong Claude để lưu gia phả riêng."):"Ai được chia sẻ app đều xem được. Chỉ ghi người đã mất, không ghi 4 đời gần nhất."}</span>
   ${gpSrc==="mine"&&acct.uid?`<button class="btn ghost sm" id="gpShare">👪 Chia sẻ lên dòng họ</button>`:""}${gpSrc==="fam"?`<button class="btn ghost sm" id="gpScan">🛡️ Rà soát riêng tư</button>`:""}
   ${gpSrc==="le"&&!lineCount?`<button class="btn primary sm" id="clanSync" ${clanBusy?"disabled":""}>Đồng bộ từ Drive</button>`:""}
@@ -2328,7 +2386,7 @@ function renderGiapha(){gpBar();const box=$("#gpbox");if(gpMounted===gpSrc&&box.
   if(gpSrc==="mine"&&!acct.ready){box.innerHTML=`<p class="src" style="padding:16px">🔐 Đang đăng nhập...</p>`;return}
   gpMounted=gpSrc;box.innerHTML="";const host=document.createElement("div");host.className="gphost";box.appendChild(host);
   if(!window.GPmount){host.textContent="Không tải được mô-đun gia phả.";return}
-  const R=host.attachShadow({mode:"open"});R.innerHTML=`<style>${GPCSS}.gstrip .gt{display:none}.gstrip{justify-content:flex-end}.six{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px;padding:2px 4px}.six button{display:flex!important;flex-direction:column;align-items:center;gap:2px;padding:8px 4px!important;border-radius:10px;font-size:12px;text-align:center}.six button span{font-size:20px}.six button:hover{background:var(--accent-soft)}</style>`+GPHTML;
+  const R=host.attachShadow({mode:"open"});R.innerHTML=`<style>${GPCSS}.gstrip .gt{display:none}.gstrip{justify-content:flex-end}.six{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px;padding:2px 4px}.six button{display:flex!important;flex-direction:column;align-items:center;gap:2px;padding:8px 4px!important;border-radius:10px;font-size:12px;text-align:center}.bubble{border:0;border-radius:18px 18px 18px 6px}.msg.me .bubble{background:var(--bubble-me);color:#fff;border-radius:18px 18px 6px 18px}.card{border:0;box-shadow:var(--shadow)}.composer{background:var(--bar);border-top:.5px solid var(--line)}.box{border-radius:22px}.six button span{font-size:20px}.six button:hover{background:var(--accent-soft)}</style>`+GPHTML;
   try{gpApi=gpSrc==="le"?GPmount(R,"lineage_le","sgpl:",{demo:false}):gpSrc==="mine"?GPmount(R,acct.uid?`data/users/${acct.uid}/fam/people`:"_local","sgpm:",{demo:false,noDb:!acct.uid}):GPmount(R,"people","sgp:",{});if(GP_SUB[gpSlot])gpApi.show(GP_SUB[gpSlot])}catch(e){console.error(e);host.textContent="Lỗi mô-đun gia phả: "+e.message}}
 document.addEventListener("click",e=>{const t=e.target;
   if(t.closest("#clanSync")){clanSync();return}
@@ -2818,7 +2876,7 @@ document.addEventListener("click",e=>{const t=e.target;
 const GUIDE={
 quick:[
  ["👆","Chọn phần muốn dùng","Trên cùng màn hình có hai nút: “🌳 Gia phả” để xem và ghi gia phả, “📖 Từ điển” để tra từ, học tiếng Việt và tiếng Anh. Bấm vào nút nào thì mở phần đó."],
- ["💬","Hỏi như nhắn tin Zalo","Ở tab Trò chuyện, gõ câu hỏi vào ô dưới cùng rồi bấm mũi tên để gửi. Không muốn gõ thì bấm hình micro 🎤 và nói. Ví dụ: “Ông nội tôi là ai?” hoặc “Bắc gọi là bát, Nam gọi là gì?”."],
+ ["💬","Hỏi như nhắn tin","Ở tab Trò chuyện, gõ câu hỏi vào ô dưới cùng rồi bấm mũi tên để gửi. Không muốn gõ thì bấm hình micro 🎤 và nói. Ví dụ: “Ông nội tôi là ai?” hoặc “Bắc gọi là bát, Nam gọi là gì?”."],
  ["➕","Thêm thông tin bằng 6 cách","Bấm dấu cộng ở ô chat, hoặc mở tab 📥 Nhập liệu. Chọn một trong 6 cách: gõ tay, nói, chụp ảnh, chọn ảnh hoặc PDF, dán chữ, hoặc tải tệp. Với gia phả viết tay hay in thành sách, chỉ cần chụp từng trang."],
  ["✅","Kiểm tra rồi mới lưu","Sau khi Claude đọc ảnh hoặc văn bản, app hiện danh sách để bạn xem lại. Sửa tên, năm sinh nếu sai, bỏ dấu chọn người không muốn lưu, rồi bấm Lưu."],
  ["😊","Cần chữ to, đọc to","Mở tab 😊 Dễ dùng để có ô hình lớn. Bấm nút hình người ♿ trên cùng để bật chữ to, chỉnh tốc độ đọc, chế độ chạm một lần. Ở trang hướng dẫn này, bấm 🔊 cạnh mỗi đoạn để nghe đọc."]],
@@ -3047,10 +3105,11 @@ function upItems(){const s=curSec(),k=curSlot(),it=[["refresh","🔄","Làm mớ
     it.push(["bot","🤖","Bot cập nhật sự kiện lịch sử đã kiểm chứng"])}
   return it}
 function renderUp(){const m=$("#upMenu");if(!m)return;
+  if(m.classList.contains("asdrop")){m.innerHTML=`<div class="label">Kết quả tìm kiếm</div><div id="upRes"></div><div class="sep"></div><div class="chips" style="margin:6px"><button class="chip" data-upq="lib">📚 Trong thư viện</button><button class="chip" data-upq="ai">✨ Hỏi AI mở rộng</button><button class="chip" data-upq="drive">☁️ Trong Google Drive</button></div>`;return}
   m.innerHTML=`<div class="label">Cập nhật trang này</div>${upItems().map(([k,i,l])=>`<button class="mi" data-up="${k}"><span aria-hidden="true">${i}</span>${esc(l)}</button>`).join("")}<div class="sep"></div>
   <div class="label">AI mở rộng + tìm kiếm</div><form id="upForm" class="upf"><input id="upQ" placeholder="${curSec()==="gp"?"Ví dụ: họ Lê ở Thanh Hóa thời Hậu Lê":"Ví dụ: từ “ạ” dùng thế nào"}" aria-label="Nội dung cần tìm"><button class="btn primary sm">🔎</button></form>
   <div class="chips" style="margin:6px 0 0"><button class="chip" data-upq="lib">📚 Trong thư viện</button><button class="chip" data-upq="ai">✨ Hỏi AI mở rộng</button><button class="chip" data-upq="drive">☁️ Trong Google Drive</button></div><div id="upRes"></div>`}
-function upOpen(o){const m=$("#upMenu");if(!m)return;m.hidden=!o;if(o){renderUp();setTimeout(()=>$("#upQ")?.focus(),30)}}
+function upOpen(o){const m=$("#upMenu");if(!m)return;m.hidden=!o;if(!o||!m.classList.contains("asdrop"))m.classList.remove("asdrop");if(o){renderUp();setTimeout(()=>$("#upQ")?.focus(),30)}}
 async function upDo(k){upOpen(false);
   if(k==="refresh"){if(view==="giapha"){gpMounted=null;renderGiapha()}else renderView();renderSide?.();renderAcctChip();toast("Đã làm mới. Dữ liệu chung cập nhật trực tiếp khi có người sửa.");return}
   if(k==="fill"&&sel){fillWithAI(sel);return}
@@ -3075,14 +3134,68 @@ async function upSearch(q,how){q=q.trim();if(!q){$("#upQ")?.focus();return}const
 document.addEventListener("click",e=>{const t=e.target;
   if(t.closest("#upBtn")){upOpen($("#upMenu").hidden);return}
   const u=t.closest("[data-up]");if(u){upDo(u.dataset.up);return}
-  const uq=t.closest("[data-upq]");if(uq){upSearch($("#upQ")?.value||"",uq.dataset.upq);return}
+  const uq=t.closest("[data-upq]");if(uq){upSearch(($("#upQ")||$("#gsQ"))?.value||"",uq.dataset.upq);return}
   const uw=t.closest("[data-upw]");if(uw){upOpen(false);show("look");openDetail(uw.dataset.upw);return}
   const up=t.closest("[data-uppp]");if(up){upOpen(false);goSlot("gp","view");setTimeout(()=>{gpApi?.revealInTree?.(up.dataset.uppp);gpApi?.openDetail?.(up.dataset.uppp)},200);return}
-  if(!$("#upMenu")?.hidden&&!t.closest("#upMenu"))upOpen(false)});
+  if(!$("#upMenu")?.hidden&&!t.closest("#upMenu,#gsBar"))upOpen(false)});
 document.addEventListener("submit",e=>{if(e.target.id==="upForm"){e.preventDefault();upSearch($("#upQ").value,"ai")}});
 document.addEventListener("keydown",e=>{if(e.key==="Escape"&&!$("#upMenu")?.hidden)upOpen(false)});
 
-if(!GP_SUB[gpSlot])gpSlot="chat";renderNav();acctInit();
+/* ===== Giao diện tối giản tông Apple: icon kiểu iPhone, thanh tìm kiếm + nhập liệu luôn có ===== */
+const GL={ /* nét vẽ đơn giản kiểu SF Symbols, 24×24 */
+ chat:'<path d="M4 5h16v11H9l-5 4z"/>',
+ tree:'<circle cx="12" cy="8" r="5"/><path d="M12 13v8M8 21h8"/>',
+ people:'<circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.5 2.7-6 6-6s6 2.5 6 6"/><circle cx="17" cy="9" r="2.6"/><path d="M15.5 14.2c3 .2 5.5 2.4 5.5 5.8"/>',
+ cal:'<rect x="3.5" y="5" width="17" height="15" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4"/>',
+ imp:'<path d="M12 4v11M7 10l5 5 5-5"/><path d="M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3"/>',
+ learn:'<path d="M4 5.5C6.5 4 9.5 4 12 5.5 14.5 4 17.5 4 20 5.5V19c-2.5-1.5-5.5-1.5-8 0-2.5-1.5-5.5-1.5-8 0z"/><path d="M12 5.5V19"/>',
+ easy:'<circle cx="12" cy="12" r="8.5"/><path d="M8.5 14c1 1.4 2.2 2 3.5 2s2.5-.6 3.5-2"/><path d="M9 9.5h.01M15 9.5h.01" stroke-width="2.6"/>',
+ more:'<rect x="4" y="4" width="16" height="5" rx="1.5"/><path d="M5.5 9v10h13V9M10 13h4"/>',
+ view:'<circle cx="10.5" cy="10.5" r="6"/><path d="M15 15l5 5"/>',
+ list:'<path d="M5 12.5l4 4L19 7"/>',
+ chart:'<path d="M4 20V10M10 20V4M16 20v-7M21 20H3"/>',
+ note:'<rect x="5" y="3.5" width="14" height="17" rx="2.5"/><path d="M9 8h6M9 12h6M9 16h3"/>',
+ user:'<circle cx="12" cy="8.5" r="3.8"/><path d="M4.5 20c.8-3.8 3.8-6 7.5-6s6.7 2.2 7.5 6"/>',
+ help:'<circle cx="12" cy="12" r="8.5"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.7.3-1 .9-1 1.7M12 17h.01" />',
+ grid:'<rect x="4" y="4" width="6.5" height="6.5" rx="1.6"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="1.6"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="1.6"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1.6"/>',
+ search:'<circle cx="10.5" cy="10.5" r="6"/><path d="M15 15l5 5"/>',
+ mic:'<rect x="9" y="3.5" width="6" height="11" rx="3"/><path d="M5.5 11.5a6.5 6.5 0 0 0 13 0M12 18v2.5"/>',
+ plus:'<path d="M12 5v14M5 12h14"/>',
+ spark:'<path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/><path d="M18.5 15.5l.8 2.2 2.2.8-2.2.8-.8 2.2-.8-2.2-2.2-.8 2.2-.8z"/>'};
+/* màu ô icon theo bảng màu hệ thống của Apple */
+const AC={blue:"#007AFF",green:"#34C759",orange:"#FF9500",red:"#FF3B30",indigo:"#5856D6",teal:"#30B0C7",yellow:"#FFCC00",gray:"#8E8E93",purple:"#AF52DE",pink:"#FF2D55",mint:"#00C7BE",brown:"#A2845E"};
+const SLOTICON={gp:{chat:["chat","green"],view:["tree","green"],list:["people","blue"],cal:["cal","red"],imp:["imp","orange"],learn:["learn","brown"],easy:["easy","yellow"],more:["more","gray"]},
+ td:{chat:["chat","blue"],view:["view","indigo"],list:["list","teal"],cal:["chart","purple"],imp:["imp","orange"],learn:["learn","pink"],easy:["easy","mint"],more:["note","yellow"]}};
+const gly=(k,cls="")=>`<svg class="gl ${cls}" viewBox="0 0 24 24" aria-hidden="true">${GL[k]||GL.grid}</svg>`;
+const appIcon=(k,c)=>`<span class="appi" style="--ai:${AC[c]||AC.gray}" aria-hidden="true">${gly(k)}</span>`;
+function renderNav(){const side=$("#secnav");if(side)side.innerHTML=["gp","td"].map((s,n)=>`<div class="navh"><span>${n+1}</span>${SEC[s].name}</div>${SEC[s].slots.map(([k,i,l,c])=>{const [g,col]=SLOTICON[s][k];return`<button class="nav" data-slot="${s}:${k}">${appIcon(g,col)}<span class="nl">${esc(l)}</span>${c?`<span class="count" id="${c}">0</span>`:""}</button>`}).join("")}`).join("");
+  $$(".nav.acctgo .ni,.nav.helpgo .ni").forEach(x=>{const h=x.closest(".helpgo");x.outerHTML=h?appIcon("help","blue"):appIcon("user","gray")});
+  markSlots()}
+function renderTab(){const tb=$("#tabbar");if(!tb)return;const s=curSec();tb.innerHTML=SEC[s].slots.filter(x=>SHORT[s][x[0]]).map(([k])=>`<button data-slot="${s}:${k}">${gly(SLOTICON[s][k][0],"tbi")}${SHORT[s][k]}</button>`).join("")+`<button id="tabMore">${gly("grid","tbi")}Thêm</button>`;markSlots();if(typeof gsSync==="function")gsSync()}
+/* Thanh tìm kiếm chung: tìm trong thư viện, hỏi AI, tìm trong Drive; mic; nút + mở 6 cách nhập */
+function gsPlaceholder(){return curSec()==="gp"?"Tìm người trong gia phả, hoặc hỏi AI":"Tìm từ, hoặc hỏi AI"}
+function gsSync(){const i=$("#gsQ");if(i)i.placeholder=gsPlaceholder()}
+function gsRun(how){const q=$("#gsQ").value.trim();if(!q){$("#gsQ").focus();return}
+  if(how==="ai"){upSearch(q,"ai");$("#gsQ").value="";gsDrop(false);return}
+  const m=$("#upMenu");m.hidden=false;m.classList.add("asdrop");renderUp();upSearch(q,how||"lib")}
+function gsDrop(o){const m=$("#upMenu");if(!o){m.classList.remove("asdrop")}}
+let gsSixOpen=false;
+function gsSix(o){gsSixOpen=o;const m=$("#gsSix");m.hidden=!o;if(o)m.innerHTML=`<div class="label">${curSec()==="gp"?"Thêm vào gia phả":"Thêm vào từ điển"} · 6 cách</div><div class="six menu6">${SIX.map(([k,i,l])=>`<button data-gssix="${k}"><span aria-hidden="true">${i}</span>${l}</button>`).join("")}</div>`}
+document.addEventListener("click",e=>{const t=e.target;
+  if(t.closest("#gsGo")){gsRun("lib");return}
+  if(t.closest("#gsAi")){gsRun("ai");return}
+  if(t.closest("#gsMic")){listen((x,fin)=>{$("#gsQ").value=x;if(fin)gsRun("lib")},$("#gsMic"));return}
+  if(t.closest("#gsPlus")){gsSix(!gsSixOpen);return}
+  const sx=t.closest("[data-gssix]");if(sx){gsSix(false);sixGo(curSec(),sx.dataset.gssix);return}
+  if(gsSixOpen&&!t.closest("#gsSix"))gsSix(false);
+  if(t.closest("[data-slot],[data-sec],[data-view]"))setTimeout(gsSync,0)},true);
+document.addEventListener("submit",e=>{if(e.target.id==="gsForm"){e.preventDefault();gsRun("lib")}});
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&gsSixOpen)gsSix(false);
+  if((e.key==="/"&&!/INPUT|TEXTAREA|SELECT/.test(document.activeElement?.tagName))||(e.key==="k"&&(e.metaKey||e.ctrlKey))){e.preventDefault();$("#gsQ")?.focus()}});
+/* nút trên đầu: thay icon chữ bằng nét SF */
+(()=>{const u=$("#upBtn");if(u)u.innerHTML=gly("spark");const h=$("#helpBtn");if(h){h.innerHTML=gly("help");h.removeAttribute("style")}})();
+
+if(!GP_SUB[gpSlot])gpSlot="chat";renderNav();acctInit();gsSync();
 initNotebook();clanInit();show(view);renderSide();initStore();
 (async()=>{try{sample=window.claude?.use?await window.claude.use("sample"):null}catch{sample=null}if(view==="chat")renderChat()})();
 </script>
