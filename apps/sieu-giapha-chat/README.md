@@ -38,6 +38,14 @@ Chúng có ở hai màn Nhập liệu, ở nút **+** của hai khung chat và t
 
 Với gia phả, ảnh chụp **bản viết tay, sách in, bản in hoặc Hán Nôm** được Claude đọc từng trang. Claude chép lại chữ rồi tách ra từng người, kèm cha mẹ và vợ chồng. Người dùng duyệt lại trước khi lưu: người trùng tên được báo, chỗ chữ khó đọc được ghi chú. Bản chép lại được lưu kèm.
 
+## Chạy thực tế (ngoài Claude)
+
+Thư mục [`web/`](web/) là bản web chạy độc lập, cài được lên điện thoại như app và mở được khi mất mạng. Có hai chế độ: **trên máy** (không cần máy chủ) và **Supabase** (đăng nhập Google/email, dữ liệu chung, gia phả riêng, bot, AI qua máy chủ). Hướng dẫn từng bước: [CAI-DAT.md](CAI-DAT.md).
+
+- `web/sgp-runtime.js`: lớp thay cho môi trường Claude, cùng một app chạy được cả hai nơi.
+- `supabase/schema.sql`: bảng và Row Level Security. `supabase/functions/claude`: máy chủ AI giữ khóa Claude API.
+- `node web/build.cjs`: tạo lại `web/index.html` từ `index.html`.
+
 ## Chạy thử
 
 - **Đầy đủ tính năng**: mở trang dưới dạng Artifact trong Claude. Cần cấp quyền cho kho dữ liệu (`db`), Claude (`sample`), người dùng (`user`), tải tệp (`downloads`) và Google Drive (`mcp`).
@@ -76,12 +84,13 @@ Cần Node 18+ và Playwright có Chromium (`npm i -D playwright && npx playwrig
 node tests/run-all.cjs
 ```
 
-Có 7 bộ kiểm thử, mỗi bộ chạy ở khổ máy tính (1280 px) và điện thoại (390 px):
+Có 8 bộ kiểm thử, mỗi bộ chạy ở khổ máy tính (1280 px) và điện thoại (390 px):
 
 | Bộ kiểm thử | Phạm vi |
 |---|---|
 | `giapha-clan` | Nhúng cây gia phả, đồng bộ từ điển họ Lê từ Drive (giả lập), cây triều Lê |
 | `accounts` | Bot của 3 tài khoản kiểm chéo rồi đưa vào thư viện, gia phả riêng, chia sẻ ẩn 4 đời, menu ✨, thanh tìm kiếm |
+| `standalone` | Bản web: chế độ trên máy (lưu IndexedDB, sao lưu, AI bằng khóa riêng, PWA) và Supabase giả lập (đăng nhập, gia phả riêng không lộ, không sửa được bot người khác, AI qua máy chủ) |
 | `guide` | Trang hướng dẫn: lời chào lần đầu, đủ 5 nhóm nội dung, đọc to, nút ? |
 | `english-course` | Đủ 5 bước của một bài, luyện tập, nói với Claude (giả lập và kịch bản dự phòng), ôn thẻ |
 | `import-and-history` | Nhập gia phả từ ảnh và văn bản, nối cha mẹ và vợ chồng, phát hiện trùng, dòng thời gian song song lịch sử |
