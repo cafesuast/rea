@@ -480,6 +480,12 @@ label.btn{cursor:pointer}
 .gpe button{min-height:120px}
 @media (max-width:760px){.six{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+.hhero{background:linear-gradient(135deg,var(--accent-soft),var(--panel));border:1px solid var(--line);border-radius:16px;padding:16px;display:flex;flex-direction:column;gap:10px}
+.hhero h2{margin:0;font-size:20px}.hhero p{margin:0;color:var(--muted)}
+.htabs{flex-wrap:nowrap;overflow-x:auto;align-self:flex-start;max-width:100%;flex:none}.htabs button{white-space:nowrap;flex:none!important;display:inline-flex!important;flex-direction:row!important;gap:4px;padding:6px 12px;border-radius:8px;font-size:13.5px}.htabs button.on{background:var(--panel);color:var(--accent);font-weight:600;box-shadow:0 1px 2px rgba(0,0,0,.08)}
+.hbody{gap:4px}.hg{display:flex;gap:12px;align-items:flex-start;padding:10px 4px;border-bottom:1px solid var(--line)}.hg:last-child{border-bottom:0}
+.hg>div{flex:1;min-width:0}.hg b{font-size:15px}.hg p{margin:4px 0 0;line-height:1.6;font-size:14.5px}.hgi{font-size:24px;line-height:1;width:32px;text-align:center;flex:none}
+.ghi{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:8px 12px;flex:none;padding:10px 12px;border-radius:12px;background:var(--accent-soft);border:1px solid var(--line);font-size:14px}.ghi>div{flex:1;min-width:160px}
 </style>
 
 <div class="app" id="app">
@@ -487,6 +493,7 @@ label.btn{cursor:pointer}
     <div class="brand"><span class="mark">GP</span><b>Siêu GiaPha chat<small>Từ điển · Gia phả · Lịch sử</small></b>
       <button class="icon-btn" id="hideNav" title="Thu gọn" aria-label="Thu gọn thanh bên"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M9 4v16"/></svg></button></div>
     <div id="secnav"></div>
+    <button class="nav helpgo" data-view="help"><span class="ni" aria-hidden="true">📘</span>Hướng dẫn · nghe đọc</button>
     <button class="add-main" data-add><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>Thêm từ mới</button>
     <div class="stats" id="stats"></div>
     <div class="grow"></div>
@@ -503,9 +510,11 @@ label.btn{cursor:pointer}
       <button class="icon-btn" id="showNav" title="Menu" aria-label="Mở menu"><svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
       <h1 id="viewTitle">Trò chuyện</h1>
       <div class="secsw" role="tablist" aria-label="Phần chính"><button data-sec="gp">🌳 Gia phả</button><button data-sec="td">📖 Từ điển</button></div><span class="env-pill" id="envPill"></span>
+      <button class="icon-btn" id="helpBtn" title="Hướng dẫn" aria-label="Hướng dẫn sử dụng" style="font-weight:700;font-size:16px">?</button>
       <button class="icon-btn" id="a11yBtn" title="Trợ năng và môi trường" aria-label="Trợ năng và môi trường"><svg viewBox="0 0 24 24"><circle cx="12" cy="4.5" r="1.8"/><path d="M5 8.5l7 1.5 7-1.5M12 10v4.5M12 14.5l-3.5 6M12 14.5l3.5 6"/></svg></button>
       <button class="icon-btn" data-view="look" title="Tra cứu" aria-label="Tra cứu"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg></button>
     </header>
+    <div class="ghi" id="guideHi" hidden role="note"><span aria-hidden="true">👋</span><div><b>Lần đầu dùng?</b> Xem hướng dẫn 5 bước, có đọc to.</div><button class="btn primary sm helpgo">📘 Xem</button><button class="btn ghost sm" id="ghiNo">Để sau</button></div>
 
     <section class="view" id="v-chat">
       <div class="msgs" id="msgs" aria-live="polite"></div>
@@ -571,6 +580,7 @@ label.btn{cursor:pointer}
 
     <section class="view" id="v-giapha" hidden><div class="gpbar" id="gpbar"></div><div id="gpbox"></div><div class="gpover" id="gpImp" hidden></div><div class="gpover" id="gpHist" hidden></div><div class="gpover" id="gpEasy" hidden></div></section>
     <section class="view" id="v-easy" hidden><div class="easy" id="easy"></div></section>
+    <section class="view" id="v-help" hidden><div class="easy" id="help"></div></section>
     <section class="view" id="v-lessons" hidden><div class="easy" id="lessons"></div></section>
     <section class="view" id="v-roots" hidden><div class="easy" id="roots"></div></section>
     <section class="view" id="v-plan" hidden><div class="plan" id="plan"></div></section>
@@ -1158,7 +1168,7 @@ async function initStore(){
 
 /* ===== Giao diện ===== */
 let view=ls.get("view","giapha"),sel=null,letter=ls.get("letter",""),limit=200;
-const titles={chat:"Trò chuyện",giapha:"Gia phả",look:"Tra cứu",review:"Kiểm duyệt",import:"Nhập dữ liệu",easy:"Dễ dùng · Tiếng Anh giao tiếp",lessons:"Bài học tiếng Việt",roots:"Dòng họ & Lịch sử",plan:"Kế hoạch 1–2 triệu từ",notebook:"Sổ tay của tôi"};
+const titles={chat:"Trò chuyện",giapha:"Gia phả",look:"Tra cứu",review:"Kiểm duyệt",import:"Nhập dữ liệu",easy:"Dễ dùng · Tiếng Anh giao tiếp",lessons:"Bài học tiếng Việt",roots:"Dòng họ & Lịch sử",plan:"Kế hoạch 1–2 triệu từ",notebook:"Sổ tay của tôi",help:"Hướng dẫn"};
 const VIEWS=Object.keys(titles);
 function changed(){words.sort((a,b)=>collT.compare(a.w,b.w));byIdMap=new Map(words.map(w=>[w.id,w]));if(sel&&!byId(sel))closeDetail();renderSide();renderView();if(sel)renderDetail()}
 function renderSide(){
@@ -1169,8 +1179,8 @@ function renderSide(){
   $("#cAll").textContent=n.toLocaleString("vi-VN");$("#cRaw").textContent=(n-ok).toLocaleString("vi-VN");
   $("#syncState").textContent=mode==="db"?"● Đã đồng bộ":mode==="local"?"Bản xem thử":"Đang tải...";
 }
-function show(v){view=v;ls.set("view",v);if(!["giapha","roots"].includes(v))ls.set("lastTu",v);if(!VIEWS.includes(v))v=view="chat";VIEWS.forEach(k=>$("#v-"+k).hidden=k!==v);$$("[data-view]").forEach(b=>b.classList.toggle("on",b.dataset.view===v));$("#viewTitle").innerHTML=esc(titles[v])+(v==="chat"?"<small>Hỏi nghĩa, cách dùng, so sánh vùng miền và thế hệ</small>":"");$("#app").classList.remove("drawer");renderTab();renderView();{const s=curSec(),k=curSlot();$("#viewTitle").textContent=(s==="gp"?"Gia phả · ":"Từ điển · ")+SEC[s].slots.find(x=>x[0]===k)[2]}}
-function renderView(){({chat:renderChat,look:renderLook,review:renderReview,import:()=>{},easy:renderEasy,lessons:renderLessons,roots:renderRoots,giapha:renderGiapha,plan:renderPlan,notebook:renderNotebook})[view]()}
+function show(v){view=v;ls.set("view",v);if(!["giapha","roots"].includes(v))ls.set("lastTu",v);if(!VIEWS.includes(v))v=view="chat";VIEWS.forEach(k=>$("#v-"+k).hidden=k!==v);$$("[data-view]").forEach(b=>b.classList.toggle("on",b.dataset.view===v));$("#viewTitle").innerHTML=esc(titles[v])+(v==="chat"?"<small>Hỏi nghĩa, cách dùng, so sánh vùng miền và thế hệ</small>":"");$("#app").classList.remove("drawer");renderTab();renderView();if(v==="help")$("#viewTitle").textContent="📘 Hướng dẫn";else{const s=curSec(),k=curSlot();$("#viewTitle").textContent=(s==="gp"?"Gia phả · ":"Từ điển · ")+SEC[s].slots.find(x=>x[0]===k)[2]}}
+function renderView(){({chat:renderChat,look:renderLook,review:renderReview,import:()=>{},easy:renderEasy,lessons:renderLessons,roots:renderRoots,giapha:renderGiapha,plan:renderPlan,notebook:renderNotebook,help:renderHelp})[view]()}
 function fmt(v){return esc(v).replace(/(^|[\s(·,;:])\/([^/\s<>][^/<>]*?)\//g,'$1<span class="ipa">/$2/</span>').replace(/`(Fact|Inference|Unknown)`/g,'<span class="lab $1">$1</span>').replace(/\*([^*<>]+)\*/g,"<i>$1</i>").replace(/`([^`<>]+)`/g,"<code>$1</code>")}
 function badges(w){return`${w.level===10?'<span class="tag t10">10 tầng</span>':w.level===7?'<span class="tag">7 tầng</span>':'<span class="tag">INDEX</span>'}${w.status!=="RAW"?'<span class="tag ok">Đã duyệt</span>':""}${w.unk?`<span class="tag unk">${w.unk} Unknown</span>`:""}`}
 
@@ -2728,7 +2738,7 @@ const TD_VIEW={chat:"chat",view:"look",list:"review",cal:"plan",imp:"import",lea
 const GP_SUB={chat:"chat",view:"tree",list:"list",cal:"gio"};
 let gpSlot=ls.get("gpSlot","chat"),gpe={open:false};
 function curSec(){return["giapha","roots"].includes(view)?"gp":"td"}
-function curSlot(){if(view==="roots")return"learn";if(view==="giapha")return gpSlot;return Object.keys(TD_VIEW).find(k=>TD_VIEW[k]===view)||"chat"}
+function curSlot(){if(view==="help")return"help";if(view==="roots")return"learn";if(view==="giapha")return gpSlot;return Object.keys(TD_VIEW).find(k=>TD_VIEW[k]===view)||"chat"}
 function sixBar(ctx,compact){return`<div class="six ${compact?"sm":""}" role="group" aria-label="6 cách nhập liệu">${SIX.map(([k,i,l])=>`<button data-six="${ctx}:${k}"><span aria-hidden="true">${i}</span>${l}</button>`).join("")}</div>`}
 function sixMenuHTML(ctx){return`<div class="label">Nhập liệu · 6 cách</div><div class="six menu6">${SIX.map(([k,i,l])=>`<button data-v="six:${k}"><span aria-hidden="true">${i}</span>${l}</button>`).join("")}</div><div class="sep"></div>`}
 function renderNav(){const side=$("#secnav");if(side)side.innerHTML=["gp","td"].map((s,n)=>`<div class="navh"><span>${n+1}</span>${SEC[s].name}</div>${SEC[s].slots.map(([k,i,l,c])=>`<button class="nav" data-slot="${s}:${k}"><span class="ni" aria-hidden="true">${i}</span>${esc(l)}${c?`<span class="count" id="${c}">0</span>`:""}</button>`).join("")}`).join("");
@@ -2782,6 +2792,78 @@ document.addEventListener("click",e=>{const t=e.target;
     if(a.startsWith("gp:"))sixGo("gp",a.slice(3));else if(a.startsWith("slot:"))goSlot("gp",a.slice(5));else if(a==="hist"){gpe.open=false;renderGpe();gph.open=true;renderGph()}
     else if(a.startsWith("ask:")){goSlot("gp","chat");const R=$(".gphost")?.shadowRoot;const inp=R?.querySelector("#input");if(inp){inp.value=a.slice(4);inp.dispatchEvent(new Event("input",{bubbles:true}));R.querySelector("#send")?.click()}}return}
 },true);
+
+
+/* ===== Hướng dẫn sử dụng (chữ + đọc to) ===== */
+const GUIDE={
+quick:[
+ ["👆","Chọn phần muốn dùng","Trên cùng màn hình có hai nút: “🌳 Gia phả” để xem và ghi gia phả, “📖 Từ điển” để tra từ, học tiếng Việt và tiếng Anh. Bấm vào nút nào thì mở phần đó."],
+ ["💬","Hỏi như nhắn tin Zalo","Ở tab Trò chuyện, gõ câu hỏi vào ô dưới cùng rồi bấm mũi tên để gửi. Không muốn gõ thì bấm hình micro 🎤 và nói. Ví dụ: “Ông nội tôi là ai?” hoặc “Bắc gọi là bát, Nam gọi là gì?”."],
+ ["➕","Thêm thông tin bằng 6 cách","Bấm dấu cộng ở ô chat, hoặc mở tab 📥 Nhập liệu. Chọn một trong 6 cách: gõ tay, nói, chụp ảnh, chọn ảnh hoặc PDF, dán chữ, hoặc tải tệp. Với gia phả viết tay hay in thành sách, chỉ cần chụp từng trang."],
+ ["✅","Kiểm tra rồi mới lưu","Sau khi Claude đọc ảnh hoặc văn bản, app hiện danh sách để bạn xem lại. Sửa tên, năm sinh nếu sai, bỏ dấu chọn người không muốn lưu, rồi bấm Lưu."],
+ ["😊","Cần chữ to, đọc to","Mở tab 😊 Dễ dùng để có ô hình lớn. Bấm nút hình người ♿ trên cùng để bật chữ to, chỉnh tốc độ đọc, chế độ chạm một lần. Ở trang hướng dẫn này, bấm 🔊 cạnh mỗi đoạn để nghe đọc."]],
+six:[
+ ["⌨️","Gõ tay","Mở biểu mẫu để điền từng người hoặc từng từ, đủ các ô."],
+ ["🎤","Nói","Bấm rồi kể bằng giọng nói. Ví dụ: “Cụ Lê Văn Phúc sinh năm 1925, vợ là cụ Nguyễn Thị Hạnh”. Claude tự tách ra từng người."],
+ ["📷","Chụp ảnh","Chụp thẳng trang gia phả, trang sách, bia mộ hay tờ giấy. Nên chụp đủ sáng, không bị bóng tay."],
+ ["🖼️","Ảnh, PDF","Chọn nhiều ảnh có sẵn trong máy, hoặc tệp PDF bản in, bản scan. Mỗi tệp PDF đọc tối đa 40 trang."],
+ ["📋","Dán chữ","Dán đoạn chữ đã có, từ Word, Zalo hay email."],
+ ["📄","Tệp","Gia phả: tệp GEDCOM (.ged) hoặc bản sao lưu .json. Từ điển: tệp .md, .txt, .json đúng mẫu INDEX hoặc FULL."]],
+gp:[
+ ["💬","Trò chuyện","Hỏi trợ lý gia phả về bất kỳ ai: quan hệ, cách xưng hô, ngày giỗ. Chọn ô “Tôi là” để app tính đúng cách gọi. Có thể kể để thêm người, trợ lý sẽ hỏi lại cho đủ rồi đề nghị lưu."],
+ ["🌳","Cây gia phả","Cây sự sống theo từng đời. Chạm vào một người để xem chi tiết, sửa, thêm cha mẹ, vợ chồng, con. Dùng nút cộng trừ để phóng to thu nhỏ, ô “Gốc” để xem từ một cụ. Có thể chuyển sang Cây triều Lê (dữ liệu lịch sử)."],
+ ["👥","Thành viên","Danh sách mọi người, tìm theo tên, lọc theo đời, chi, phái."],
+ ["🕯️","Ngày giỗ","Lịch giỗ theo âm lịch, tự đổi sang ngày dương của năm nay và báo còn bao nhiêu ngày."],
+ ["📥","Nhập liệu","Ưu tiên ảnh bản viết tay, sách, bản in, Hán Nôm. Chọn loại tài liệu, chụp hoặc chọn ảnh, bấm “Cho Claude đọc”. Duyệt danh sách: người trùng tên với người đã có sẽ được báo, chỗ chữ mờ được ghi chú. Bản chép lại chữ được lưu kèm để đối chiếu sau."],
+ ["📜","Dòng họ & Lịch sử","Phả hệ 19 đời của riêng bạn, từ điển dòng họ, lịch sử Việt Nam, và từ điển gia phả họ Lê đồng bộ từ Google Drive. Nút “Song song lịch sử” đặt năm sinh, năm mất của từng người cạnh các biến cố lịch sử cùng thời, kèm tuổi của mỗi người lúc đó."],
+ ["😊","Dễ dùng","Ô hình lớn cho ông bà: kể để thêm người, chụp trang gia phả, xem cây, ngày giỗ, hỏi “ông bà tôi là ai”."],
+ ["💾","Sao lưu & xuất","Tải bản sao lưu .json (đủ mọi thông tin), xuất GEDCOM để mở bằng phần mềm gia phả khác, hoặc nhập lại từ tệp."]],
+td:[
+ ["💬","Trò chuyện","Hỏi nghĩa, cách dùng, so sánh Bắc Trung Nam, từ lóng Gen Z, dịch Anh Việt. Bấm dấu cộng để chọn “Suy nghĩ sâu” cho câu hỏi khó."],
+ ["🔎","Tra cứu","Tìm từ theo chữ cái A đến Z, lọc theo 5 trục: niên đại, độ tuổi, vùng miền, trình độ, lĩnh vực. Chạm một từ để xem thẻ đủ 10 tầng, nghe đọc, xem sơ đồ."],
+ ["✅","Kiểm duyệt","Các mục từ mới ở tầng RAW chờ xem lại. Sửa chỗ Unknown, rồi duyệt để đưa lên tầng chuẩn."],
+ ["📈","Kế hoạch","Tiến độ hướng tới 1 đến 2 triệu từ, mục tiêu mỗi ngày, xuất tệp A–Z để lưu trữ."],
+ ["📥","Nhập liệu","6 cách nhập, đồng bộ các tệp INDEX và FULL từ Google Drive, hoặc dán nội dung."],
+ ["📚","Bài học","100 bài về vùng miền, thế hệ, văn hóa; Sách lớp 1 đến 12 tự soạn theo chủ đề chương trình 2018, có hình minh họa, bài tập, hỏi cô giáo và tải PDF."],
+ ["😊","Dễ dùng · Tiếng Anh","Khóa tiếng Anh giao tiếp từ số 0: 14 bài hằng ngày và 8 bài phỏng vấn visa. Mỗi bài 5 bước: đọc truyện, học từ Anh Việt, hội thoại đóng vai, luyện tập, nói với Claude. Chế độ “Chạm & nghe” có ô hình lớn."],
+ ["📒","Sổ tay & xuất","Từ bạn đã lưu, ghi chú riêng, xuất .md hoặc .zip."]],
+faq:[
+ ["Dữ liệu lưu ở đâu?","Gia phả và từ điển lưu trong app trên Claude. Ai được bạn chia sẻ app cũng xem được. Sổ tay, tiến độ học là riêng của từng người."],
+ ["Có an toàn khi nhập người đang sống không?","Chỉ nên ghi tên, năm sinh, quan hệ. Không ghi số điện thoại, địa chỉ nhà, tài khoản nếu định chia sẻ app."],
+ ["Claude đọc ảnh sai thì sao?","Sửa ngay trong màn duyệt trước khi lưu. Nếu sai nhiều, chụp lại thẳng hơn, đủ sáng, mỗi ảnh một trang."],
+ ["Dữ liệu mẫu họ Lê là gì?","Là 17 người mẫu để bạn thử. Khi bắt đầu nhập gia phả thật, bấm “Xóa dữ liệu mẫu”."],
+ ["Không nghe được tiếng đọc?","Kiểm tra âm lượng máy. Một số máy chưa có giọng tiếng Việt, khi đó app đọc bằng giọng mặc định. Có thể chỉnh tốc độ ở nút ♿."],
+ ["Micro không nhận giọng nói?","Cho phép trình duyệt dùng micro. Nếu vẫn không được, bấm micro trên bàn phím điện thoại để nói thay cho gõ."],
+ ["Mở app ngoài Claude được không?","Được, nhưng ở chế độ xem thử. Đọc ảnh, soạn bài, chat AI và đồng bộ Drive cần mở trong Claude."]]};
+let gtab=ls.get("gtab","quick");
+function guideParas(){const S=(h,list)=>list.map(([i,t,d])=>`${t}. ${d}`);return{quick:GUIDE.quick.map(([i,t,d],n)=>`Bước ${n+1}: ${t}. ${d}`),six:S(0,GUIDE.six),gp:S(0,GUIDE.gp),td:S(0,GUIDE.td),faq:GUIDE.faq.map(([q,a])=>`${q} ${a}`)}}
+function guideMd(){const L=["# Hướng dẫn sử dụng Siêu GiaPha chat","","Siêu GiaPha chat có hai phần chạy song song: **Gia phả** và **Siêu Từ Điển**. Hai phần có cùng 8 tab, theo cùng thứ tự, và cùng 6 cách nhập liệu.","","## Cho người mới: 5 bước",""];
+  GUIDE.quick.forEach(([i,t,d],n)=>L.push(`${n+1}. ${i} **${t}.** ${d}`));
+  L.push("","## 6 cách nhập liệu","","Có ở mọi chỗ nhập: tab Nhập liệu của hai phần, nút **+** trong hai khung chat và các biểu mẫu.","");GUIDE.six.forEach(([i,t,d])=>L.push(`- ${i} **${t}:** ${d}`));
+  L.push("","## Phần 1. Gia phả","");GUIDE.gp.forEach(([i,t,d])=>L.push(`- ${i} **${t}:** ${d}`));
+  L.push("","## Phần 2. Siêu Từ Điển","");GUIDE.td.forEach(([i,t,d])=>L.push(`- ${i} **${t}:** ${d}`));
+  L.push("","## Hỏi đáp","");GUIDE.faq.forEach(([q,a])=>L.push(`**${q}**  `,a,""));
+  L.push("## Nghe hướng dẫn","","Trong app, bấm nút **?** trên cùng để mở trang Hướng dẫn. Mỗi đoạn có nút 🔊 để nghe đọc, và nút “Nghe cả phần” để nghe liền mạch.");return L.join("\n")}
+function renderHelp(){const el=$("#help");const tabs=[["quick","🌱 Người mới"],["six","➕ 6 cách nhập"],["gp","🌳 Gia phả"],["td","📖 Từ điển"],["faq","❓ Hỏi đáp"]];
+  const item=(i,t,d,n)=>`<div class="hg"><span class="hgi" aria-hidden="true">${i}</span><div><b>${n!=null?`Bước ${n+1}. `:""}${esc(t)}</b><p>${esc(d)}</p></div><button class="icon-btn" data-gsay="${esc((n!=null?`Bước ${n+1}: `:"")+t+". "+d)}" aria-label="Nghe đoạn ${esc(t)}">🔊</button></div>`;
+  const body=gtab==="quick"?GUIDE.quick.map(([i,t,d],n)=>item(i,t,d,n)).join(""):gtab==="faq"?GUIDE.faq.map(([q,a])=>item("💡",q,a)).join(""):GUIDE[gtab].map(([i,t,d])=>item(i,t,d)).join("");
+  el.innerHTML=`<div class="hhero"><h2>📘 Hướng dẫn Siêu GiaPha chat</h2><p>Hai phần <b>🌳 Gia phả</b> và <b>📖 Siêu Từ Điển</b> có cùng 8 tab và cùng 6 cách nhập. Bấm 🔊 để nghe đọc từng đoạn.</p>
+   <div class="btns" style="margin:0"><button class="btn primary" id="gAll">🔊 Nghe cả phần</button><button class="btn ghost" id="gStop">⏹ Dừng đọc</button><button class="btn ghost" id="gMd">⬇️ Tải hướng dẫn (.md)</button></div></div>
+  <div class="dtabs htabs" role="tablist">${tabs.map(([k,l])=>`<button data-gtab="${k}" class="${gtab===k?"on":""}">${l}</button>`).join("")}</div>
+  <div class="card hbody">${gtab==="gp"||gtab==="td"?`<p class="src">Các tab theo đúng thứ tự trên thanh bên và thanh dưới cùng của điện thoại.</p>`:gtab==="six"?`<p class="src">Có ở mọi chỗ nhập liệu: tab Nhập liệu của hai phần, nút + trong hai khung chat và các biểu mẫu.</p>`:""}${body}</div>
+  ${gtab==="quick"?`<div class="card"><h3>Thử ngay</h3><div class="chips" style="margin:0"><button class="chip" data-slot="gp:chat">🌳 Mở Gia phả</button><button class="chip" data-slot="gp:imp">📷 Chụp trang gia phả</button><button class="chip" data-slot="td:chat">📖 Hỏi từ điển</button><button class="chip" data-slot="td:easy">🗣️ Học tiếng Anh</button><button class="chip" data-slot="gp:easy">😊 Dễ dùng</button></div></div>`:""}`}
+document.addEventListener("click",e=>{const t=e.target;
+  if(t.closest("#helpBtn")){show("help");return}
+  const gt=t.closest("[data-gtab]");if(gt){gtab=gt.dataset.gtab;ls.set("gtab",gtab);renderHelp();return}
+  const gs=t.closest("[data-gsay]");if(gs){say([[gs.dataset.gsay,"vi-VN"]]);return}
+  if(t.closest("#gAll")){say(guideParas()[gtab].map(x=>[x,"vi-VN"]));return}
+  if(t.closest("#gStop")){try{speechSynthesis.cancel()}catch{}return}
+  if(t.closest("#gMd")){save("huong-dan-sieu-giapha-chat.md",guideMd());return}});
+
+document.addEventListener("click",e=>{const t=e.target;
+  if(t.closest(".helpgo")){ls.set("guideSeen",1);$("#guideHi").hidden=true;show("help");return}
+  if(t.closest("#ghiNo")){ls.set("guideSeen",1);$("#guideHi").hidden=true;return}});
+if(!ls.get("guideSeen"))$("#guideHi").hidden=false;
 
 if(!GP_SUB[gpSlot])gpSlot="chat";renderNav();
 initNotebook();clanInit();show(view);renderSide();initStore();

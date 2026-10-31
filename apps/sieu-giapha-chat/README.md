@@ -7,6 +7,8 @@
 
 Giao diện dùng màu Zalo, kiểu chat và menu gọn của Claude.
 
+**Mới dùng?** Đọc [HUONG-DAN.md](HUONG-DAN.md). Trong app, bấm nút **?** trên cùng để mở hướng dẫn có đọc to (🔊) từng đoạn.
+
 ## Hai phần, cùng 8 tab
 
 | Tab | Gia phả | Siêu Từ Điển |
@@ -64,11 +66,12 @@ Cần Node 18+ và Playwright có Chromium (`npm i -D playwright && npx playwrig
 node tests/run-all.cjs
 ```
 
-Có 5 bộ kiểm thử, mỗi bộ chạy ở khổ máy tính (1280 px) và điện thoại (390 px):
+Có 6 bộ kiểm thử, mỗi bộ chạy ở khổ máy tính (1280 px) và điện thoại (390 px):
 
 | Bộ kiểm thử | Phạm vi |
 |---|---|
 | `giapha-clan` | Nhúng cây gia phả, đồng bộ từ điển họ Lê từ Drive (giả lập), cây triều Lê |
+| `guide` | Trang hướng dẫn: lời chào lần đầu, đủ 5 nhóm nội dung, đọc to, nút ? |
 | `english-course` | Đủ 5 bước của một bài, luyện tập, nói với Claude (giả lập và kịch bản dự phòng), ôn thẻ |
 | `import-and-history` | Nhập gia phả từ ảnh và văn bản, nối cha mẹ và vợ chồng, phát hiện trùng, dòng thời gian song song lịch sử |
 | `parallel-tabs` | Đủ 8 tab của cả hai phần, menu + với 6 cách nhập |
