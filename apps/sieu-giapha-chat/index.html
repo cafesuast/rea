@@ -486,6 +486,19 @@ label.btn{cursor:pointer}
 .hbody{gap:4px}.hg{display:flex;gap:12px;align-items:flex-start;padding:10px 4px;border-bottom:1px solid var(--line)}.hg:last-child{border-bottom:0}
 .hg>div{flex:1;min-width:0}.hg b{font-size:15px}.hg p{margin:4px 0 0;line-height:1.6;font-size:14.5px}.hgi{font-size:24px;line-height:1;width:32px;text-align:center;flex:none}
 .ghi{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:8px 12px;flex:none;padding:10px 12px;border-radius:12px;background:var(--accent-soft);border:1px solid var(--line);font-size:14px}.ghi>div{flex:1;min-width:160px}
+.acctchip{display:flex;align-items:center;gap:6px;min-height:36px;padding:3px 10px 3px 3px;border-radius:999px;background:var(--panel-2);font-size:13px;font-weight:600;max-width:180px}
+.acctchip .av{width:30px;height:30px;border-radius:50%;object-fit:cover;flex:none;display:grid;place-items:center}.acctchip .an{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.acctchip:empty{display:none}
+.upmenu{position:absolute;right:12px;top:58px;width:min(360px,calc(100vw - 24px));max-height:calc(100vh - 140px);overflow:auto}
+.upmenu .mi{text-decoration:none;color:inherit}.upmenu .mi small{display:inline;margin-left:4px}.upf{display:flex;gap:6px;padding:2px 6px}.upf input{flex:1;min-width:0;min-height:36px;border:1px solid var(--line);border-radius:10px;padding:0 10px;background:var(--panel);color:var(--ink)}
+.upmenu .upf button{width:auto}.upmenu .chips .chip{width:auto}
+#upRes{padding:4px 0}.acard{flex-direction:row;align-items:center;gap:14px}.acard h3{margin:0}.avl{width:56px;height:56px;border-radius:50%;flex:none}
+.botst{display:flex;gap:10px;flex-wrap:wrap;align-items:stretch}.botst>div{flex:1 1 180px}.botst small{display:block;color:var(--muted);font-size:12px}.botst>span{flex:0 0 auto;min-width:76px;text-align:center;background:var(--panel-2);border-radius:12px;padding:8px}.botst>span b{font-size:20px}
+.botlog{font:12.5px/1.6 ui-monospace,monospace;background:var(--panel-2);border-radius:10px;padding:8px 10px;max-height:240px;overflow:auto}
+.prop{border:1px solid var(--line);border-radius:12px;padding:10px;display:flex;flex-direction:column;gap:4px}.prop.merged{border-color:var(--accent)}.prop.rejected{opacity:.6}
+.prop .ph{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.prop .pst{margin-left:auto;font-size:12px;color:var(--muted)}.prop p{margin:0}.prop small{color:var(--muted)}.prop .vt.ok{color:#1a8f4a}.prop .vt.no{color:#c0392b}
+.botnet{display:flex;flex-direction:column;gap:8px}.bn{display:flex;gap:10px;align-items:center}.bn img{width:36px;height:36px;border-radius:50%}.bn small{display:block;color:var(--muted)}.bn.me b{color:var(--accent)}
+.main{position:relative}
+@media (max-width:760px){.top{gap:4px}.top .icon-btn{width:32px;min-width:32px;height:32px}.acctchip .an{display:none}.acctchip{padding:1px;min-height:32px}.acctchip .av{width:28px;height:28px}.top [data-view="look"].icon-btn{display:none}}
 </style>
 
 <div class="app" id="app">
@@ -493,6 +506,7 @@ label.btn{cursor:pointer}
     <div class="brand"><span class="mark">GP</span><b>Siêu GiaPha chat<small>Từ điển · Gia phả · Lịch sử</small></b>
       <button class="icon-btn" id="hideNav" title="Thu gọn" aria-label="Thu gọn thanh bên"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M9 4v16"/></svg></button></div>
     <div id="secnav"></div>
+    <button class="nav acctgo" data-view="acct"><span class="ni" aria-hidden="true">👤</span>Tài khoản & Bot</button>
     <button class="nav helpgo" data-view="help"><span class="ni" aria-hidden="true">📘</span>Hướng dẫn · nghe đọc</button>
     <button class="add-main" data-add><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>Thêm từ mới</button>
     <div class="stats" id="stats"></div>
@@ -510,10 +524,13 @@ label.btn{cursor:pointer}
       <button class="icon-btn" id="showNav" title="Menu" aria-label="Mở menu"><svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
       <h1 id="viewTitle">Trò chuyện</h1>
       <div class="secsw" role="tablist" aria-label="Phần chính"><button data-sec="gp">🌳 Gia phả</button><button data-sec="td">📖 Từ điển</button></div><span class="env-pill" id="envPill"></span>
+      <button class="icon-btn" id="upBtn" title="Làm mới, nâng cấp, AI mở rộng + tìm kiếm" aria-label="Làm mới, nâng cấp, AI mở rộng và tìm kiếm" aria-haspopup="menu">✨</button>
+      <button class="acctchip" id="acctChip" aria-label="Tài khoản và bot"></button>
       <button class="icon-btn" id="helpBtn" title="Hướng dẫn" aria-label="Hướng dẫn sử dụng" style="font-weight:700;font-size:16px">?</button>
       <button class="icon-btn" id="a11yBtn" title="Trợ năng và môi trường" aria-label="Trợ năng và môi trường"><svg viewBox="0 0 24 24"><circle cx="12" cy="4.5" r="1.8"/><path d="M5 8.5l7 1.5 7-1.5M12 10v4.5M12 14.5l-3.5 6M12 14.5l3.5 6"/></svg></button>
       <button class="icon-btn" data-view="look" title="Tra cứu" aria-label="Tra cứu"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg></button>
     </header>
+    <div class="menu upmenu" id="upMenu" role="menu" hidden></div>
     <div class="ghi" id="guideHi" hidden role="note"><span aria-hidden="true">👋</span><div><b>Lần đầu dùng?</b> Xem hướng dẫn 5 bước, có đọc to.</div><button class="btn primary sm helpgo">📘 Xem</button><button class="btn ghost sm" id="ghiNo">Để sau</button></div>
 
     <section class="view" id="v-chat">
@@ -581,6 +598,7 @@ label.btn{cursor:pointer}
     <section class="view" id="v-giapha" hidden><div class="gpbar" id="gpbar"></div><div id="gpbox"></div><div class="gpover" id="gpImp" hidden></div><div class="gpover" id="gpHist" hidden></div><div class="gpover" id="gpEasy" hidden></div></section>
     <section class="view" id="v-easy" hidden><div class="easy" id="easy"></div></section>
     <section class="view" id="v-help" hidden><div class="easy" id="help"></div></section>
+    <section class="view" id="v-acct" hidden><div class="easy" id="acct"></div></section>
     <section class="view" id="v-lessons" hidden><div class="easy" id="lessons"></div></section>
     <section class="view" id="v-roots" hidden><div class="easy" id="roots"></div></section>
     <section class="view" id="v-plan" hidden><div class="plan" id="plan"></div></section>
@@ -697,7 +715,7 @@ async function initStore(){
   const fallback=()=>{if(resolved)return;resolved=true;mode="local";people=(OPT.demo===false?[]:DEMO).map(p=>({...p,spouseIds:[...p.spouseIds]}));changed()};
   const timer=setTimeout(fallback,10000);
   try{
-    db=window.claude?.use?await window.claude.use("db"):null;
+    db=OPT.noDb?null:(window.claude?.use?await window.claude.use("db"):null);
     if(!db){clearTimeout(timer);fallback();return}
     col=db.collection(COL);
     col.onSnapshot(snap=>{clearTimeout(timer);resolved=true;mode="db";people=snap.docs.map(d=>({...d.data(),id:d.id}));changed()},err=>{clearTimeout(timer);if(!resolved){col=null;fallback()}else toast("Mất kết nối dữ liệu: "+err.message)});
@@ -1168,7 +1186,7 @@ async function initStore(){
 
 /* ===== Giao diện ===== */
 let view=ls.get("view","giapha"),sel=null,letter=ls.get("letter",""),limit=200;
-const titles={chat:"Trò chuyện",giapha:"Gia phả",look:"Tra cứu",review:"Kiểm duyệt",import:"Nhập dữ liệu",easy:"Dễ dùng · Tiếng Anh giao tiếp",lessons:"Bài học tiếng Việt",roots:"Dòng họ & Lịch sử",plan:"Kế hoạch 1–2 triệu từ",notebook:"Sổ tay của tôi",help:"Hướng dẫn"};
+const titles={chat:"Trò chuyện",giapha:"Gia phả",look:"Tra cứu",review:"Kiểm duyệt",import:"Nhập dữ liệu",easy:"Dễ dùng · Tiếng Anh giao tiếp",lessons:"Bài học tiếng Việt",roots:"Dòng họ & Lịch sử",plan:"Kế hoạch 1–2 triệu từ",notebook:"Sổ tay của tôi",help:"Hướng dẫn",acct:"Tài khoản & Bot"};
 const VIEWS=Object.keys(titles);
 function changed(){words.sort((a,b)=>collT.compare(a.w,b.w));byIdMap=new Map(words.map(w=>[w.id,w]));if(sel&&!byId(sel))closeDetail();renderSide();renderView();if(sel)renderDetail()}
 function renderSide(){
@@ -1179,8 +1197,8 @@ function renderSide(){
   $("#cAll").textContent=n.toLocaleString("vi-VN");$("#cRaw").textContent=(n-ok).toLocaleString("vi-VN");
   $("#syncState").textContent=mode==="db"?"● Đã đồng bộ":mode==="local"?"Bản xem thử":"Đang tải...";
 }
-function show(v){view=v;ls.set("view",v);if(!["giapha","roots"].includes(v))ls.set("lastTu",v);if(!VIEWS.includes(v))v=view="chat";VIEWS.forEach(k=>$("#v-"+k).hidden=k!==v);$$("[data-view]").forEach(b=>b.classList.toggle("on",b.dataset.view===v));$("#viewTitle").innerHTML=esc(titles[v])+(v==="chat"?"<small>Hỏi nghĩa, cách dùng, so sánh vùng miền và thế hệ</small>":"");$("#app").classList.remove("drawer");renderTab();renderView();if(v==="help")$("#viewTitle").textContent="📘 Hướng dẫn";else{const s=curSec(),k=curSlot();$("#viewTitle").textContent=(s==="gp"?"Gia phả · ":"Từ điển · ")+SEC[s].slots.find(x=>x[0]===k)[2]}}
-function renderView(){({chat:renderChat,look:renderLook,review:renderReview,import:()=>{},easy:renderEasy,lessons:renderLessons,roots:renderRoots,giapha:renderGiapha,plan:renderPlan,notebook:renderNotebook,help:renderHelp})[view]()}
+function show(v){view=v;ls.set("view",v);if(!["giapha","roots"].includes(v))ls.set("lastTu",v);if(!VIEWS.includes(v))v=view="chat";VIEWS.forEach(k=>$("#v-"+k).hidden=k!==v);$$("[data-view]").forEach(b=>b.classList.toggle("on",b.dataset.view===v));$("#viewTitle").innerHTML=esc(titles[v])+(v==="chat"?"<small>Hỏi nghĩa, cách dùng, so sánh vùng miền và thế hệ</small>":"");$("#app").classList.remove("drawer");renderTab();renderView();if(v==="help"||v==="acct")$("#viewTitle").textContent=v==="help"?"📘 Hướng dẫn":"👤 Tài khoản & Bot";else{const s=curSec(),k=curSlot();$("#viewTitle").textContent=(s==="gp"?"Gia phả · ":"Từ điển · ")+SEC[s].slots.find(x=>x[0]===k)[2]}}
+function renderView(){({chat:renderChat,look:renderLook,review:renderReview,import:()=>{},easy:renderEasy,lessons:renderLessons,roots:renderRoots,giapha:renderGiapha,plan:renderPlan,notebook:renderNotebook,help:renderHelp,acct:renderAcct})[view]()}
 function fmt(v){return esc(v).replace(/(^|[\s(·,;:])\/([^/\s<>][^/<>]*?)\//g,'$1<span class="ipa">/$2/</span>').replace(/`(Fact|Inference|Unknown)`/g,'<span class="lab $1">$1</span>').replace(/\*([^*<>]+)\*/g,"<i>$1</i>").replace(/`([^`<>]+)`/g,"<code>$1</code>")}
 function badges(w){return`${w.level===10?'<span class="tag t10">10 tầng</span>':w.level===7?'<span class="tag">7 tầng</span>':'<span class="tag">INDEX</span>'}${w.status!=="RAW"?'<span class="tag ok">Đã duyệt</span>':""}${w.unk?`<span class="tag unk">${w.unk} Unknown</span>`:""}`}
 
@@ -2233,7 +2251,7 @@ schInit();
 /* ===== Siêu GiaPha: gia phả đầy đủ (GIAPHA chat nhúng) + Từ điển gia phả họ Lê (Drive) ===== */
 const CLAN_TIERS=["Tên chi phái & nhà thờ họ","Địa danh gốc & di cư","Thủy tổ & niên đại","Thế thứ & chữ lót","Nhân vật lịch sử","Di tích, từ đường, sắc phong","Văn bản gia phả Hán Nôm","Liên kết chi phái, hội đồng họ","Hải ngoại","Nguồn & cơ hội AILA"];
 let clanDocs={},clanCol=null,lineCol=null,lineCount=0,clanBusy=false,clanMsg="",cq="",ctype="",cshow=60;
-let gpSrc=ls.get("gpsrc","fam"),gpApi=null,gpMounted="";
+let gpSrc=ls.get("gpsrc2","mine"),gpApi=null,gpMounted="";
 function clanRows(){return Object.values(clanDocs).filter(d=>d.kind==="index").sort((a,b)=>collT.compare(a.title,b.title)||(a.part||0)-(b.part||0)).flatMap(d=>d.rows||[])}
 function clanEntries(){return Object.values(clanDocs).filter(d=>d.kind==="full").sort((a,b)=>collT.compare(a.title,b.title)||(a.part||0)-(b.part||0)).flatMap(d=>d.entries||[])}
 function clanParseIndex(text){const rows=[];unescapeMd(text).split("\n").forEach(l=>{const c=l.split("|").map(s=>s.trim());if(c.length>=7&&/^\d+$/.test(c[0]))rows.push(c.slice(0,7))});return rows}
@@ -2301,19 +2319,21 @@ function rootsClan(){const rows=clanRows(),ents=clanEntries(),f=fold(cq).trim(),
 
 /* ---- view Gia phả: GIAPHA chat đầy đủ trong shadow DOM ---- */
 function gpBar(){const b=$("#gpbar");if(!b)return;
-  b.innerHTML=`<div class="seg" role="tablist" aria-label="Nguồn gia phả"><button data-gpsrc="fam" class="${gpSrc==="fam"?"on":""}">Gia phả gia đình</button><button data-gpsrc="le" class="${gpSrc==="le"?"on":""}">Cây triều Lê${lineCount?` (${lineCount})`:""}</button></div>
-  <span class="src">${gpSrc==="le"?(lineCount?"Dữ liệu lịch sử từ Drive (Wikidata). Xem và tra cứu, nên sửa ở tệp gốc.":clanBusy?esc(clanMsg):"Chưa có dữ liệu."):"Cây sự sống của gia đình: nhập, sửa, ngày giỗ, xưng hô, nhập/xuất GEDCOM."}</span>
+  b.innerHTML=`<div class="seg" role="tablist" aria-label="Nguồn gia phả"><button data-gpsrc="mine" class="${gpSrc==="mine"?"on":""}">🔒 Gia phả riêng</button><button data-gpsrc="fam" class="${gpSrc==="fam"?"on":""}">👪 Dòng họ chung</button><button data-gpsrc="le" class="${gpSrc==="le"?"on":""}">Cây triều Lê${lineCount?` (${lineCount})`:""}</button></div>
+  <span class="src">${gpSrc==="le"?(lineCount?"Dữ liệu lịch sử từ Drive (Wikidata). Xem và tra cứu, nên sửa ở tệp gốc.":clanBusy?esc(clanMsg):"Chưa có dữ liệu."):gpSrc==="mine"?(acct.uid?"Chỉ mình bạn xem được. Chia sẻ lên dòng họ sẽ ẩn 4 đời gần nhất.":"Chế độ khách: đăng nhập trong Claude để lưu gia phả riêng."):"Ai được chia sẻ app đều xem được. Chỉ ghi người đã mất, không ghi 4 đời gần nhất."}</span>
+  ${gpSrc==="mine"&&acct.uid?`<button class="btn ghost sm" id="gpShare">👪 Chia sẻ lên dòng họ</button>`:""}${gpSrc==="fam"?`<button class="btn ghost sm" id="gpScan">🛡️ Rà soát riêng tư</button>`:""}
   ${gpSrc==="le"&&!lineCount?`<button class="btn primary sm" id="clanSync" ${clanBusy?"disabled":""}>Đồng bộ từ Drive</button>`:""}
   <span class="gpacts"><button class="btn ghost sm" data-gphopen>📜 Song song lịch sử</button><button class="btn ghost sm" data-rtabgo="clan">Họ Lê</button></span>`}
 function renderGiapha(){gpBar();const box=$("#gpbox");if(gpMounted===gpSrc&&box.firstChild)return;
+  if(gpSrc==="mine"&&!acct.ready){box.innerHTML=`<p class="src" style="padding:16px">🔐 Đang đăng nhập...</p>`;return}
   gpMounted=gpSrc;box.innerHTML="";const host=document.createElement("div");host.className="gphost";box.appendChild(host);
   if(!window.GPmount){host.textContent="Không tải được mô-đun gia phả.";return}
   const R=host.attachShadow({mode:"open"});R.innerHTML=`<style>${GPCSS}.gstrip .gt{display:none}.gstrip{justify-content:flex-end}.six{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px;padding:2px 4px}.six button{display:flex!important;flex-direction:column;align-items:center;gap:2px;padding:8px 4px!important;border-radius:10px;font-size:12px;text-align:center}.six button span{font-size:20px}.six button:hover{background:var(--accent-soft)}</style>`+GPHTML;
-  try{gpApi=gpSrc==="le"?GPmount(R,"lineage_le","sgpl:",{demo:false}):GPmount(R,"people","sgp:",{});if(GP_SUB[gpSlot])gpApi.show(GP_SUB[gpSlot])}catch(e){console.error(e);host.textContent="Lỗi mô-đun gia phả: "+e.message}}
+  try{gpApi=gpSrc==="le"?GPmount(R,"lineage_le","sgpl:",{demo:false}):gpSrc==="mine"?GPmount(R,acct.uid?`data/users/${acct.uid}/fam/people`:"_local","sgpm:",{demo:false,noDb:!acct.uid}):GPmount(R,"people","sgp:",{});if(GP_SUB[gpSlot])gpApi.show(GP_SUB[gpSlot])}catch(e){console.error(e);host.textContent="Lỗi mô-đun gia phả: "+e.message}}
 document.addEventListener("click",e=>{const t=e.target;
   if(t.closest("#clanSync")){clanSync();return}
-  const gs=t.closest("[data-gpsrc]");if(gs){gpSrc=gs.dataset.gpsrc;ls.set("gpsrc",gpSrc);renderGiapha();return}
-  const gg=t.closest("[data-gpgo]");if(gg){gpSrc=gg.dataset.gpgo;ls.set("gpsrc",gpSrc);show("giapha");return}
+  const gs=t.closest("[data-gpsrc]");if(gs){gpSrc=gs.dataset.gpsrc;ls.set("gpsrc2",gpSrc);renderGiapha();return}
+  const gg=t.closest("[data-gpgo]");if(gg){gpSrc=gg.dataset.gpgo;ls.set("gpsrc2",gpSrc);show("giapha");return}
   const rg=t.closest("[data-rtabgo]");if(rg){rtab=rg.dataset.rtabgo;ls.set("rtab",rtab);show("roots");return}
   if(t.closest("#cmore")){cshow+=120;renderRoots();return}
   const ac=t.closest("[data-askclan]");if(ac){show("chat");send(`Theo hiểu biết lịch sử và gia phả, hãy giới thiệu ngắn về “${ac.dataset.askclan}” liên quan họ Lê ở Việt Nam: nguồn gốc, niên đại, nhân vật, di tích, văn bản liên quan. Ghi rõ chỗ nào là Fact, Inference hoặc Unknown, không bịa tên người hay số liệu.`);return}
@@ -2706,7 +2726,7 @@ function gphYear(s){const m=String(s||"").match(/(\d{3,4})(?!.*\d{3,4})/);return
 function gphEvents(){const P=(gpApi?.people||[]).filter(p=>p.name);const now=new Date().getFullYear();
   const fam=[];P.forEach(p=>{const b=gphYear(p.birth),d=gphYear(p.death);if(b)fam.push({y:b,k:"b",p});if(d)fam.push({y:d,k:"d",p})});
   const ys=fam.map(e=>e.y);const lo=ys.length?Math.min(...ys)-20:1900;
-  const hist=[...HIST.map(h=>({y:h[0],lab:h[1],t:h[2],d:h[3]})),...HIST2.map(h=>({y:h[0],lab:h[1],t:h[2],d:h[3]}))].filter(h=>h.y>=lo&&h.y<=now).map(h=>({...h,k:"h"}));
+  const hist=[...HIST.map(h=>({y:h[0],lab:h[1],t:h[2],d:h[3]})),...HIST2.map(h=>({y:h[0],lab:h[1],t:h[2],d:h[3]})),...(window.HISTV||[]).filter(h=>+h.year).map(h=>({y:+h.year,lab:h.lab||String(h.year),t:h.title+" ✓",d:(h.desc||"")+" (đã được các bot kiểm chứng)"}))].filter(h=>h.y>=lo&&h.y<=now).map(h=>({...h,k:"h"}));
   const alive=y=>P.map(p=>{const b=gphYear(p.birth),d=gphYear(p.death);return b&&b<=y&&(!d||d>=y)&&(d||y-b<105)?{p,age:y-b}:null}).filter(Boolean).sort((a,b)=>b.age-a.age);
   return{all:[...fam,...hist].sort((a,b)=>a.y-b.y||(a.k==="h"?-1:1)),alive,P,lo}}
 function renderGph(){const box=$("#gpHist");if(!box)return;box.hidden=!gph.open;if(!gph.open)return;
@@ -2738,7 +2758,7 @@ const TD_VIEW={chat:"chat",view:"look",list:"review",cal:"plan",imp:"import",lea
 const GP_SUB={chat:"chat",view:"tree",list:"list",cal:"gio"};
 let gpSlot=ls.get("gpSlot","chat"),gpe={open:false};
 function curSec(){return["giapha","roots"].includes(view)?"gp":"td"}
-function curSlot(){if(view==="help")return"help";if(view==="roots")return"learn";if(view==="giapha")return gpSlot;return Object.keys(TD_VIEW).find(k=>TD_VIEW[k]===view)||"chat"}
+function curSlot(){if(view==="help"||view==="acct")return view;if(view==="roots")return"learn";if(view==="giapha")return gpSlot;return Object.keys(TD_VIEW).find(k=>TD_VIEW[k]===view)||"chat"}
 function sixBar(ctx,compact){return`<div class="six ${compact?"sm":""}" role="group" aria-label="6 cách nhập liệu">${SIX.map(([k,i,l])=>`<button data-six="${ctx}:${k}"><span aria-hidden="true">${i}</span>${l}</button>`).join("")}</div>`}
 function sixMenuHTML(ctx){return`<div class="label">Nhập liệu · 6 cách</div><div class="six menu6">${SIX.map(([k,i,l])=>`<button data-v="six:${k}"><span aria-hidden="true">${i}</span>${l}</button>`).join("")}</div><div class="sep"></div>`}
 function renderNav(){const side=$("#secnav");if(side)side.innerHTML=["gp","td"].map((s,n)=>`<div class="navh"><span>${n+1}</span>${SEC[s].name}</div>${SEC[s].slots.map(([k,i,l,c])=>`<button class="nav" data-slot="${s}:${k}"><span class="ni" aria-hidden="true">${i}</span>${esc(l)}${c?`<span class="count" id="${c}">0</span>`:""}</button>`).join("")}`).join("");
@@ -2865,7 +2885,204 @@ document.addEventListener("click",e=>{const t=e.target;
   if(t.closest("#ghiNo")){ls.set("guideSeen",1);$("#guideHi").hidden=true;return}});
 if(!ls.get("guideSeen"))$("#guideHi").hidden=false;
 
-if(!GP_SUB[gpSlot])gpSlot="chat";renderNav();
+/* ===== Tài khoản · mỗi tài khoản một bot · bot trao đổi thư viện ===== */
+const BOT_NEED=2; /* số bot khác cần xác nhận trước khi đưa vào thư viện chung */
+const BOT_FIELDS=["Đời sống hằng ngày","Gia đình, họ hàng","Ẩm thực","Giáo dục","Y tế, sức khỏe","Công nghệ","Kinh tế, công việc","Văn hóa, lễ tết","Thiên nhiên","Pháp luật, hành chính"];
+let acct={uid:null,me:null,user:null,db:null,bots:[],props:[],histv:[],running:false,log:[],canEdit:false,ready:false};
+window.HISTV=[];
+const today=()=>new Date().toISOString().slice(0,10);
+const myBot=()=>acct.bots.find(b=>b.id===acct.uid)||null;
+async function acctInit(){
+  try{acct.user=window.claude?.use?await window.claude.use("user"):null;acct.db=window.claude?.use?await window.claude.use("db"):null;
+    if(acct.user){acct.uid=await acct.user.id().catch(()=>null);acct.me=await acct.user.me().catch(()=>null);acct.canEdit=!!acct.me?.canEdit}}catch{}
+  acct.ready=true;renderAcctChip();
+  if(gpSrc==="mine"&&view==="giapha"){gpMounted=null;renderGiapha()}
+  if(view==="acct")renderAcct();
+  if(!acct.db)return;
+  const on=(q,f)=>{try{q().onSnapshot(f,()=>{})}catch{}};
+  on(()=>acct.db.collection("histv"),s=>{acct.histv=s.docs.map(d=>({...d.data(),id:d.id}));window.HISTV=acct.histv;if(typeof gph!=="undefined"&&gph.open)renderGph()});
+  on(()=>acct.db.collection("botx").orderBy("at","desc").limit(300),s=>{acct.props=s.docs.map(d=>({...d.data(),id:d.id}));if(view==="acct")renderAcct();renderAcctChip()});
+  on(()=>acct.db.collection("bots"),s=>{acct.bots=s.docs.map(d=>({...d.data(),id:d.id}));if(view==="acct")renderAcct();renderAcctChip()});
+  if(acct.uid)setTimeout(botAuto,6000);
+}
+function renderAcctChip(){const c=$("#acctChip");if(!c)return;
+  if(!acct.ready){c.textContent="";return}
+  if(!acct.uid){c.innerHTML=`<span class="av">👤</span><span class="an">Khách</span>`;c.title="Chưa đăng nhập: mở trang trong Claude bằng tài khoản của bạn";return}
+  const b=myBot();const pend=acct.props.filter(p=>p.status==="pending"&&p.by!==acct.uid&&!(p.votes||{})[acct.uid]).length;
+  c.innerHTML=`<img class="av" alt="" src="${esc(acct.me?.avatarUrl||"")}"><span class="an">${b?"🤖 ":""}${esc(acct.me?.name||"Tài khoản")}</span>${pend?`<span class="count">${pend}</span>`:""}`;c.title="Tài khoản và bot của bạn"}
+function botName(b,ps){return b?.nick||("Bot của "+(ps?.[b?.id]?.name||"một thành viên"))}
+async function botCreate(){if(!acct.db||!acct.uid){toast("Mở trang trong Claude và đăng nhập để tạo bot.");return}
+  const nick=($("#botNick")?.value||"").trim().slice(0,40);const focus=$$("#botFocus input:checked").map(x=>x.value);
+  try{await acct.db.doc("bots/"+acct.uid).set({nick,focus:focus.length?focus:["word","event"],auto:true,created:new Date().toISOString(),lastRun:"",stats:{p:0,v:0,m:0},log:[]});toast("Đã tạo bot của bạn")}
+  catch(e){toast(e?.code==="invalid_argument"?"Tài khoản của bạn chỉ có quyền xem, chưa tạo được bot.":"Chưa tạo được bot: "+(e?.message||e))}}
+async function botSet(d){if(!acct.db||!acct.uid||!myBot())return;try{await acct.db.doc("bots/"+acct.uid).update(d)}catch(e){toast("Chưa lưu được: "+(e?.message||e))}}
+async function botAuto(){const b=myBot();if(!b||!b.auto||b.lastRun===today()||acct.running||!sample)return;
+  try{const pm=await window.claude.use("permissions");if(pm&&await pm.state("sample")!=="granted")return}catch{return}
+  runBot(true)}
+function botLog(t){acct.log.push(new Date().toLocaleTimeString("vi-VN",{hour:"2-digit",minute:"2-digit"})+" · "+t);if(view==="acct")renderAcct()}
+function propKey(p){return p.kind==="word"?"w:"+fold(p.data?.w||""):"e:"+(p.data?.year||"")+":"+fold(p.data?.title||"").slice(0,40)}
+function histAll(){return[...HIST.map(h=>({year:h[0],title:h[2]})),...HIST2.map(h=>({year:h[0],title:h[2]})),...acct.histv]}
+async function runBot(auto){
+  if(acct.running)return;if(!sample){toast("Bot cần Claude: mở trang trong Claude và cho phép dùng Claude.");return}
+  if(!acct.db||!acct.uid||!myBot()){toast("Hãy tạo bot trước.");return}
+  acct.running=true;acct.log=[];const b=myBot();const st={p:0,v:0,m:0};botLog(auto?"Tự chạy cập nhật hôm nay":"Bắt đầu chạy");
+  try{
+    /* 1. Kiểm chứng đề xuất của các bot khác */
+    const todo=acct.props.filter(p=>p.status==="pending"&&p.by!==acct.uid&&!(p.votes||{})[acct.uid]).slice(0,6);
+    botLog(todo.length?`Kiểm chứng ${todo.length} đề xuất của bot khác`:"Không có đề xuất nào chờ kiểm chứng");
+    for(const p of todo){
+      const r=await sample.json(`Bạn là bot KIỂM CHỨNG độc lập của "Siêu GiaPha chat". Kiểm tra mục ${p.kind==="word"?"từ điển tiếng Việt":"sự kiện lịch sử Việt Nam"} sau có chính xác không:\n${JSON.stringify(p.data)}\nNguồn bot đề xuất ghi: ${p.data?.source||"không có"}\nChỉ trả "ok" khi chắc chắn đúng theo tri thức phổ biến và sử sách. Sai năm, sai nghĩa, sai tên, hoặc có thông tin về người đang sống thì trả "no". Không chắc thì "unsure".\nTrả JSON: {"verdict":"ok"|"no"|"unsure","label":"Fact"|"Inference"|"Unknown","note":"tối đa 30 từ, nêu chỗ sai nếu có"}`,{modelTier:"complex",cache:false});
+      const v=["ok","no","unsure"].includes(r?.verdict)?r.verdict:"unsure";
+      await acct.db.doc("botx/"+p.id).update({votes:{[acct.uid]:{v,label:String(r?.label||"Unknown").slice(0,12),note:String(r?.note||"").slice(0,300),at:new Date().toISOString()}}});
+      st.v++;botLog(`${v==="ok"?"✓ Đúng":v==="no"?"✗ Sai":"? Chưa chắc"}: ${p.kind==="word"?p.data.w:p.data.year+" "+p.data.title}`)}
+    /* 2. Đưa vào thư viện các mục đủ xác nhận */
+    st.m+=await botMergeReady();
+    /* 3. Đề xuất mục mới cho các bot khác kiểm */
+    const focus=b.focus||["word","event"];const have=new Set(acct.props.map(propKey));
+    if(focus.includes("word")){const field=BOT_FIELDS[(new Date().getDate()+acct.uid.length)%BOT_FIELDS.length];
+      const ex=words.filter(w=>!w.domain||w.domain.includes(field.split(",")[0])).slice(0,150).map(w=>w.w).join(", ");
+      botLog(`Đề xuất từ mới, lĩnh vực ${field}`);
+      const r=await sample.json(`Bạn là bot BIÊN SOẠN của Siêu Từ Điển Việt–Anh. Đề xuất 3 từ tiếng Việt thông dụng, có thật, thuộc lĩnh vực "${field}", không trùng các từ: ${ex||"(chưa có)"}.\nMỗi từ gồm: w, pos (danh từ/động từ/tính từ...), meaning (ngắn, chính xác), en (tiếng Anh), example (một câu ví dụ tự nhiên), source (tên một từ điển uy tín, ví dụ "Từ điển tiếng Việt, Hoàng Phê"). Không bịa từ, không bịa nguồn.\nTrả JSON {"items":[...]}`,{modelTier:"default",cache:false});
+      for(const it of (r?.items||[]).slice(0,3)){if(!it?.w||!it?.meaning)continue;const d={w:String(it.w).trim(),pos:it.pos||"",meaning:it.meaning,en:it.en||"",example:it.example||"",domain:field,source:it.source||""};
+        if(byId(wid(d.w))||have.has(propKey({kind:"word",data:d})))continue;await botPropose("word",d);st.p++}}
+    if(focus.includes("event")){const H=histAll();const per=[[1000,1400],[1400,1700],[1700,1858],[1858,1945],[1945,1975],[1975,2000],[2000,2025]];
+      const cnt=per.map(([a,z])=>H.filter(h=>h.year>=a&&h.year<z).length);const k=cnt.indexOf(Math.min(...cnt));const [a,z]=per[k];
+      botLog(`Đề xuất sự kiện lịch sử ${a}–${z}`);
+      const r=await sample.json(`Bạn là bot SỬ HỌC của Siêu GiaPha chat. Đề xuất 2 sự kiện lịch sử Việt Nam có thật, được sử sách ghi rõ, trong giai đoạn ${a}–${z}, không trùng: ${H.filter(h=>h.year>=a&&h.year<z).map(h=>h.year+" "+h.title).join("; ")||"(chưa có)"}.\nMỗi sự kiện: year (số), lab (ngày tháng năm như sử ghi), title (ngắn), desc (1–2 câu), source (URL bài Wikipedia tiếng Việt). Không nêu người đang sống. Không bịa.\nTrả JSON {"items":[...]}`,{modelTier:"default",cache:false});
+      for(const it of (r?.items||[]).slice(0,2)){const y=+it?.year;if(!y||!it.title)continue;const d={year:y,lab:it.lab||String(y),title:it.title,desc:it.desc||"",source:it.source||""};
+        if(have.has(propKey({kind:"event",data:d}))||H.some(h=>h.year===y&&fold(h.title)===fold(d.title)))continue;await botPropose("event",d);st.p++}}
+    const s0=b.stats||{p:0,v:0,m:0};
+    await botSet({lastRun:today(),stats:{p:(s0.p||0)+st.p,v:(s0.v||0)+st.v,m:(s0.m||0)+st.m},log:acct.log.slice(-20)});
+    botLog(`Xong: kiểm ${st.v}, đề xuất ${st.p}, đưa vào thư viện ${st.m}`);
+  }catch(e){botLog("Dừng: "+(e?.code==="not_granted"?"chưa cho phép dùng Claude":e?.message||e));if(e?.code==="rate_limited")botLog("Claude đang bận, thử lại sau.")}
+  acct.running=false;if(view==="acct")renderAcct()}
+async function botPropose(kind,data){const id="x"+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+  await acct.db.doc("botx/"+id).set({kind,data,by:acct.uid,at:new Date().toISOString(),status:"pending",votes:{}});botLog(`Đề xuất: ${kind==="word"?data.w:data.year+" "+data.title}`)}
+function propTally(p){const vs=Object.entries(p.votes||{}).filter(([u])=>u!==p.by).map(([,v])=>v);return{ok:vs.filter(v=>v.v==="ok").length,no:vs.filter(v=>v.v==="no").length,un:vs.filter(v=>v.v==="unsure").length,n:vs.length}}
+async function botMerge(p,by){
+  if(p.kind==="word"){await importEntries([{w:p.data.w,pos:p.data.pos,meaning:p.data.meaning,en:p.data.en,example:p.data.example,domain:p.data.domain,note:`Bot đề xuất, ${by}. Nguồn: ${p.data.source||"Unknown"}`,src:"bot"}],()=>{},()=>{})}
+  else await acct.db.doc("histv/"+p.id).set({year:p.data.year,lab:p.data.lab,title:p.data.title,desc:p.data.desc,source:p.data.source,ok:by,at:new Date().toISOString()});
+  await acct.db.doc("botx/"+p.id).update({status:"merged",mergedAt:new Date().toISOString(),mergedBy:by})}
+async function botMergeReady(){let n=0;
+  for(const p of acct.props.filter(p=>p.status==="pending")){const t=propTally(p);
+    if(t.ok>=BOT_NEED&&!t.no){try{await botMerge(p,`${t.ok} bot xác nhận`);n++;botLog(`➕ Vào thư viện: ${p.kind==="word"?p.data.w:p.data.year+" "+p.data.title}`)}catch(e){botLog("Chưa đưa vào được: "+(e?.message||e))}}
+    else if(t.no>=2){try{await acct.db.doc("botx/"+p.id).update({status:"rejected"});botLog(`Loại: ${p.kind==="word"?p.data.w:p.data.title}`)}catch{}}}
+  return n}
+let acctTab=ls.get("acctTab","bot");
+async function renderAcct(){const el=$("#acct");if(!el)return;
+  const ids=[...new Set([...acct.bots.map(b=>b.id),...acct.props.map(p=>p.by)])];const ps=acct.user&&ids.length?await acct.user.profiles(ids).catch(()=>({})):{};
+  if(view!=="acct")return;const b=myBot();
+  const head=!acct.uid?`<div class="card"><h3>🔐 Đăng nhập</h3><p>Siêu GiaPha chat dùng chính <b>tài khoản Claude</b> của bạn để đăng nhập, không cần mật khẩu riêng. Hãy mở trang này trong Claude (claude.ai hoặc app Claude) bằng tài khoản của bạn.</p><p class="src">Đang ở chế độ khách: xem được dữ liệu mẫu, chưa có gia phả riêng và chưa có bot.</p></div>`
+   :`<div class="card acard"><img class="avl" alt="" src="${esc(acct.me?.avatarUrl||"")}"><div><h3>${esc(acct.me?.name||"Tài khoản của bạn")}</h3><p class="src">Đã đăng nhập bằng tài khoản Claude${acct.me?.isOwner?" · chủ app":acct.canEdit?" · biên tập viên":""}. Gia phả riêng 🔒 của bạn chỉ mình bạn xem được, kể cả chủ app cũng không đọc được.</p></div></div>`;
+  const tabs=[["bot","🤖 Bot của tôi"],["ex",`🔁 Trao đổi (${acct.props.filter(p=>p.status==="pending").length})`],["net",`🌐 Mạng bot (${acct.bots.length})`],["priv","🔒 Bảo mật"]];
+  let body="";
+  if(acctTab==="bot")body=!acct.uid?`<p class="src">Đăng nhập để có bot riêng.</p>`:!b?`<h3>Tạo bot của bạn</h3><p>Mỗi tài khoản có một bot. Mỗi ngày bot tự kiểm chứng đề xuất của bot khác, đề xuất mục mới, và đưa vào thư viện chung những mục đã được ít nhất ${BOT_NEED} bot khác xác nhận đúng.</p>
+     <label class="field">Tên bot (không bắt buộc)<input id="botNick" maxlength="40" placeholder="Ví dụ: Bot họ Lê Thanh Hóa"></label>
+     <div id="botFocus" class="chips" style="margin:0"><label class="chip"><input type="checkbox" value="word" checked> 📖 Từ điển</label><label class="chip"><input type="checkbox" value="event" checked> 📜 Lịch sử</label></div>
+     <div class="btns"><button class="btn primary" id="botCreate">🤖 Tạo bot</button></div>`
+   :`<div class="botst"><div><b>${esc(botName(b,ps))}</b><small>Lần chạy gần nhất: ${b.lastRun||"chưa chạy"}</small></div><span><b>${b.stats?.v||0}</b><small>đã kiểm</small></span><span><b>${b.stats?.p||0}</b><small>đã đề xuất</small></span><span><b>${b.stats?.m||0}</b><small>vào thư viện</small></span></div>
+     <div class="btns"><button class="btn primary" id="botRun" ${acct.running?"disabled":""}>${acct.running?"⏳ Bot đang chạy...":"▶️ Chạy bot ngay"}</button><label class="chip"><input type="checkbox" id="botAutoCk" ${b.auto?"checked":""}> Tự chạy mỗi ngày khi mở app</label></div>
+     <div class="chips" style="margin:0"><label class="chip"><input type="checkbox" data-bfocus="word" ${(b.focus||[]).includes("word")?"checked":""}> 📖 Từ điển</label><label class="chip"><input type="checkbox" data-bfocus="event" ${(b.focus||[]).includes("event")?"checked":""}> 📜 Lịch sử</label></div>
+     ${(acct.log.length?acct.log:b.log||[]).length?`<div class="botlog" aria-live="polite">${(acct.log.length?acct.log:b.log).slice(-14).map(l=>`<div>${esc(l)}</div>`).join("")}</div>`:""}
+     <p class="src">Bot chạy bằng Claude dưới tài khoản của bạn. Bot chỉ chạy khi bạn mở app; nếu đã cho phép dùng Claude, bot tự chạy một lần mỗi ngày.</p>`;
+  if(acctTab==="ex"){const L=acct.props.slice(0,80);body=`<p class="src">Cập nhật trực tiếp. Mỗi đề xuất cần ${BOT_NEED} bot khác xác nhận “đúng” và không bot nào báo “sai” thì mới vào thư viện. 2 bot báo sai thì bị loại.${acct.canEdit?" Bạn là biên tập viên nên có thể duyệt tay.":""}</p>`+(L.length?L.map(p=>{const t=propTally(p);return`<div class="prop ${p.status}"><div class="ph"><span class="pk">${p.kind==="word"?"📖":"📜"}</span><b>${esc(p.kind==="word"?p.data.w:p.data.year+" · "+p.data.title)}</b><span class="pst">${p.status==="merged"?"✓ Đã vào thư viện":p.status==="rejected"?"✗ Bị loại":`Chờ: ${t.ok}/${BOT_NEED} đúng${t.no?`, ${t.no} sai`:""}`}</span></div>
+      <p>${esc(p.kind==="word"?`${p.data.pos?"("+p.data.pos+") ":""}${p.data.meaning}${p.data.en?" · "+p.data.en:""}`:p.data.desc)}</p>
+      <small>Đề xuất bởi ${esc(botName(acct.bots.find(x=>x.id===p.by)||{id:p.by},ps))}${p.data.source?` · Nguồn: ${/^https?:/.test(p.data.source)?`<a href="${esc(p.data.source)}" target="_blank" rel="noopener">${esc(p.data.source.replace(/^https?:\/\//,"").slice(0,50))}</a>`:esc(p.data.source)}`:""}</small>
+      ${Object.entries(p.votes||{}).map(([u,v])=>`<small class="vt ${v.v}">${v.v==="ok"?"✓":v.v==="no"?"✗":"?"} ${esc(botName(acct.bots.find(x=>x.id===u)||{id:u},ps))}: ${esc(v.label)}${v.note?" · "+esc(v.note):""}</small>`).join("")}
+      ${p.status==="pending"&&acct.canEdit?`<div class="btns" style="margin:0"><button class="btn ghost sm" data-pok="${p.id}">✓ Duyệt vào thư viện</button><button class="btn ghost sm" data-pno="${p.id}">✗ Loại</button></div>`:""}</div>`}).join(""):`<p class="src">Chưa có đề xuất nào. Tạo bot và bấm “Chạy bot ngay” để bắt đầu.</p>`)}
+  if(acctTab==="net")body=acct.bots.length?`<div class="botnet">${acct.bots.map(x=>`<div class="bn ${x.id===acct.uid?"me":""}"><img alt="" src="${esc(ps[x.id]?.avatarUrl||"")}"><div><b>${esc(botName(x,ps))}${x.id===acct.uid?" (bạn)":""}</b><small>Chạy gần nhất: ${x.lastRun||"chưa"} · kiểm ${x.stats?.v||0} · đề xuất ${x.stats?.p||0} · vào thư viện ${x.stats?.m||0}</small></div></div>`).join("")}</div><p class="src">Mỗi người được chia sẻ app này có thể tạo bot. Càng nhiều bot, dữ liệu được kiểm chéo càng nhiều lần.</p>`:`<p class="src">Chưa có bot nào.</p>`;
+  if(acctTab==="priv")body=`<ul class="lul"><li><b>Gia phả riêng 🔒</b>: lưu trong vùng riêng của tài khoản bạn. Người khác, kể cả chủ app, không đọc được.</li><li><b>Gia phả dòng họ chung 👪</b>: ai được chia sẻ app cũng xem được. Khi bạn chia sẻ từ gia phả riêng, app <b>ẩn 4 đời gần nhất</b> và mọi người còn sống. Chỉ người đã mất ở các đời xa hơn được đưa lên, và chỉ kèm tên, năm sinh, năm mất, ngày giỗ, nơi an táng, quan hệ cha mẹ, vợ chồng.</li><li>Không đưa lên kho chung: số điện thoại, nơi ở, ghi chú riêng.</li><li>Bot không bao giờ đọc gia phả riêng của bạn. Bot chỉ trao đổi từ điển và sự kiện lịch sử.</li><li>Muốn gửi gia phả riêng cho người thân: dùng 💾 Sao lưu (.json) rồi người thân nhập vào gia phả riêng của họ.</li></ul>
+    <div class="btns"><button class="btn ghost" data-gpgo="mine">🔒 Mở gia phả riêng</button><button class="btn ghost" data-gpgo="fam">👪 Mở gia phả dòng họ</button></div>`;
+  el.innerHTML=head+`<div class="dtabs htabs" role="tablist">${tabs.map(([k,l])=>`<button data-atab="${k}" class="${acctTab===k?"on":""}">${l}</button>`).join("")}</div><div class="card">${body}</div>`}
+/* ---- Gia phả riêng → chia sẻ lên dòng họ (ẩn 4 đời) ---- */
+function gpDepths(P){const by=new Map(P.map(p=>[p.id,p])),memo=new Map();
+  const g=(p,d=0)=>{if(!p||d>60)return 1;if(memo.has(p.id))return memo.get(p.id);const par=by.get(p.fatherId)||by.get(p.motherId);let v;if(par)v=g(par,d+1)+1;else{const sp=(p.spouseIds||[]).map(x=>by.get(x)).find(x=>x&&(x.fatherId||x.motherId));v=sp?g(sp,d+1):1}memo.set(p.id,v);return v};
+  P.forEach(p=>g(p));return memo}
+function gpPublicSplit(P){const D=gpDepths(P);const max=Math.max(1,...D.values());const now=new Date().getFullYear();
+  const yr=s=>{const m=String(s||"").match(/(\d{4})(?!.*\d{4})/);return m?+m[1]:null};
+  const ok=[],hid=[];P.forEach(p=>{const dead=!!String(p.death||"").trim();const old=yr(p.birth)&&now-yr(p.birth)>110;
+    (D.get(p.id)<=max-4&&(dead||old)?ok:hid).push(p)});return{ok,hid,max}}
+async function gpShareClan(){if(gpSrc!=="mine"||!gpApi){toast("Mở gia phả riêng trước.");return}
+  const P=gpApi.people.filter(p=>p.name);const {ok,hid,max}=gpPublicSplit(P);
+  if(!ok.length){toast(`Chưa có ai đủ điều kiện: gia phả có ${max} đời, 4 đời gần nhất được ẩn.`);return}
+  if(!confirm(`Đưa ${ok.length} người đã mất (từ đời 1 đến đời ${max-4}) lên gia phả dòng họ chung?\n${hid.length} người thuộc 4 đời gần nhất hoặc còn sống sẽ được giữ kín.`))return;
+  const db=acct.db;if(!db){toast("Cần mở trong Claude.");return}
+  const fam=ls.get("famCode")||("f"+Math.random().toString(36).slice(2,8));ls.set("famCode",fam);const ids=new Set(ok.map(p=>p.id));const map=id=>id&&ids.has(id)?fam+"_"+id:"";
+  const KEEP=["name","gender","alias","birth","death","deathLunar","order","branch","birthPlace","burial","job"];let n=0;
+  for(const p of ok){const d={};KEEP.forEach(k=>{if(p[k])d[k]=p[k]});d.fatherId=map(p.fatherId);d.motherId=map(p.motherId);d.spouseIds=(p.spouseIds||[]).map(map).filter(Boolean);
+    try{await db.doc("people/"+fam+"_"+p.id).set(d);n++}catch(e){toast("Dừng: "+(e?.message||e));break}}
+  toast(`Đã đưa ${n} người lên gia phả dòng họ. Đã ẩn ${hid.length} người.`)}
+function gpPrivacyScan(){if(!gpApi)return[];const P=gpApi.people.filter(p=>p.name);const {hid}=gpPublicSplit(P);const ph=P.filter(p=>p.phone||p.residence&&!String(p.death||"").trim());return[...new Map([...hid,...ph].map(p=>[p.id,p])).values()]}
+async function gpMoveToMine(list){const db=acct.db;if(!db||!acct.uid){toast("Cần đăng nhập trong Claude.");return}
+  let n=0;for(const p of list){const {id,...d}=p;try{await db.doc(`data/users/${acct.uid}/fam/people/${id}`).set(d);await db.doc("people/"+id).delete();n++}catch(e){toast("Dừng: "+(e?.code==="invalid_argument"?"bạn không có quyền xóa ở gia phả chung":e?.message||e));break}}
+  toast(`Đã chuyển ${n} người vào gia phả riêng của bạn.`)}
+document.addEventListener("click",async e=>{const t=e.target;
+  if(t.closest("#acctChip")||t.closest(".acctgo")){show("acct");return}
+  const at=t.closest("[data-atab]");if(at){acctTab=at.dataset.atab;ls.set("acctTab",acctTab);renderAcct();return}
+  if(t.closest("#botCreate")){botCreate();return}
+  if(t.closest("#botRun")){runBot(false);return}
+  if(t.closest("#botAutoCk")){botSet({auto:t.checked});return}
+  const bf=t.closest("[data-bfocus]");if(bf){const f=new Set(myBot()?.focus||[]);bf.checked?f.add(bf.dataset.bfocus):f.delete(bf.dataset.bfocus);botSet({focus:[...f]});return}
+  const pk=t.closest("[data-pok]");if(pk){const p=acct.props.find(x=>x.id===pk.dataset.pok);if(p){try{await botMerge(p,"biên tập viên duyệt");toast("Đã đưa vào thư viện")}catch(er){toast("Chưa được: "+(er?.message||er))}}return}
+  const pn=t.closest("[data-pno]");if(pn){try{await acct.db.doc("botx/"+pn.dataset.pno).update({status:"rejected"})}catch{}return}
+  if(t.closest("#gpShare")){gpShareClan();return}
+  if(t.closest("#gpScan")){const L=gpPrivacyScan();if(!L.length){toast("Không thấy người còn sống hay thông tin riêng ở 4 đời gần nhất.");return}
+    if(confirm(`Có ${L.length} người thuộc 4 đời gần nhất, còn sống, hoặc có số điện thoại, nơi ở trong gia phả chung:\n${L.slice(0,12).map(p=>"• "+p.name).join("\n")}${L.length>12?"\n…":""}\n\nChuyển họ vào gia phả riêng 🔒 của bạn và xóa khỏi gia phả chung?`))gpMoveToMine(L);return}
+});
+
+/* ===== Nút Làm mới · Nâng cấp · AI mở rộng + tìm kiếm ở mọi trang ===== */
+function upItems(){const s=curSec(),k=curSlot(),it=[["refresh","🔄","Làm mới dữ liệu trang này"]];
+  if(view==="acct"){it.push(["bot","🤖","Cho bot chạy cập nhật ngay"]);return it}
+  if(view==="help")return it;
+  if(s==="td"){
+    if(k==="view"||k==="chat"){if(sel)it.push(["fill","✨","AI bổ sung chi tiết cho “"+(byId(sel)?.w||"")+"”"]);it.push(["drive","☁️","Lấy từ mới nhất từ Google Drive"])}
+    if(k==="list"||k==="cal"||k==="imp")it.push(["drive","☁️","Lấy từ mới nhất từ Google Drive"]);
+    if(k==="learn"&&typeof ln!=="undefined"&&ln)it.push(["deep","✨","AI soạn lại bài này chi tiết hơn"]);
+    it.push(["bot","🤖","Bot kiểm chứng, đề xuất từ mới"])}
+  else{
+    if(k==="learn")it.push(["clan","☁️","Đồng bộ gia phả họ Lê mới nhất từ Drive"]);
+    if(["chat","view","list","cal","more"].includes(k)){it.push(["gpcheck","✨","AI rà soát gia phả: thiếu sót, mâu thuẫn"]);it.push(["gphist","📜","Cập nhật dòng thời gian song song lịch sử"])}
+    if(gpSrc==="mine")it.push(["share","👪","Chia sẻ lên gia phả dòng họ (ẩn 4 đời)"]);
+    if(gpSrc==="fam")it.push(["scan","🛡️","Rà soát riêng tư gia phả chung"]);
+    it.push(["bot","🤖","Bot cập nhật sự kiện lịch sử đã kiểm chứng"])}
+  return it}
+function renderUp(){const m=$("#upMenu");if(!m)return;
+  m.innerHTML=`<div class="label">Cập nhật trang này</div>${upItems().map(([k,i,l])=>`<button class="mi" data-up="${k}"><span aria-hidden="true">${i}</span>${esc(l)}</button>`).join("")}<div class="sep"></div>
+  <div class="label">AI mở rộng + tìm kiếm</div><form id="upForm" class="upf"><input id="upQ" placeholder="${curSec()==="gp"?"Ví dụ: họ Lê ở Thanh Hóa thời Hậu Lê":"Ví dụ: từ “ạ” dùng thế nào"}" aria-label="Nội dung cần tìm"><button class="btn primary sm">🔎</button></form>
+  <div class="chips" style="margin:6px 0 0"><button class="chip" data-upq="lib">📚 Trong thư viện</button><button class="chip" data-upq="ai">✨ Hỏi AI mở rộng</button><button class="chip" data-upq="drive">☁️ Trong Google Drive</button></div><div id="upRes"></div>`}
+function upOpen(o){const m=$("#upMenu");if(!m)return;m.hidden=!o;if(o){renderUp();setTimeout(()=>$("#upQ")?.focus(),30)}}
+async function upDo(k){upOpen(false);
+  if(k==="refresh"){if(view==="giapha"){gpMounted=null;renderGiapha()}else renderView();renderSide?.();renderAcctChip();toast("Đã làm mới. Dữ liệu chung cập nhật trực tiếp khi có người sửa.");return}
+  if(k==="fill"&&sel){fillWithAI(sel);return}
+  if(k==="drive"){show("import");driveList();return}
+  if(k==="deep"&&typeof ln!=="undefined"&&ln){runDeep(ln);return}
+  if(k==="clan"){clanSync();return}
+  if(k==="bot"){if(!myBot()){acctTab="bot";show("acct");toast("Tạo bot trước nhé");return}acctTab="bot";show("acct");runBot(false);return}
+  if(k==="gpcheck"){gpAsk("Hãy rà soát gia phả hiện tại: chỉ ra người thiếu năm sinh, năm mất, cha mẹ; năm tháng mâu thuẫn (con sinh trước cha mẹ, mất trước khi sinh); người có thể bị trùng. Liệt kê ngắn gọn từng mục cần sửa.");return}
+  if(k==="gphist"){gph.open=true;if(view!=="giapha")show("giapha");renderGph();return}
+  if(k==="share"){gpShareClan();return}
+  if(k==="scan"){$("#gpScan")?.click()||document.getElementById("gpScan")?.click();if(!$("#gpScan")){const L=gpPrivacyScan();toast(L.length?`Có ${L.length} người cần chuyển vào gia phả riêng.`:"Gia phả chung ổn.")}return}}
+function gpAsk(q){goSlot("gp","chat");setTimeout(()=>{const R=$(".gphost")?.shadowRoot;const inp=R?.querySelector("#input");if(inp){inp.value=q;inp.dispatchEvent(new Event("input",{bubbles:true}));R.querySelector("#send")?.click()}},150)}
+async function upSearch(q,how){q=q.trim();if(!q){$("#upQ")?.focus();return}const out=$("#upRes");
+  if(how==="lib"){if(curSec()==="gp"&&gpApi){const f=fold(q);const P=gpApi.people.filter(p=>fold(p.name||"").includes(f)).slice(0,8);out.innerHTML=P.length?P.map(p=>`<button class="mi" data-uppp="${p.id}">👤 ${esc(p.name)} <small>${esc(gpApi.life?.(p)||"")}</small></button>`).join(""):`<p class="src">Không thấy trong gia phả.</p>`;return}
+    const L=search(q).slice(0,8);out.innerHTML=L.length?L.map(w=>`<button class="mi" data-upw="${w.id}">📖 ${esc(w.w)} <small>${esc(strip(w.meaning||"").slice(0,50))}</small></button>`).join(""):`<p class="src">Không thấy trong thư viện. Thử “Hỏi AI mở rộng”.</p>`;return}
+  if(how==="drive"){out.innerHTML=`<p class="src">Đang tìm trong Drive...</p>`;const m=await getMcp();if(!m){out.innerHTML=`<p class="src">Cần mở trong Claude và kết nối Google Drive.</p>`;return}
+    try{const r=payloadOf(await m.callTool(DRIVE,"search_files",{query:`fullText contains '${q.replace(/'/g,"\\'")}'`,pageSize:8,excludeContentSnippets:true}));const F=(r?.files||[]).filter(f=>!f.trashed);
+      out.innerHTML=F.length?F.map(f=>`<a class="mi" target="_blank" rel="noopener" href="https://drive.google.com/open?id=${encodeURIComponent(f.id)}">📄 ${esc(f.title||f.name||"Tệp")}</a>`).join(""):`<p class="src">Không thấy tệp nào.</p>`}catch(e){out.innerHTML=`<p class="src">Chưa tìm được: ${esc(e?.message||e)}</p>`}return}
+  upOpen(false);
+  if(curSec()==="gp")gpAsk(`Tìm hiểu mở rộng: ${q}. Trả lời dựa trên gia phả hiện có và lịch sử Việt Nam. Ghi rõ Fact, Inference hoặc Unknown, nêu nguồn nếu có, không bịa tên người hay năm.`);
+  else{show("chat");send(`Tìm kiếm mở rộng: ${q}. Hãy trả lời đầy đủ, có ví dụ, so sánh vùng miền nếu liên quan, ghi rõ Fact, Inference hoặc Unknown và nguồn tham khảo. Không bịa.`)}}
+document.addEventListener("click",e=>{const t=e.target;
+  if(t.closest("#upBtn")){upOpen($("#upMenu").hidden);return}
+  const u=t.closest("[data-up]");if(u){upDo(u.dataset.up);return}
+  const uq=t.closest("[data-upq]");if(uq){upSearch($("#upQ")?.value||"",uq.dataset.upq);return}
+  const uw=t.closest("[data-upw]");if(uw){upOpen(false);show("look");openDetail(uw.dataset.upw);return}
+  const up=t.closest("[data-uppp]");if(up){upOpen(false);goSlot("gp","view");setTimeout(()=>{gpApi?.revealInTree?.(up.dataset.uppp);gpApi?.openDetail?.(up.dataset.uppp)},200);return}
+  if(!$("#upMenu")?.hidden&&!t.closest("#upMenu"))upOpen(false)});
+document.addEventListener("submit",e=>{if(e.target.id==="upForm"){e.preventDefault();upSearch($("#upQ").value,"ai")}});
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&!$("#upMenu")?.hidden)upOpen(false)});
+
+if(!GP_SUB[gpSlot])gpSlot="chat";renderNav();acctInit();
 initNotebook();clanInit();show(view);renderSide();initStore();
 (async()=>{try{sample=window.claude?.use?await window.claude.use("sample"):null}catch{sample=null}if(view==="chat")renderChat()})();
 </script>

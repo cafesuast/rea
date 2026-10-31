@@ -6,6 +6,7 @@ const PEOPLE=fs.readdirSync(__dirname+'/fixtures/people').map(f=>[f.replace('.js
 for(const [W,H,nm] of [[1280,860,'d'],[390,820,'m']]){
 const p=await b.newPage({viewport:{width:W,height:H}});const errs=[];p.on('pageerror',e=>errs.push(e.message));p.on('console',m=>{if(m.type()==='error')errs.push(m.text())});
 await p.addInitScript(({FX,PEOPLE})=>{
+  localStorage.setItem('stdien:gpsrc2','"fam"'); /* các bộ này kiểm gia phả dòng họ chung */
   const store={people:Object.fromEntries(PEOPLE)};const subs={};
   const emit=c=>(subs[c]||[]).forEach(cb=>cb({docs:Object.entries(store[c]||{}).map(([id,d])=>({id,data:()=>JSON.parse(JSON.stringify(d))}))}));
   const db={collection:c=>({onSnapshot(cb,er){(subs[c]=subs[c]||[]).push(cb);setTimeout(()=>emit(c),10);return()=>{}},
