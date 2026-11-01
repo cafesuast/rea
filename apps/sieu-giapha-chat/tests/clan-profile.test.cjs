@@ -23,7 +23,12 @@ const nf=await p.evaluate(()=>['country','ho','toc','chi','nhanh','dong','doi'].
 await p.fill('#cp_toc','Tộc Lê (Bối Khê)');await p.fill('#cp_doi','16');await p.uncheck('#cp_lineGo');
 await p.click('#cpSave');const miss=await p.evaluate(()=>[document.querySelectorAll('#cpSheet .cpf.miss').length,document.querySelector('#cpSheet .cpmsg').textContent]);
 if(miss[0]!==3||!/Chi/.test(miss[1]))throw new Error('validation '+miss);
-await p.click('[data-cpkb="chi"]');await p.click('#cpAllKb');await p.click('#cpSave');await p.waitForTimeout(200);
+await p.click('[data-cpkb="chi"]');await p.click('#cpAllKb');await p.click('#cpSave');await p.waitForTimeout(100);
+if(!/Điều khoản/.test(await p.evaluate(()=>document.querySelector('#cpSheet .cpmsg').textContent))||await p.evaluate(()=>document.querySelector('#cpSheet').hidden))throw new Error('terms not required');
+if(await p.evaluate(()=>document.querySelectorAll('#cpSheet [data-cpm]').length)!==7)throw new Error('multi-method buttons');
+if(!/Người còn sống, 4 đời gần nhất/.test(await p.evaluate(()=>document.querySelector('.cpcons').textContent)))throw new Error('consent wording');
+await p.check('#cp_terms');await p.click('#cpSave');await p.waitForTimeout(200);
+if(!(await p.evaluate(()=>clanProf.terms?.v===1&&!clanProf.consent?.on)))throw new Error('terms saved');
 const cp=await p.evaluate(()=>({prof:clanProf,ho:gpHo,hidden:document.querySelector('#cpSheet').hidden,row:document.querySelector('#profRow small').textContent}));
 if(!cp.hidden||cp.prof.chi!=='Không biết'||cp.prof.nhanh!=='Không biết'||cp.prof.country!=='Việt Nam'||cp.ho!=='le'||!/Tộc Lê \(Bối Khê\) · Đời 16/.test(cp.row))throw new Error('saved '+JSON.stringify(cp));
 await p.evaluate(()=>{acctTab='set';show('acct')});await p.waitForTimeout(300);if(!(await p.evaluate(()=>/Bối Khê/.test(document.querySelector('#cpRow')?.innerText||''))))throw new Error('settings row');
@@ -45,6 +50,10 @@ const s2=await p.evaluate(()=>({names:gpi.pages.map(x=>x.name),msg:gd.msg}));if(
 // không thấy thư mục: gợi ý thư mục gần giống
 await p.evaluate(()=>{gpi.pages=[];renderGpi()});await p.fill('#gdFolder','GIAPHA TRAN');await p.click('#gdScan');await p.waitForFunction(()=>!gd.busy,null,{timeout:8000});
 if(!/Không tìm thấy|gần giống/.test(await p.evaluate(()=>gd.msg)))throw new Error('notfound '+await p.evaluate(()=>gd.msg));
+// thẻ mục tiêu trong Kế hoạch của cả 2 hệ thống
+await p.evaluate(()=>{gpi.open=false;renderGpi();goSlot('td','cal')});await p.waitForTimeout(300);if(!/1\.000\.000/.test(await p.evaluate(()=>document.querySelector('#plan .goalcard')?.innerText||'')))throw new Error('goal card td');
+await p.evaluate(()=>goSlot('gp','plan'));await p.waitForTimeout(300);if(!/100\.000/.test(await p.evaluate(()=>document.querySelector('#gpX .goalcard')?.innerText||'')))throw new Error('goal card gp');
+await p.screenshot({path:`cp-${nm}-goal.png`});
 // tính năng tìm được trong ✨ Tất cả tính năng
 if(!(await p.evaluate(()=>featFind('hồ sơ dòng họ').length&&featFind('quét ảnh').length)))throw new Error('feats');
 console.log(nm,'calls',await p.evaluate(()=>__calls.length),'sw',await p.evaluate(()=>document.documentElement.scrollWidth),'errs',JSON.stringify(errs));await ctx.close()}await b.close()})().catch(e=>{console.log('Error',e.message);process.exit(1)});

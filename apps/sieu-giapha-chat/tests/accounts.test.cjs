@@ -2,7 +2,7 @@
 const fs0=require('fs'),path0=require('path');const OUT=path0.join(__dirname,'out');fs0.mkdirSync(OUT,{recursive:true});process.chdir(OUT);
 const {chromium}=require('playwright');(async()=>{const b=await chromium.launch();
 for(const [W,H,nm] of [[1280,860,'d'],[390,820,'m']]){const ctx=await b.newContext({viewport:{width:W,height:H}});const errs=[];
-await ctx.addInitScript(()=>{localStorage.setItem('stdien:clanProf',JSON.stringify({country:'Việt Nam',ho:'Lê',toc:'Không biết',chi:'Không biết',nhanh:'Không biết',dong:'Không biết',doi:'Không biết'}));
+await ctx.addInitScript(()=>{localStorage.setItem('stdien:clanProf',JSON.stringify({country:'Việt Nam',ho:'Lê',toc:'Không biết',chi:'Không biết',nhanh:'Không biết',dong:'Không biết',doi:'Không biết',terms:{v:1,at:'2026-11-01T00:00:00Z'}}));
   const store=window.__store=JSON.parse(localStorage.getItem('__mockdb')||'{}');const subs=[];const persist=()=>localStorage.setItem('__mockdb',JSON.stringify(store));
   const merge=(a,b)=>{for(const k in b){if(b[k]&&typeof b[k]==='object'&&!Array.isArray(b[k])&&a[k]&&typeof a[k]==='object')merge(a[k],b[k]);else a[k]=b[k]}return a};
   const list=c=>Object.entries(store[c]||{}).map(([id,d])=>({id,data:()=>JSON.parse(JSON.stringify(d))}));

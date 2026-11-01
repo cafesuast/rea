@@ -4,7 +4,7 @@ const FILE=process.env.SGP_FILE||path0.join(__dirname,'..','index.html');
 const {chromium}=require('playwright');(async()=>{const b=await chromium.launch();
 for(const [W,H,nm] of [[1280,860,'d'],[390,820,'m']]){const ctx=await b.newContext({viewport:{width:W,height:H}});const errs=[];
 await ctx.addInitScript(()=>{localStorage.setItem('stdien:guideSeen','1');
-  localStorage.setItem('stdien:clanProf',JSON.stringify({country:'Việt Nam',ho:'Lê',toc:'Không biết',chi:'Không biết',nhanh:'Không biết',dong:'Không biết',doi:'Không biết'}));
+  localStorage.setItem('stdien:clanProf',JSON.stringify({country:'Việt Nam',ho:'Lê',toc:'Không biết',chi:'Không biết',nhanh:'Không biết',dong:'Không biết',doi:'Không biết',terms:{v:1,at:'2026-11-01T00:00:00Z'}}));
   const img=()=>{const c=document.createElement('canvas');c.width=40;c.height=40;return c.toDataURL('image/jpeg').split(',')[1]};window.__calls=[];
   const mcp={async callTool(s,t,a){__calls.push(t+':'+(a.query||a.fileId));let r;
     if(t==='search_files')r=/parentId = 'FOLDERabc123'/.test(a.query)?{files:[{id:'im1',title:'a.jpg',mimeType:'image/jpeg'},{id:'im2',title:'b.jpg',mimeType:'image/jpeg'}]}:{files:[]};

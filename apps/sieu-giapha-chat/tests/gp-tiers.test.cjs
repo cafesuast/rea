@@ -4,11 +4,11 @@ const FILE=process.env.SGP_FILE||path0.join(__dirname,'..','index.html');
 const {chromium}=require('playwright');(async()=>{const b=await chromium.launch();
 for(const [W,H,nm] of [[1280,860,'d'],[390,820,'m']]){const ctx=await b.newContext({viewport:{width:W,height:H}});const errs=[];
 await ctx.addInitScript(()=>{localStorage.setItem('stdien:guideSeen','1');localStorage.setItem('sgpm:me','"p9"');localStorage.setItem('stdien:gpsrc2','"mine"');
-  localStorage.setItem('stdien:clanProf',JSON.stringify({country:'Việt Nam',ho:'Lê',toc:'Tộc Lê (Bối Khê)',chi:'Không biết',nhanh:'Không biết',dong:'Không biết',doi:'16',consent:{on:true,v:1,at:'2026-11-01T00:00:00Z'}}));
+  localStorage.setItem('stdien:clanProf',JSON.stringify({country:'Việt Nam',ho:'Lê',toc:'Tộc Lê (Bối Khê)',chi:'Không biết',nhanh:'Không biết',dong:'Không biết',doi:'16',terms:{v:1,at:'2026-11-01T00:00:00Z'},consent:{on:true,v:1,at:'2026-11-01T00:00:00Z'}}));
   const priv={};for(let i=1;i<=14;i++)priv['p'+i]={name:'Lê Văn A'+i,gender:'m',fatherId:i>1?'p'+(i-1):'',birth:String(i>8?1900+i*8:1600+i*30),death:i<=8?String(1650+i*30):'',spouseIds:[]};
   priv.p2.birth='1730';priv.p1.deathLunar='';
   const store=window.__store={'data/users/u_A/fam/people':priv,
-    people:{fX_a:{name:'Lê Văn A1',birth:'1630',deathLunar:'12/03',code:'LE-BOIKHE-D8-VANA1'},fX_b:{name:'Lê Văn A2',birth:'1735',code:'LE-BOIKHE-D9-VANA2'}},
+    people:{fX_0:{name:'Lê Văn A0',birth:'1600',death:'1660',code:'LE-BOIKHE-D7-VANA0'},fX_a:{name:'Lê Văn A1',birth:'1630',deathLunar:'12/03',code:'LE-BOIKHE-D8-VANA1',fatherId:'fX_0'},fX_b:{name:'Lê Văn A2',birth:'1735',code:'LE-BOIKHE-D9-VANA2'}},
     lineage_le:{q3:{name:'Lê Văn A3',death:'1740',notes:'Nguồn: Wikidata'},q9:{name:'Lê Thánh Tông',src:'Viện Hán Nôm'}}};
   const subs=[];const merge=(a,b)=>{for(const k in b)a[k]=b[k];return a};
   const list=c=>Object.entries(store[c]||{}).map(([id,d])=>({id,data:()=>JSON.parse(JSON.stringify(d))}));
@@ -42,6 +42,13 @@ if(sh.ids!=='p1,p2,p3,p4,p5,p6,p7,p8'||!sh.codes||!sh.on)throw new Error('share 
 const due=await p.evaluate(()=>{gpChk.bot='week';gpChk.lastBot='2026-10-20';const a=gpDueBot(new Date(2026,10,1));gpChk.lastBot='2026-10-30';const b=gpDueBot(new Date(2026,10,1));gpChk.bot='month';gpChk.lastBot='2026-10-20';const c=gpDueBot(new Date(2026,10,1));return[a,b,c].join()});
 if(due!=='true,false,false')throw new Error('bot due '+due);
 await p.keyboard.press('Escape');
+// AI tự điền các đời ngoài 4 đời gần bạn (cấp quyền riêng)
+await p.evaluate(()=>{acctTab='bot';show('acct')});await p.waitForTimeout(300);if(!(await p.$('#permCard [data-perm="privFill"]')))throw new Error('perm card');
+await p.evaluate(()=>{const c=document.querySelector('#permCard [data-perm="privFill"]');c.checked=true;c.dispatchEvent(new Event('change',{bubbles:true}))});await p.waitForFunction(()=>!fillBusy&&perm.last,null,{timeout:8000});
+const af=await p.evaluate(()=>{const P=__store['data/users/u_A/fam/people'];return{a0:P.ai_fX_0?.name,p1f:P.p1.fatherId,p9:P.p9.notes||'',msg:perm.msg}});
+if(af.a0!=='Lê Văn A0'||af.p1f!=='ai_fX_0'||/AI/.test(af.p9))throw new Error('autofill '+JSON.stringify(af));
+await p.evaluate(()=>{acctTab='ex';renderAcct()});await p.waitForTimeout(300);if(!(await p.$('#revBox')))throw new Error('review box');
+await p.evaluate(()=>show('giapha'));
 // nhập liệu từ tab Lịch sử chuyển về gia phả riêng
 await p.evaluate(()=>{gpSrc='le';gpiOpen()});await p.waitForTimeout(200);if(await p.evaluate(()=>gpSrc)!=='mine')throw new Error('import target');
 if(!(await p.evaluate(()=>featFind('đối chiếu').length&&featFind('mã ráp nối').length&&featFind('cá nhân 8 đời').length)))throw new Error('feats');
