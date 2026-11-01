@@ -69,6 +69,8 @@ svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.8;stroke
 .stats .lbl{grid-column:1/-1;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
 .stats div b{display:block;font-size:17px;font-variant-numeric:tabular-nums}
 .stats div small{color:var(--muted);font-size:11.5px}
+.stats .stgo{cursor:pointer;border-radius:8px;margin:-4px;padding:4px}.stats .stgo:hover,.stats .stgo:focus-visible{background:color-mix(in srgb,var(--accent) 12%,transparent);outline:none}.stats .stgo.raw b{color:var(--inf)}.stats .stgo.ok b{color:var(--accent)}.stats .stsave{grid-column:1/-1;margin:0;font-size:11px;color:var(--muted)}
+.rv-bulk{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;margin:10px 0}.rv-bulk{text-align:left}.rv-bulk>div{display:flex;flex-direction:column;align-items:flex-start;gap:2px;min-width:0;flex:1 1 260px}.rv-bulk small{color:var(--muted)}
 .bar{grid-column:1/-1;height:6px;border-radius:999px;background:var(--line);overflow:hidden;display:flex}
 .bar i{display:block;height:100%}
 .side .grow{flex:1}
@@ -681,6 +683,18 @@ html[data-dev="mobile"] .six{display:flex;flex-wrap:wrap}html[data-dev="mobile"]
 .app.navright{flex-direction:row-reverse}.app.navright .side{border-right:0;border-left:1px solid var(--line)}.app.navright.navless .side{margin-left:0;margin-right:-236px}
 @media(min-width:761px){.app.peek .side{position:fixed;top:0;bottom:0;left:0;z-index:60;margin:0!important;box-shadow:0 0 40px rgba(0,0,0,.2)}.app.navright.peek .side{left:auto;right:0}}
 .laybox{border-top:1px solid var(--line,rgba(127,127,127,.2));margin-top:12px;padding-top:10px}.laybox h4{margin:0 0 4px}.laybox .setrow small{display:block;color:var(--muted)}
+/* Thư viện gia đình */
+.libshelves{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,200px),1fr));gap:8px}
+.libshelves button{display:flex;flex-direction:column;align-items:flex-start;gap:2px;text-align:left;padding:12px;border-radius:14px;border:1.5px solid var(--line);background:var(--panel)}
+.libshelves button.on{border-color:var(--accent);background:var(--accent-soft)}.libshelves .em{font-size:26px;line-height:1}.libshelves small{color:var(--muted);font-size:12px;line-height:1.4}
+.libadd summary{cursor:pointer;list-style:none}.libadd summary::-webkit-details-marker{display:none}
+.libform{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));gap:10px;margin-top:10px}.libform .full{grid-column:1/-1}
+.libthumb{height:56px;border-radius:8px;border:1px solid var(--line)}
+.liblist{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,420px),1fr));gap:10px}
+.libitem{display:flex;gap:12px;align-items:flex-start;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px}
+.libic{font-size:30px;line-height:1;width:44px;text-align:center;flex:none}.libcover{width:64px;height:84px;object-fit:cover;border-radius:8px;border:1px solid var(--line);flex:none}
+.libt{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}.libt small{color:var(--muted);font-size:12px}.libt p{margin:0;font-size:13.5px;line-height:1.5}.libt a{color:var(--accent);font-size:12.5px;overflow-wrap:anywhere}
+.libacts{display:flex;flex-direction:column;gap:6px;align-items:flex-end}
 /* Thiên hà 3DG */
 .g3host.space{background:#03040c;border-radius:0}.gpalt:has(.g3host.space){background:#03040c}.gpalt:has(.g3host.space) .glegend .lg{background:rgba(255,255,255,.08);color:#e5e7ff}
 .gpalt:has(.g3host.space) .g3ctl .btn{background:rgba(255,255,255,.1);color:#fff;border-color:rgba(255,255,255,.2)}
@@ -4473,6 +4487,110 @@ FEATS.push(["Giao diện","⛶","Toàn màn hình",()=>fsToggle()],["Giao diện
   ["Nhập liệu","📄","Quét tài liệu, chữ viết tay khi chụp ảnh",()=>{lay.scan=lay.scan==="photo"?"doc":lay.scan;layOK();gpPrivOpen();setTimeout(()=>$("#gpImp .scanmode")?.scrollIntoView({block:"center"}),250)}]);
 setTimeout(()=>{devApply();scanInject()},0);
 
+/* ===== Thư viện gia đình (trong 🔒 Cá nhân): Sách · Bản gốc gia phả gia đình · Tư liệu gia đình =====
+   Mỗi mục: tên, ngăn, link (Drive, Dropbox, web...), ghi chú, năm, nguồn, kèm 1 ảnh bìa hoặc ảnh trang gốc (thu nhỏ).
+   Lưu trong vùng riêng của tài khoản (data/users/<uid>, kind "lib") nên chỉ bạn xem, đồng bộ mọi máy, dùng được offline.
+   Link “Dán link tư liệu” của gia phả cũng hiện ở ngăn Tư liệu gia đình. */
+const LIB_SHELVES=[["book","📖","Sách","Sách gia phả, tộc phả, sách về dòng họ, quê hương"],["orig","📜","Bản gốc gia phả gia đình","Bản gia phả gốc: chép tay, Hán Nôm, bản in cũ, ảnh chụp từng trang"],["doc","🗂️","Tư liệu gia đình","Giấy tờ, thư từ, ảnh, sắc phong, bia mộ, ghi âm, video"]];
+let lib=ls.get(gpAccLSP("lib:")+"items",[]),libOpen=false,libShelf=ls.get("libShelf","all"),libMsg="",libImg="",libDraft={};
+function libIn(list){lib=list.sort((a,b)=>String(b.at).localeCompare(String(a.at)));try{localStorage.setItem(gpAccLSP("lib:")+"items",JSON.stringify(lib))}catch{}if(libOpen)libRender();gpBar()}
+initNotebook=(o=>async function(){await o();try{if(nbCol)nbCol.onSnapshot(s=>libIn(s.docs.map(d=>({...d.data(),id:d.id})).filter(x=>x.kind==="lib")),()=>{})}catch{}})(initNotebook);
+async function libSave(rec){const id=rec.id||("lib"+Date.now().toString(36));const r={...rec,kind:"lib",at:rec.at||new Date().toISOString()};delete r.id;
+  if(nbCol){await nbCol.doc(id).set(r)}else libIn([{...r,id},...lib.filter(x=>x.id!==id)]);return id}
+async function libDel(id){if(nbCol){try{await nbCol.doc(id).delete()}catch{}}else libIn(lib.filter(x=>x.id!==id))}
+function libAll(){const links=(typeof rawLinks!=="undefined"?rawLinks:[]).filter(x=>x.target==="gp"||x.store).map(x=>({id:x.id,shelf:"doc",title:x.note||"Link tư liệu",url:x.url,note:x.store?"Kho lưu trữ chính của tài khoản":"",at:x.at,fromLink:true}));
+  return[...lib,...links.filter(l=>!lib.some(x=>x.url&&x.url===l.url))]}
+function libCount(){return libAll().length}
+function libHTML(){const all=libAll(),cnt=k=>all.filter(x=>x.shelf===k).length,L=libShelf==="all"?all:all.filter(x=>x.shelf===libShelf);
+  const sh=k=>LIB_SHELVES.find(x=>x[0]===k)||LIB_SHELVES[2];
+  return`<div class="gpi lib"><div class="gpi-h"><h3>📚 Thư viện gia đình <span class="tag">🔒 chỉ mình bạn</span></h3><button class="icon-btn" data-libclose aria-label="Đóng">✕</button></div>
+  <p class="src">Nơi cất sách, bản gốc gia phả và tư liệu của gia đình. Gắn với tài khoản <b>${esc(acct?.me?.name||"của bạn")}</b>, đồng bộ trên mọi máy và xem được khi mất mạng.</p>
+  <div class="libshelves">${[["all","🏛️","Tất cả","Mọi ngăn"],...LIB_SHELVES].map(([k,i,l,d])=>`<button class="${libShelf===k?"on":""}" data-libshelf="${k}"><span class="em">${i}</span><b>${l}</b><small>${k==="all"?all.length:cnt(k)} mục · ${esc(d)}</small></button>`).join("")}</div>
+  <details class="card libadd" ${all.length?"":"open"}><summary><b>＋ Thêm vào thư viện</b></summary>
+   <div class="libform">
+    <label class="field">Ngăn<select data-libf="shelf">${LIB_SHELVES.map(([k,i,l])=>`<option value="${k}" ${((libDraft.shelf||libShelf)===k)?"selected":""}>${i} ${l}</option>`).join("")}</select></label>
+    <label class="field">Tên<input data-libf="title" value="${esc(libDraft.title||"")}" placeholder="VD: Gia phả họ Lê Bồi Khê, bản chép tay 1942"></label>
+    <label class="field">Link (Google Drive, Dropbox, web...)<input data-libf="url" value="${esc(libDraft.url||"")}" inputmode="url" placeholder="https://drive.google.com/..."></label>
+    <label class="field">Năm, nguồn, người giữ<input data-libf="meta" value="${esc(libDraft.meta||"")}" placeholder="VD: 1942 · cụ Lê Văn Tư chép · bác Cường đang giữ"></label>
+    <label class="field full">Ghi chú<textarea data-libf="note" rows="2" placeholder="Nội dung chính, tình trạng bản gốc, số trang...">${esc(libDraft.note||"")}</textarea></label>
+    <div class="field full">Ảnh bìa hoặc ảnh trang gốc (tùy chọn)<div class="btns"><label class="btn ghost sm">📷 Chụp / chọn ảnh<input type="file" accept="image/*" hidden data-libimg></label>${libImg?`<img class="libthumb" src="${libImg}" alt="Ảnh đã chọn"><button class="mini" data-libimgx>✕ Bỏ ảnh</button>`:""}</div></div>
+    <div class="btns full"><button class="btn primary" data-libsave>Lưu vào thư viện</button></div>
+   </div><p class="src" role="status">${esc(libMsg)}</p></details>
+  ${L.length?`<div class="liblist">${L.map(x=>{const S=sh(x.shelf),dr=x.url&&typeof rlDrive==="function"?rlDrive(x.url):null,pl=x.url&&typeof rlPlat==="function"?rlPlat(x.url):null;
+    return`<div class="libitem">${x.img?`<img class="libcover" src="${esc(x.img)}" alt="">`:`<span class="libic">${S[1]}</span>`}<div class="libt"><b>${esc(x.title||"(chưa đặt tên)")}</b>
+     <small>${S[2]}${x.meta?" · "+esc(x.meta):""} · ${new Date(x.at).toLocaleDateString("vi-VN")}${x.fromLink?" · từ Dán link tư liệu":""}</small>
+     ${x.note?`<p>${esc(x.note)}</p>`:""}${x.url?`<a href="${esc(x.url)}" target="_blank" rel="noopener">${pl?pl.icon+" ":""}${esc(x.url.replace(/^https?:\/\/(www\.)?/,"").slice(0,70))}</a>`:""}</div>
+     <span class="libacts">${dr?`<button class="btn ghost sm" data-libscan="${esc(x.id)}" title="Claude đọc tư liệu này và tách người vào gia phả riêng">🔎 Đọc vào gia phả</button>`:""}${x.fromLink?"":`<button class="mini" data-libdel="${esc(x.id)}" aria-label="Xóa">✕</button>`}</span></div>`}).join("")}</div>`
+  :`<div class="empty"><b>Ngăn này còn trống</b>Bấm “Thêm vào thư viện” để cất sách, bản gốc gia phả hoặc tư liệu gia đình.</div>`}</div>`}
+function libEl(){let e=$("#gpLib");if(!e){e=document.createElement("div");e.id="gpLib";e.className="gpover";e.hidden=true;$("#gpHist")?.after(e)}return e}
+function libRender(){const e=libEl();e.querySelectorAll("[data-libf]").forEach(f=>libDraft[f.dataset.libf]=f.value);e.hidden=!libOpen||view!=="giapha";if(!e.hidden)e.innerHTML=libHTML()}
+function libShow(on=true,shelf){libOpen=on;if(shelf){libShelf=shelf;ls.set("libShelf",shelf)}if(on){if(typeof gpi!=="undefined"&&gpi.open){gpi.open=false;renderGpi()}if(gpSrc!=="me4"){gpSrc="me4";ls.set("gpsrc2","me4")}if(view!=="giapha")show("giapha");else renderGiapha()}libRender()}
+renderGiapha=(o=>function(){o();if(libOpen&&gpSrc!=="me4")libOpen=false;libRender()})(renderGiapha);
+renderGpi=(o=>function(){o();if(gpi.open&&libOpen){libOpen=false;libRender()}})(renderGpi);
+gpBar=(o=>function(){o();const b=$("#gpbar");if(!b||gpSrc!=="me4"||b.querySelector(".libbtn"))return;const n=libCount();
+  const seg=b.querySelector('.seg[aria-label="Nguồn gia phả"]');(seg||b.firstElementChild)?.insertAdjacentHTML("afterend",`<button class="btn ${libOpen?"primary":"ghost"} sm libbtn" data-libopen>📚 Thư viện gia đình${n?` (${n})`:""}</button>`)})(gpBar);
+document.addEventListener("change",async e=>{const f=e.target.closest?.("[data-libimg]");if(!f||!f.files[0])return;
+  try{const s=await gpiShrink(f.files[0]);const bmp=await createImageBitmap(s);const k=Math.min(1,900/Math.max(bmp.width,bmp.height));const c=document.createElement("canvas");c.width=Math.round(bmp.width*k);c.height=Math.round(bmp.height*k);c.getContext("2d").drawImage(bmp,0,0,c.width,c.height);
+    libImg=c.toDataURL("image/jpeg",.78);if(libImg.length>400000)libImg=c.toDataURL("image/jpeg",.55);libRender();const d=$("#gpLib .libadd");if(d)d.open=true}catch{toast("Không đọc được ảnh này")}});
+document.addEventListener("click",async e=>{const t=e.target;
+  if(t.closest?.("[data-libopen]")){libShow(!libOpen);gpBar();return}
+  if(t.closest?.("[data-libclose]")){libShow(false);gpBar();return}
+  const sh=t.closest?.("[data-libshelf]");if(sh){libShelf=sh.dataset.libshelf;ls.set("libShelf",libShelf);libRender();if(libShelf!=="all"){libDraft.shelf=libShelf;const q=$("#gpLib [data-libf=shelf]");if(q)q.value=libShelf}return}
+  if(t.closest?.("[data-libimgx]")){libImg="";libRender();const d=$("#gpLib .libadd");if(d)d.open=true;return}
+  if(t.closest?.("[data-libsave]")){const v=k=>($(`#gpLib [data-libf="${k}"]`)?.value||"").trim();const rec={shelf:v("shelf")||"doc",title:v("title"),url:v("url"),meta:v("meta"),note:v("note"),img:libImg||""};
+    if(!rec.title&&!rec.url&&!rec.img){libMsg="Hãy ghi tên, dán link hoặc chọn ảnh.";libRender();const d=$("#gpLib .libadd");if(d)d.open=true;return}
+    if(rec.url&&typeof rlValid==="function"&&!rlValid(rec.url)){libMsg="Link chưa đúng, cần bắt đầu bằng https://";libRender();const d=$("#gpLib .libadd");if(d)d.open=true;return}
+    if(!rec.title)rec.title=rec.url?rec.url.replace(/^https?:\/\/(www\.)?/,"").slice(0,50):"Ảnh tư liệu";
+    try{await libSave(rec);libImg="";libMsg="";libDraft={};document.querySelectorAll("#gpLib [data-libf]").forEach(f=>f.value="");libShelf=rec.shelf;ls.set("libShelf",libShelf);toast("📚 Đã cất vào "+LIB_SHELVES.find(x=>x[0]===rec.shelf)[2]);libRender();gpBar()}catch(er){libMsg="Chưa lưu được: "+(er?.message||er);libRender()}return}
+  const dl=t.closest?.("[data-libdel]");if(dl){if(confirm("Xóa mục này khỏi thư viện?")){await libDel(dl.dataset.libdel);gpBar()}return}
+  const sc=t.closest?.("[data-libscan]");if(sc){const x=libAll().find(y=>y.id===sc.dataset.libscan);if(x&&typeof rlScan==="function"){libShow(false);rlScan({id:x.fromLink?x.id:undefined,url:x.url,note:x.title,target:"gp"})}return}});
+FEATS.push(["Gia phả","📚","Thư viện gia đình: sách, bản gốc gia phả, tư liệu gia đình",()=>libShow(true)]);
+
+/* ===== Số từ, số người, số đời, họ: tự đếm, tự ghi vào database. RAW và ĐÃ DUYỆT, duyệt hàng loạt ===== */
+function tuStat(){const n=words.length,duyet=words.filter(w=>w.status!=="RAW").length;return{n,raw:n-duyet,duyet,du10:words.filter(w=>w.level===10).length,l7:words.filter(w=>w.level===7).length,unk:words.filter(w=>w.unk).length,ready:words.filter(w=>w.status==="RAW"&&w.level===10&&!w.unk).length}}
+function gpReady(s=gpStatsData()){return s.P.filter(p=>!p.verified&&!gpIssues(p,s.by).length)}
+const fmtN=x=>Number(x||0).toLocaleString("vi-VN");
+let stSaved=ls.get("stSaved",{}),stDb=null,stT=null,stBusy=false;
+function stLine(k){const x=stSaved[k];return x?`<p class="stsave">☁️ Đã ghi vào database lúc ${new Date(x).toLocaleTimeString("vi-VN",{hour:"2-digit",minute:"2-digit"})}</p>`:`<p class="stsave">💾 Số liệu tự ghi vào database khi thay đổi</p>`}
+renderSide=(o=>function(){o();const s=tuStat(),pct=x=>s.n?(x/s.n*100).toFixed(1)+"%":"0";
+  $("#stats").innerHTML=`<span class="lbl">Kho từ · số từ</span><div><b>${fmtN(s.n)}</b><small>mục từ</small></div><div class="stgo raw" data-stgo="td" role="button" tabindex="0" title="Mở Kiểm duyệt"><b>${fmtN(s.raw)}</b><small>RAW chờ duyệt</small></div><div class="stgo ok" data-stgo="td" role="button" tabindex="0" title="Mở Kiểm duyệt"><b>${fmtN(s.duyet)}</b><small>đã duyệt</small></div><div><b>${fmtN(s.du10)}</b><small>đủ 10 tầng${s.unk?" · "+fmtN(s.unk)+" Unknown":""}</small></div>
+   <div class="bar" title="Đã duyệt / RAW đủ 10 tầng / còn lại"><i style="width:${pct(s.duyet)};background:var(--accent)"></i><i style="width:${pct(s.ready)};background:var(--fact)"></i><i style="width:${pct(s.raw-s.ready)};background:var(--muted);opacity:.35"></i></div>${stLine("tu")}`;stQueue()})(renderSide);
+gpStatsHTML=function(){const s=gpStatsData(),pct=x=>s.n?(x/s.n*100).toFixed(1)+"%":"0",raw=s.n-s.ver,rd=gpReady(s).length;
+  return`<span class="lbl">Kho người · họ ${esc(typeof hoName==="function"?hoName():"")} · ${s.gens} đời</span><div><b>${fmtN(s.n)}</b><small>số người</small></div><div class="stgo raw" data-stgo="gp" role="button" tabindex="0" title="Mở Kiểm duyệt gia phả"><b>${fmtN(raw)}</b><small>RAW chờ duyệt</small></div><div class="stgo ok" data-stgo="gp" role="button" tabindex="0" title="Mở Kiểm duyệt gia phả"><b>${fmtN(s.ver)}</b><small>đã duyệt</small></div><div><b>${fmtN(s.full)}</b><small>đủ thông tin</small></div>
+   <div class="bar" title="Đã duyệt / đủ thông tin chờ duyệt / còn thiếu"><i style="width:${pct(s.ver)};background:var(--accent)"></i><i style="width:${pct(rd)};background:var(--fact)"></i></div>${stLine(stKeyGp())}`};
+gpCounts=(o=>function(){o();stQueue()})(gpCounts);
+function stKeyGp(){return"gp_"+(typeof gpSrc!=="undefined"?gpSrc:"")+"_"+(typeof gpHo!=="undefined"?gpHo:"")}
+/* ghi số liệu: kho từ và gia phả chung vào bảng "stats" dùng chung; gia phả riêng vào hồ sơ tài khoản */
+function stQueue(){if(stT)return;stT=setTimeout(()=>{stT=null;stWrite()},3000)}
+async function stWrite(){if(stBusy)return;stBusy=true;try{
+  if(!stDb&&acct?.db)stDb=acct.db;if(!stDb&&window.claude?.use){try{stDb=await window.claude.use("db")}catch{}}
+  const at=new Date().toISOString(),jobs=[];
+  if(mode==="db"&&col&&canWrite!==false&&words.length){const s=tuStat(),{ready,...d}=s,sig=JSON.stringify(d);if(ls.get("stSig_tu","")!==sig)jobs.push(["tu",sig,()=>stDb.collection("stats").doc("tu").set({kind:"stats",loai:"tu",...d,sanSang:ready,at})])}
+  if(typeof gpApi!=="undefined"&&gpApi&&gpP().length){const s=gpStatsData(),d={kind:"stats",loai:"nguoi",ho:hoName(),hoSlug:gpHo,nguon:gpSrc,n:s.n,raw:s.n-s.ver,duyet:s.ver,du:s.full,thieu:s.iss,doi:s.gens},sig=JSON.stringify(d),k=stKeyGp();
+    if(ls.get("stSig_"+k,"")!==sig){const priv=gpSrc==="mine"||gpSrc==="me4";
+      if(priv&&nbCol)jobs.push([k,sig,()=>nbCol.doc("stats_"+gpSrc).set({...d,at})]);
+      else if(!priv&&stDb&&canWrite!==false)jobs.push([k,sig,()=>stDb.collection("stats").doc("ho_"+String(gpHo).replace(/[^\w-]/g,"")).set({...d,at})])}}
+  for(const[k,sig,run]of jobs){try{await run();ls.set("stSig_"+k,sig);stSaved[k]=Date.now();ls.set("stSaved",stSaved);document.querySelectorAll(".stats .stsave").forEach(e=>{if(e.closest("#stats")?k==="tu":k===stKeyGp())e.outerHTML=stLine(k)})}catch{}}
+ }finally{stBusy=false}}
+/* duyệt hàng loạt: bấm 2 lần để chắc chắn */
+let bulkArm="",bulkT=null;
+function bulkBtn(kind,n,label){if(!n)return"";const armed=bulkArm===kind;return`<button class="btn ${armed?"danger armed":"primary"} bulkgo" data-bulk="${kind}">${armed?`Bấm lần nữa để duyệt ${fmtN(n)} mục`:label}</button>`}
+renderReview=(o=>function(){o();const s=tuStat(),sum=$("#review .rv-sum");if(!sum)return;
+  sum.insertAdjacentHTML("afterend",`<div class="rv-bulk card"><div><b>RAW ${fmtN(s.raw)} → ĐÃ DUYỆT ${fmtN(s.duyet)}</b><small>${fmtN(s.ready)} mục đủ 10 tầng, không còn Unknown, có thể duyệt ngay.</small></div>${canWrite===false?`<span class="tag">Chỉ có quyền xem</span>`:bulkBtn("tu",s.ready,`✓ Duyệt tất cả ${fmtN(s.ready)} mục đủ chuẩn`)}</div>`)})(renderReview);
+renderGpx=(o=>function(){o();if(gpx.open!=="review")return;const s=gpStatsData(),rd=gpReady(s).length,sum=$("#gpX .rv-sum");if(!sum)return;
+  sum.insertAdjacentHTML("afterend",`<div class="rv-bulk card"><div><b>RAW ${fmtN(s.n-s.ver)} → ĐÃ DUYỆT ${fmtN(s.ver)}</b><small>${fmtN(rd)} người đủ thông tin, không mâu thuẫn, có thể duyệt ngay.</small></div>${gpSrc==="le"?`<span class="tag">Gia phả mẫu, chỉ xem</span>`:bulkBtn("gp",rd,`✓ Duyệt tất cả ${fmtN(rd)} người đủ chuẩn`)}</div>`)})(renderGpx);
+async function bulkRun(kind){const by=acct?.me?.name||"",at=new Date().toISOString();let ok=0,fail=0;
+  const L=kind==="tu"?words.filter(w=>w.status==="RAW"&&w.level===10&&!w.unk):gpReady();
+  toast(`Đang duyệt ${fmtN(L.length)} mục...`);
+  for(let i=0;i<L.length;i+=20){await Promise.all(L.slice(i,i+20).map(x=>(kind==="tu"?putWord({...x,status:"DUYET"}):gpApi.put(x.id,{...x,verified:true,verifiedBy:by,verifiedAt:at})).then(()=>ok++,()=>fail++)))}
+  toast(`Đã duyệt ${fmtN(ok)} mục${fail?`, ${fmtN(fail)} mục chưa lưu được`:""}`);
+  setTimeout(()=>{if(kind==="tu"){if(view==="review")renderReview();renderSide()}else{renderGpx();gpCounts()}stQueue()},200)}
+document.addEventListener("click",e=>{const t=e.target;
+  const g=t.closest?.("[data-stgo]");if(g){goSlot(g.dataset.stgo,g.dataset.stgo==="td"?"list":"review");return}
+  const b=t.closest?.("[data-bulk]");if(b){const k=b.dataset.bulk;if(kind_ok(k)){if(bulkArm!==k){bulkArm=k;clearTimeout(bulkT);bulkT=setTimeout(()=>{bulkArm="";k==="tu"?renderReview():renderGpx()},6000);k==="tu"?renderReview():renderGpx();return}
+    bulkArm="";clearTimeout(bulkT);bulkRun(k)}}});
+function kind_ok(k){if(k==="tu"&&canWrite===false){toast("Bạn chỉ có quyền xem, không duyệt được.");return false}return true}
+document.addEventListener("keydown",e=>{const g=e.target.closest?.("[data-stgo]");if(g&&(e.key==="Enter"||e.key===" ")){e.preventDefault();g.click()}});
 /* ===== Bấm giữ chuột rồi kéo để di chuyển sơ đồ (cây, vòng tròn) =====
    Kéo trên vùng cây để cuộn theo tay; vòng tròn vừa khung thì kéo để dời hình. Không bôi đen chữ khi kéo.
    Bấm (không kéo) vẫn mở thẻ người như cũ. 3D: kéo để xoay, giữ Shift hoặc chuột phải khi kéo để di chuyển. */
