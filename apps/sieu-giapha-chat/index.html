@@ -4393,17 +4393,20 @@ document.addEventListener("keydown",e=>{if(e.key==="Escape"&&document.documentEl
 document.addEventListener("click",e=>{if(e.target.closest?.("#fsBtn"))fsToggle()});
 
 /* ---- menu trái: tự thu gọn sau 3 giây (máy tính), rê chuột sát mép để mở tạm ---- */
-let navT=null;
+let navT=null,navPin=false;
 function navMode(){return lay.nav==="auto"?(devCur()==="pc"?"auto3":"show"):lay.nav}
 function navAutoArm(){clearTimeout(navT);const app=$("#app");if(!app)return;const m=navMode();
   if(m==="hide"){app.classList.add("navless");return}if(m==="show"){if(devCur()==="pc")app.classList.remove("navless");return}
-  if(m==="auto3")navT=setTimeout(()=>{if(!$(".side:hover")&&!app.classList.contains("drawer")){app.classList.add("navless");app.classList.remove("peek")}},3000)}
+  if(m==="auto3"&&!navPin)navT=setTimeout(()=>{if(navPin)return;if(!$(".side:hover")&&!app.classList.contains("drawer")){app.classList.add("navless");app.classList.remove("peek")}},3000)}
 document.addEventListener("mousemove",e=>{if(navMode()!=="auto3"||devCur()!=="pc")return;const app=$("#app");if(!app)return;
   const edge=lay.navSide==="right"?e.clientX>innerWidth-10:e.clientX<10;
   if(edge&&app.classList.contains("navless")){app.classList.add("peek");app.classList.remove("navless");clearTimeout(navT)}});
 document.addEventListener("mouseover",e=>{if(e.target.closest?.(".side"))clearTimeout(navT)});
 document.addEventListener("mouseout",e=>{if(e.target.closest?.(".side")&&!e.relatedTarget?.closest?.(".side"))navAutoArm()});
-document.addEventListener("click",e=>{if(e.target.closest?.("#showNav")&&navMode()==="auto3")setTimeout(navAutoArm,50)});
+/* bấm vào menu = muốn dùng menu: ghim mở (đẩy nội dung sang, không che), chỉ tự thu gọn lại sau khi bạn bấm vào vùng làm việc */
+document.addEventListener("click",e=>{if(navMode()!=="auto3"||devCur()!=="pc")return;const app=$("#app");if(!app)return;
+  if(e.target.closest?.(".side,#showNav")){if(e.target.closest("#hideNav")){navPin=false;return}navPin=true;clearTimeout(navT);setTimeout(()=>{app.classList.remove("navless","peek")},0);return}
+  if(navPin&&e.target.closest?.(".main")){navPin=false;navAutoArm()}},true);
 
 /* ---- bảng bên phải (thẻ thành viên trong gia phả): ghim / nổi / rộng ---- */
 const RP_CSS={dock:"",float:".detail{position:fixed!important;right:12px!important;top:12px!important;bottom:12px!important;z-index:50;border-radius:18px;border-left:0!important;box-shadow:0 20px 50px rgba(0,0,0,.22);width:380px!important}",wide:".detail{width:520px!important}"};

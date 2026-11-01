@@ -11,7 +11,11 @@ for(const [W,H,nm,mob] of [[1280,860,'d',false],[390,820,'m',true]]){
   if(!mob){// menu trái thu gọn sau 3 giây
     await p.mouse.move(700,400);await p.waitForTimeout(3400);if(!(await p.evaluate(()=>document.querySelector('#app').classList.contains('navless'))))fail('nav not collapsed');
     await p.mouse.move(3,400);await p.waitForTimeout(150);if(!(await p.evaluate(()=>document.querySelector('#app').classList.contains('peek'))))fail('no peek');
-    await p.mouse.move(700,400);await p.waitForTimeout(3400);if(!(await p.evaluate(()=>document.querySelector('#app').classList.contains('navless'))))fail('not re-collapsed');}
+    await p.mouse.move(700,400);await p.waitForTimeout(3400);if(!(await p.evaluate(()=>document.querySelector('#app').classList.contains('navless'))))fail('not re-collapsed');
+    // bấm vào menu: menu ghim mở, không tự đóng; bấm vào vùng làm việc thì 3 giây sau mới thu gọn
+    await p.mouse.move(3,400);await p.waitForTimeout(150);const nb=await p.evaluate(()=>{const n=[...document.querySelectorAll('.side .nav')].find(x=>x.getClientRects().length);const r=n.getBoundingClientRect();return[r.x+20,r.y+r.height/2]});
+    await p.mouse.click(nb[0],nb[1]);await p.mouse.move(900,500);await p.waitForTimeout(3500);const c1=await p.evaluate(()=>document.querySelector('#app').className);if(/navless|peek/.test(c1))fail('menu closed after click '+c1);
+    await p.mouse.click(900,500);await p.waitForTimeout(3500);if(!(await p.evaluate(()=>document.querySelector('#app').classList.contains('navless'))))fail('no collapse after main click');}
   // toàn màn hình (trong khung kiểm thử: chế độ tập trung hoặc fullscreen API)
   await p.evaluate(()=>fsToggle());await p.waitForTimeout(300);if(!(await p.evaluate(()=>fsOn())))fail('fs on');
   await p.evaluate(()=>fsToggle());await p.waitForTimeout(300);if(await p.evaluate(()=>fsOn()))fail('fs off');
