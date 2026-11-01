@@ -624,6 +624,9 @@ body{-webkit-font-smoothing:antialiased;letter-spacing:-.01em}
 .fs-in{width:min(560px,100%);max-height:86vh;overflow:auto;background:var(--panel);border-radius:16px;padding:12px 14px;box-shadow:0 20px 50px rgba(0,0,0,.25)}
 .fsq{width:100%;min-height:42px;border-radius:12px;border:0;background:var(--panel-2);padding:0 12px;font:inherit;margin:6px 0 8px;color:var(--fg)}
 .fs-l .mi{display:flex;align-items:center;gap:10px;width:100%;min-height:44px;padding:8px 10px;border-radius:10px;text-align:left;font-size:15px;color:var(--fg)}.fs-l .mi:hover{background:var(--panel-2)}.fs-l .mi span{width:24px;text-align:center}.fs-l .label{font-size:12px;color:var(--muted);text-transform:uppercase;margin:10px 4px 2px}
+.side.sec-td #stats{display:block!important}.side.sec-gp #stats{display:none!important}.side:not(.sec-gp) #gpStats{display:none}
+.pl{margin:8px 0}.pl-h{display:flex;justify-content:space-between;font-size:14px;margin-bottom:4px}.pl-h span{color:var(--muted)}.pl .bar{height:8px;border-radius:4px;background:var(--panel-2);overflow:hidden;display:flex}
+.gpnb{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.gpnb .t{flex:1 1 160px}.gpnote{flex:2 1 180px;min-height:36px;border-radius:10px;border:0;background:var(--panel-2);padding:0 10px;font:inherit;color:var(--fg)}
 </style>
 
 <div class="app" id="app">
@@ -786,7 +789,7 @@ const DEMO=[ /* chỉ dùng khi trang không kết nối được kho dữ liệ
  ["p15","Lê Gia Bảo","m","2008","","","p9","p10",[],"Hà Nội","",""],["p16","Lê Ngọc An","f","2012","","","p9","p10",[],"Hà Nội","",""],
  ["p17","Võ Minh Khang","m","2015","","","p12","p11",[],"Đà Nẵng","",""]
 ].map(([id,name,gender,birth,death,deathLunar,fatherId,motherId,spouseIds,residence,burial,notes])=>({id,name,gender,birth,death,deathLunar,fatherId,motherId,spouseIds,residence,burial,notes,sample:true}));
-const FIELDS=["name","gender","alias","birth","death","deathLunar","order","fatherId","motherId","spouseIds","birthPlace","residence","burial","job","branch","phone","notes"];
+const FIELDS=["name","gender","alias","birth","death","deathLunar","order","fatherId","motherId","spouseIds","birthPlace","residence","burial","job","branch","phone","notes","verified","verifiedBy","verifiedAt"];
 const byId=id=>people.find(p=>p.id===id);
 const spousesOf=p=>{const ids=new Set(p.spouseIds||[]);people.forEach(x=>(x.spouseIds||[]).includes(p.id)&&ids.add(x.id));return[...ids].map(byId).filter(Boolean)};
 const childrenOf=(p,withSpouse=true)=>{const ids=new Set([p.id]);if(withSpouse)spousesOf(p).forEach(s=>ids.add(s.id));return people.filter(x=>ids.has(x.fatherId)||ids.has(x.motherId)).filter((x,i,a)=>a.indexOf(x)===i).sort(byBirth)};
@@ -3760,6 +3763,85 @@ renderNav=(o=>function(){o();const r=$(".navrest");if(r&&!$("#navFeat"))r.insert
   const sd=$(".side");if(sd)sd.classList.toggle("moreopen",!!(r&&!r.hidden&&curSec()==="td"))})(renderNav);
 /* Sổ tay & xuất: thêm nút xuất toàn bộ từ điển (trước nằm ở chân thanh bên) */
 renderNotebook=(o=>function(){o();const c=$("#notebook .card");if(c&&!$("#nbDictExp"))c.querySelector(".btns")?.insertAdjacentHTML("beforeend",`<button class="btn ghost" id="nbDictExp">⬇️ Xuất toàn bộ từ điển (.md, .zip, .json)</button>`)})(renderNotebook);
+
+/* ===== v19: Siêu Gia Phả và Siêu Từ Điển là 2 hệ thống song song, đủ 12 mục, dùng dữ liệu của nhau ===== */
+SEC.gp.slots=[["chat","💬","Trò chuyện"],["list","🔎","Tra cứu thành viên","cAllP"],["view","🌳","Cây gia phả"],["review","✅","Kiểm duyệt","cRevP"],["plan","📈","Kế hoạch"],["imp","📥","Nhập liệu"],["learn","📚","Bài học · Dòng họ & Lịch sử"],["easy","😊","Dễ dùng"],["more","📒","Sổ tay & sao lưu","cNbP"],["cal","🕯️","Ngày giỗ"]];
+SLOTICON.gp={...SLOTICON.gp,list:["view","blue"],review:["list","teal"],plan:["chart","purple"],more:["note","yellow"]};
+DAILY.gp=["chat","list","view","cal"];
+SHORT.gp={chat:"Trò chuyện",list:"Tra cứu",view:"Cây",imp:"Nhập liệu",learn:"Bài học"};
+let gpx={open:""};
+const gpP=()=>(gpApi?.people||[]).filter(p=>p&&p.name);
+const yr=s=>{const m=String(s||"").match(/(\d{3,4})/);return m?+m[1]:null};
+function gpIssues(p,by){const out=[],b=yr(p.birth),d=yr(p.death),dead=!!String(p.death||"").trim();
+  if(!b)out.push("thiếu năm sinh");if(dead&&!p.deathLunar)out.push("thiếu ngày giỗ");if(b&&d&&d<b)out.push("năm mất trước năm sinh");
+  const f=by.get(p.fatherId),m=by.get(p.motherId);[f,m].forEach(x=>{const xb=yr(x?.birth);if(x&&xb&&b&&b-xb<12)out.push(`sinh quá gần ${x===f?"cha":"mẹ"} (${b-xb} năm)`)});
+  if(gpSrc==="fam"&&!dead)out.push("người còn sống ở gia phả chung");if(gpSrc==="fam"&&(p.phone||(p.residence&&!dead)))out.push("có thông tin riêng tư");return out}
+function gpStatsData(){const P=gpP(),by=new Map(P.map(p=>[p.id,p]));const ver=P.filter(p=>p.verified).length,iss=P.filter(p=>gpIssues(p,by).length).length;
+  let gens=0;try{gens=Math.max(0,...P.map(p=>gpApi.gen(p)))}catch{}return{n:P.length,ver,iss,full:P.length-iss,gens,by,P}}
+function gpStatsHTML(){const s=gpStatsData();const pct=x=>s.n?(x/s.n*100).toFixed(1)+"%":"0";
+  return`<span class="lbl">Kho người · họ ${esc(typeof hoName==="function"?hoName():"")}</span><div><b>${s.n.toLocaleString("vi-VN")}</b><small>người</small></div><div><b>${s.ver.toLocaleString("vi-VN")}</b><small>đã duyệt</small></div><div><b>${s.full.toLocaleString("vi-VN")}</b><small>đủ thông tin</small></div><div><b>${s.gens}</b><small>đời</small></div>
+   <div class="bar"><i style="width:${pct(s.ver)};background:var(--accent)"></i><i style="width:${pct(Math.max(0,s.full-s.ver))};background:var(--fact)"></i></div>`}
+function gpCounts(){const s=gpStatsData();const set=(id,v)=>{const e=document.getElementById(id);if(e)e.textContent=v.toLocaleString("vi-VN")};set("cAllP",s.n);set("cRevP",s.iss+Math.max(0,s.n-s.ver-s.iss));set("cNbP",gpNb.length);
+  const st=$("#gpStats");if(st)st.innerHTML=gpStatsHTML()}
+renderNav=(o=>function(){o();const sd=$(".side"),s=curSec();let g=$("#gpStats");if(!g&&sd){$("#stats")?.insertAdjacentHTML("afterend",`<div class="stats" id="gpStats"></div>`);g=$("#gpStats")}
+  if(sd){sd.classList.toggle("sec-gp",s==="gp");sd.classList.toggle("sec-td",s==="td")}const hid=$("#secnav>div[hidden]");if(hid&&!$("#cAllP"))hid.insertAdjacentHTML("beforeend",`<span id="cAllP"></span><span id="cRevP"></span><span id="cNbP"></span>`);gpCounts()})(renderNav);
+setInterval(()=>{if(curSec()==="gp")gpCounts()},2000);
+/* ---- Sổ tay gia phả (riêng từng người) ---- */
+let gpNb=ls.get("gpNb",[]),gpNbSubd=false;
+function gpNbSub(){if(gpNbSubd||!nbCol)return;gpNbSubd=true;try{nbCol.onSnapshot(s=>{gpNb=s.docs.map(d=>({...d.data(),id:d.id})).filter(x=>x.kind==="gpnb");ls.set("gpNb",gpNb);if(gpx.open==="more")renderGpx();gpCounts()},()=>{})}catch{}}
+async function gpNbAdd(p,note){if(!p)return;const id="gpnb_"+String(p.id).replace(/[^\w-]/g,"").slice(0,60),rec={kind:"gpnb",pid:p.id,name:p.name||"",life:gpApi?.life?.(p)||"",src:gpSrc,ho:typeof gpHo!=="undefined"?gpHo:"",note:note||(gpNb.find(x=>x.id===id)?.note||""),at:new Date().toISOString()};
+  if(nbCol){gpNbSub();try{await nbCol.doc(id).set(rec)}catch{}}else{gpNb=[{...rec,id},...gpNb.filter(x=>x.id!==id)];ls.set("gpNb",gpNb.slice(0,500))}toast("Đã lưu “"+rec.name+"” vào Sổ tay gia phả");gpCounts();if(gpx.open==="more")renderGpx()}
+async function gpNbDel(id){if(nbCol){try{await nbCol.doc(id).delete()}catch{}}else{gpNb=gpNb.filter(x=>x.id!==id);ls.set("gpNb",gpNb)}if(gpx.open==="more")renderGpx();gpCounts()}
+async function gpNbNote(id,note){const x=gpNb.find(y=>y.id===id);if(!x)return;const {id:_,...rec}={...x,note};if(nbCol){try{await nbCol.doc(id).set(rec)}catch{}}else{x.note=note;ls.set("gpNb",gpNb)}toast("Đã lưu ghi chú")}
+function gpNbMd(){const L=["# SỔ TAY GIA PHẢ","",`> Xuất từ Siêu GiaPha chat · ${new Date().toLocaleDateString("vi-VN")}`,""];gpNb.forEach(x=>{L.push(`## ${x.name}`,x.life?`* **Năm:** ${x.life}`:"",x.note?`* **Ghi chú:** ${x.note}`:"","")});
+  const kin=nb.filter(w=>KIN.some(k=>fold(k[0])===fold(w.w)));if(kin.length){L.push("## Thuật ngữ gia phả đã tra (từ Siêu Từ Điển)","");kin.forEach(w=>L.push(`* **${w.w}**: ${w.meaning||""}${w.en?" (*"+w.en+"*)":""}`))}return L.filter(x=>x!==null).join("\n")}
+/* ---- khung hiển thị 3 mục mới ---- */
+function gpxEl(){let a=$("#gpX");if(!a){a=document.createElement("div");a.id="gpX";a.className="gpover";a.hidden=true;$("#gpImp")?.before(a)}return a}
+function renderGpx(){const a=gpxEl();a.hidden=!gpx.open;if(!gpx.open)return;const k=gpx.open,s=gpStatsData();const T={review:"✅ Kiểm duyệt gia phả",plan:"📈 Kế hoạch gia phả",more:"📒 Sổ tay & sao lưu"}[k];
+  let body="";
+  if(k==="review"){const f=ls.get("gprf","need");const rows=s.P.map(p=>({p,is:gpIssues(p,s.by)}));const L=rows.filter(r=>f==="need"?r.is.length:f==="todo"?!r.is.length&&!r.p.verified:r.p.verified);
+    const kinRaw=words.filter(w=>w.domain==="Gia phả & dòng họ"&&w.status==="RAW").length;
+    body=`<div class="rv-sum"><div><b>${rows.filter(r=>r.is.length).length}</b><small>cần sửa</small></div><div><b>${rows.filter(r=>!r.is.length&&!r.p.verified).length}</b><small>chờ duyệt</small></div><div><b>${s.ver}</b><small>đã duyệt</small></div><div><b>${s.n}</b><small>tổng người</small></div></div>
+     <div class="dtabs htabs">${[["need","Cần sửa"],["todo","Chờ duyệt"],["done","Đã duyệt"]].map(([v,l])=>`<button data-gprf="${v}" class="${f===v?"on":""}">${l}</button>`).join("")}</div>
+     <div class="btns"><button class="btn ghost" data-up="gpcheck">✨ AI rà soát thêm</button>${gpSrc==="fam"?`<button class="btn ghost" data-up="scan">🛡️ Rà soát riêng tư</button>`:""}${kinRaw?`<button class="btn ghost" data-slot="td:list">📖 ${kinRaw} thuật ngữ gia phả chờ duyệt bên Từ điển</button>`:""}</div>
+     ${L.length?L.slice(0,200).map(({p,is})=>`<div class="rv-item"><button class="t" data-gpopen="${esc(p.id)}"><b>${esc(p.name)}</b><small>${esc(gpApi?.life?.(p)||"")}${is.length?" · "+is.map(esc).join(" · "):""}</small></button>${p.verified?`<span class="tag ok">Đã duyệt</span>`:""}<button class="mini" data-gpnbadd="${esc(p.id)}" title="Lưu vào sổ tay">📒</button>${gpSrc!=="le"?`<button class="btn ghost" data-gpver="${esc(p.id)}" ${is.length&&!p.verified?"disabled title='Sửa các mục còn thiếu trước'":""}>${p.verified?"Bỏ duyệt":"✓ Duyệt"}</button>`:""}</div>`).join("")
+       :`<div class="empty"><b>${f==="need"?"Không còn ai cần sửa":f==="todo"?"Không có ai chờ duyệt":"Chưa duyệt ai"}</b>${s.n?"":"Gia phả chưa có ai. Vào Nhập liệu để thêm."}</div>`}`}
+  if(k==="plan"){const P=s.P,dead=P.filter(p=>String(p.death||"").trim());const goal=ls.get("gpGoal",{people:200,gens:19});
+    const bar=(l,v,t)=>`<div class="pl"><div class="pl-h"><b>${l}</b><span>${v.toLocaleString("vi-VN")} / ${t.toLocaleString("vi-VN")}</span></div><div class="bar"><i style="width:${Math.min(100,t?v/t*100:0).toFixed(1)}%;background:var(--accent)"></i></div></div>`;
+    const kinIn=KIN.filter(k=>byId(wid(k[0]))).length;
+    body=`<div class="card"><h3>Mục tiêu</h3><div class="frm" style="grid-template-columns:1fr 1fr"><label class="field">Số người<input type="number" min="10" step="10" id="gpGoalP" value="${goal.people}"></label><label class="field">Số đời (AILA 19 đời)<input type="number" min="3" max="40" id="gpGoalG" value="${goal.gens}"></label></div></div>
+     <div class="card">${bar("Người trong gia phả",P.length,goal.people)}${bar("Số đời",s.gens,goal.gens)}${bar("Có năm sinh",P.filter(p=>yr(p.birth)).length,P.length)}${bar("Người đã mất có ngày giỗ",dead.filter(p=>p.deathLunar).length,dead.length)}${bar("Đã duyệt",s.ver,P.length)}${bar("Thuật ngữ gia phả có trong Siêu Từ Điển",kinIn,KIN.length)}</div>
+     <div class="card"><h3>Việc nên làm tiếp</h3><div class="btns" style="flex-direction:column;align-items:stretch">
+      <button class="btn ghost" data-slot="gp:imp">📥 Nhập thêm người: chụp gia phả, dán chữ, kể bằng giọng nói</button><button class="btn ghost" data-slot="gp:review">✅ Sửa ${s.iss} người còn thiếu hoặc mâu thuẫn</button>
+      <button class="btn ghost" data-featgo="drivegp">☁️ Đồng bộ gia phả họ ${esc(typeof hoName==="function"?hoName():"")} từ Google Drive</button>${kinIn<KIN.length?`<button class="btn ghost" data-slot="gp:learn">📚 Lưu ${KIN.length-kinIn} thuật ngữ gia phả vào Siêu Từ Điển</button>`:""}<button class="btn ghost" data-slot="td:cal">📖 Xem kế hoạch Siêu Từ Điển</button></div></div>`}
+  if(k==="more"){gpNbSub();const kin=nb.filter(w=>KIN.some(x=>fold(x[0])===fold(w.w)));
+    body=`<div class="card"><h3>💾 Sao lưu & xuất</h3><div class="btns"><button class="btn primary" id="gpxBackup">Sao lưu, xuất GEDCOM, nhập tệp</button><button class="btn ghost" id="gpNbExp" ${gpNb.length||kin.length?"":"disabled"}>Tải sổ tay gia phả (.md)</button></div></div>
+     <div class="card"><h3>📒 Sổ tay gia phả</h3><p class="src">Người bạn lưu (bấm 📒 ở Kiểm duyệt, ở thẻ người trong kiểu xem vòng tròn, 3D) và ghi chú riêng. Chỉ bạn xem được.</p>
+      ${gpNb.length?gpNb.map(x=>`<div class="nbrow gpnb"><button class="t" data-gpopen="${esc(x.pid)}"><b>${esc(x.name)}</b><small>${esc(x.life||"")}${x.ho?" · họ "+esc(x.ho):""}</small></button><input class="gpnote" data-gpnote="${esc(x.id)}" value="${esc(x.note||"")}" placeholder="Ghi chú..."><button class="icon-btn" data-gpnbdel="${esc(x.id)}" aria-label="Xóa">✕</button></div>`).join(""):`<div class="empty"><b>Sổ tay còn trống</b>Lưu người bạn hay xem để mở lại nhanh.</div>`}</div>
+     <div class="card"><h3>📖 Thuật ngữ gia phả đã tra (từ Siêu Từ Điển)</h3>${kin.length?`<div class="chips" style="margin:0">${kin.map(w=>`<button class="chip" data-w="${w.wid}">${esc(w.w)}</button>`).join("")}</div>`:`<p class="src">Chưa có. Tra từ trong Bài học (để chuột 2 giây) hoặc mục Dòng họ & Lịch sử.</p>`}</div>`}
+  a.innerHTML=`<div class="gpi"><div class="gpi-h"><h3>${T}</h3><button class="icon-btn" data-slot="gp:chat" aria-label="Đóng">${ic.close}</button></div>${body}</div>`}
+gpCloseOver=(o=>function(){gpx.open="";const a=$("#gpX");if(a)a.hidden=true;o()})(gpCloseOver);
+goSlot=(o=>function(s,k){if(s==="gp"&&["review","plan","more"].includes(k)){gpSlot=k;ls.set("gpSlot",k);if(view!=="giapha")show("giapha");else renderGiapha();gpCloseOver();gpx.open=k;renderGpx();
+    $("#viewTitle").textContent="Gia phả · "+SEC.gp.slots.find(x=>x[0]===k)[2];markSlots();return}return o(s,k)})(goSlot);
+document.addEventListener("click",async e=>{const t=e.target;
+  const rf=t.closest?.("[data-gprf]");if(rf){ls.set("gprf",rf.dataset.gprf);renderGpx();return}
+  const ver=t.closest?.("[data-gpver]");if(ver){const p=gpApi?.byId?.(ver.dataset.gpver);if(!p)return;try{await gpApi.put(p.id,{...p,verified:!p.verified,verifiedBy:acct?.me?.name||"",verifiedAt:new Date().toISOString()});toast(p.verified?"Đã bỏ duyệt":"Đã duyệt “"+p.name+"”")}catch(er){toast("Chưa lưu được: "+(er?.message||er))}setTimeout(()=>{renderGpx();gpCounts()},150);return}
+  const op=t.closest?.("[data-gpopen]");if(op){const id=op.dataset.gpopen;upOpen(false);gpLay&&(gpLay="tree");ls.set("gpLay","tree");goSlot("gp","view");setTimeout(()=>{gpApi?.revealInTree?.(id);gpApi?.openDetail?.(id)},200);return}
+  const na=t.closest?.("[data-gpnbadd]");if(na){gpNbAdd(gpApi?.byId?.(na.dataset.gpnbadd));return}
+  const nd=t.closest?.("[data-gpnbdel]");if(nd){gpNbDel(nd.dataset.gpnbdel);return}
+  if(t.closest?.("#gpNbExp")){save("so-tay-gia-pha.md",gpNbMd());return}
+  if(t.closest?.("#gpxBackup")){const b=$(".gphost")?.shadowRoot?.querySelector("#backupBtn");if(b?.onclick)b.onclick({currentTarget:t.closest("#gpxBackup")});else b?.click();return}
+  const fg=t.closest?.("[data-featgo]");if(fg&&fg.dataset.featgo==="drivegp"){goSlot("gp","imp");setTimeout(()=>$("#gpiDrive")?.scrollIntoView({block:"center"}),200)}});
+document.addEventListener("change",e=>{const n=e.target.closest?.("[data-gpnote]");if(n){gpNbNote(n.dataset.gpnote,n.value.trim());return}
+  if(e.target.id==="gpGoalP"||e.target.id==="gpGoalG"){ls.set("gpGoal",{people:Math.max(10,+$("#gpGoalP").value||200),gens:Math.max(3,+$("#gpGoalG").value||19)});renderGpx()}});
+/* thẻ người ở kiểu xem vòng tròn, 3D: thêm nút lưu sổ tay */
+gpCard=(o=>function(id){o(id);const a=$("#gpCard .hp-a");if(a&&!a.querySelector("[data-gpnbadd]"))a.insertAdjacentHTML("beforeend",`<button class="chip" data-gpnbadd="${esc(id)}">📒 Lưu sổ tay</button>`)})(gpCard);
+/* tìm kiếm chung dùng dữ liệu của cả hai hệ thống */
+upSearch=(o=>async function(q,how){const r=await o(q,how);if(how!=="lib")return r;const out=$("#upRes");if(!out)return r;const f=fold(q).trim();if(!f)return r;
+  if(curSec()==="gp"){const W=search(q).slice(0,4),K=KIN.filter(k=>fold(k[0]).includes(f)).slice(0,3);if(W.length||K.length)out.insertAdjacentHTML("beforeend",`<div class="sep"></div><div class="label">Trong Siêu Từ Điển</div>${K.map(k=>`<button class="mi" data-askword="${esc(k[0])}">📜 ${esc(k[0])} <small>${esc(k[2].slice(0,50))}</small></button>`).join("")}${W.map(w=>`<button class="mi" data-upw="${w.id}">📖 ${esc(w.w)} <small>${esc(strip(w.meaning||"").slice(0,50))}</small></button>`).join("")}`)}
+  else if(gpApi){const P=gpP().filter(p=>fold(p.name).includes(f)).slice(0,4);if(P.length)out.insertAdjacentHTML("beforeend",`<div class="sep"></div><div class="label">Trong Siêu Gia Phả</div>${P.map(p=>`<button class="mi" data-gpopen="${esc(p.id)}">👤 ${esc(p.name)} <small>${esc(gpApi.life?.(p)||"")}</small></button>`).join("")}`)}
+  return r})(upSearch);
+FEATS.push(["Gia phả","✅","Kiểm duyệt gia phả",()=>goSlot("gp","review")],["Gia phả","📈","Kế hoạch gia phả",()=>goSlot("gp","plan")],["Gia phả","📒","Sổ tay gia phả",()=>goSlot("gp","more")],["Gia phả","🔎","Tra cứu thành viên",()=>goSlot("gp","list")]);
 
 if(!GP_SUB[gpSlot])gpSlot="chat";renderNav();acctInit();gsSync();
 {const ss=ls.get("startSec","");if(ss)view=ss==="gp"?"giapha":"chat"}

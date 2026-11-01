@@ -22,7 +22,7 @@ await p.evaluate(()=>goSlot('td','more'));await p.waitForTimeout(150);await p.cl
 await p.evaluate(()=>closeMenu());
 await p.evaluate(()=>{$("#app").classList.add('drawer')});await p.waitForTimeout(100);await p.click('#sideA11y');await p.waitForTimeout(100);if(!(await p.evaluate(()=>[...document.querySelectorAll('body>.menu')].some(m=>/trợ năng/i.test(m.innerText)))))throw new Error('a11y menu');
 await p.evaluate(()=>{closeMenu();$("#app").classList.remove('drawer')});
-await p.evaluate(()=>goSlot('gp','more'));await p.waitForTimeout(400);const bm=await p.evaluate(()=>{const m=document.querySelector('.gphost').shadowRoot.querySelector('.menu');if(!m)return null;const r=m.getBoundingClientRect();return[r.left,r.top,r.width]});
+await p.evaluate(()=>goSlot('gp','more'));await p.waitForTimeout(400);await p.click('#gpxBackup');await p.waitForTimeout(150);const bm=await p.evaluate(()=>{const m=document.querySelector('.gphost').shadowRoot.querySelector('.menu');if(!m)return null;const r=m.getBoundingClientRect();return[r.left,r.top,r.width]});
 if(!bm||bm[2]<50)throw new Error('backup menu '+JSON.stringify(bm));await p.screenshot({path:`hf-${nm}-backup.png`});
 if(nm==='d'){await p.evaluate(()=>goSlot('td','chat'));await p.click('#navMore');await p.waitForTimeout(100);if(!(await p.evaluate(()=>getComputedStyle(document.querySelector('#stats')).display!=='none')))throw new Error('stats under Thêm mục');}
 console.log(nm,'features',ok+'/'+n,'sw',await p.evaluate(()=>document.documentElement.scrollWidth),'errs',JSON.stringify(errs));await p.close()}await b.close()})().catch(e=>{console.log('Error',e.message);process.exit(1)});

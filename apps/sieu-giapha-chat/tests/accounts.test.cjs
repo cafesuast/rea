@@ -27,7 +27,7 @@ await p.click('#botRun');await p.waitForFunction(()=>!acct.running,null,{timeout
 const pend=await p.evaluate(()=>acct.props.filter(x=>x.status==='pending').length);if(pend<2)throw new Error('no proposals '+pend);
 await p.screenshot({path:`a-${nm}-bot.png`});
 // 2. bot của Bình và Chi kiểm chứng → vào thư viện
-for(const u of ['u_B','u_C']){await p.evaluate(u=>localStorage.setItem('__uid',u),u);await p.reload();await p.waitForFunction(()=>typeof acct!=="undefined"&&acct.ready&&acct.bots.length>0);await p.waitForTimeout(200);await mockSample();
+for(const u of ['u_B','u_C']){await p.evaluate(u=>localStorage.setItem('__uid',u),u);await p.waitForTimeout(300);await p.reload();await p.waitForFunction(()=>typeof acct!=="undefined"&&acct.ready&&acct.bots.length>0);await p.waitForTimeout(200);await mockSample();
   await p.evaluate(()=>show('acct'));await p.waitForTimeout(200);await p.evaluate(()=>{acctTab='bot';renderAcct()});await p.waitForTimeout(250);await p.click('#botCreate');await p.waitForTimeout(200);await p.click('#botRun');await p.waitForFunction(()=>!acct.running,null,{timeout:8000});await p.waitForTimeout(200)}
 const st=await p.evaluate(()=>({merged:acct.props.filter(x=>x.status==='merged').length,hist:(window.HISTV||[]).length,word:!!words.find(w=>w.w==='bánh chưng thử'),bots:acct.bots.length}));
 if(!st.merged||!st.hist||!st.word||st.bots!==3)throw new Error('merge '+JSON.stringify(st));
