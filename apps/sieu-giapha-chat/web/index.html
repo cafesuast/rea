@@ -675,6 +675,12 @@ html[data-app] .main>header,html[data-app] .topbar{box-shadow:inset 0 3px 0 var(
 .mind2 text{stroke:none!important;paint-order:normal}.mind2 .ln2{stroke:var(--line);stroke-width:1.25;fill:none}
 .mind2 .nd2{fill:var(--panel);stroke:none!important}.mind2 circle{stroke:none!important}.mind2 .cn2{fill:var(--accent)}.mind2 .cn2h{fill:var(--accent-soft)}
 .mind2 .ct2{fill:#fff;font-weight:600;letter-spacing:-.01em}.mind2 .nk2{fill:var(--muted);font-size:9.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase}.mind2 .nv2{fill:var(--fg);font-size:12.5px;font-weight:500}
+html[data-dev="mobile"] .six{display:flex;flex-wrap:wrap}html[data-dev="mobile"] .six [data-six$=":cam"]{order:-2}html[data-dev="mobile"] .six [data-six$=":voice"]{order:-1}
+.scanmode{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:8px 0}.scanmode .chip.on{background:var(--accent);color:#fff;border-color:var(--accent)}
+.fsbtn{font-size:18px;margin-left:4px}html.focusmode .app .side{display:none!important}html.focusmode .main>header.top{height:44px}html.focusmode .fsbtn{color:var(--accent)}
+.app.navright{flex-direction:row-reverse}.app.navright .side{border-right:0;border-left:1px solid var(--line)}.app.navright.navless .side{margin-left:0;margin-right:-236px}
+@media(min-width:761px){.app.peek .side{position:fixed;top:0;bottom:0;left:0;z-index:60;margin:0!important;box-shadow:0 0 40px rgba(0,0,0,.2)}.app.navright.peek .side{left:auto;right:0}}
+.laybox{border-top:1px solid var(--line,rgba(127,127,127,.2));margin-top:12px;padding-top:10px}.laybox h4{margin:0 0 4px}.laybox .setrow small{display:block;color:var(--muted)}
 </style>
 
 <div class="app" id="app">
@@ -4357,6 +4363,87 @@ mapSVG=function(w){const nodes=[["🔤","Từ gốc & IPA",w.ipa||"—"],["🕰�
    ${parts.map(p=>p.line).join("")}<circle class="cn2h" cx="${cx}" cy="${cy}" r="62"/><circle class="cn2" cx="${cx}" cy="${cy}" r="52"/><circle cx="${cx}" cy="${cy}" r="52" fill="url(#${uid}g)"/>
    <text class="ct2" x="${cx}" y="${cy+fs/3}" text-anchor="middle" style="font-size:${fs}px">${esc(title)}</text>${parts.map(p=>p.node).join("")}</svg>
   <p class="src">${esc(w.pos||"")}${w.meaning?" — "+esc(cut(w.meaning,140)):""}</p>`};
+
+/* ===== v23: nhận biết 💻 máy tính / 📱 điện thoại; quét tài liệu và chữ viết tay khi chụp ảnh;
+   toàn màn hình; menu trái tự thu gọn sau 3 giây; chọn kiểu hiện cho bên trái và bên phải (tham khảo Claude) ===== */
+var lay={dev:"auto",nav:"auto",navSide:"left",right:"dock",scan:"doc",...ls.get("lay",{})};
+function layOK(){ls.set("lay",lay)}
+function devDetect(){const coarse=matchMedia("(pointer:coarse)").matches,ua=/Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent),narrow=innerWidth<760;return(coarse&&(ua||narrow))||(ua&&narrow)?"mobile":"pc"}
+function devCur(){return lay.dev==="auto"?devDetect():lay.dev}
+function devLabel(){const d=devCur();return d==="mobile"?`📱 Điện thoại (${innerWidth}px, cảm ứng)`:`💻 Máy tính (${innerWidth}px)`}
+function devApply(){const r=document.documentElement,d=devCur();r.dataset.dev=d;$("#app")?.classList.toggle("navright",lay.navSide==="right");navAutoArm();rpApply()}
+addEventListener("resize",()=>{clearTimeout(devApply.t);devApply.t=setTimeout(devApply,200)});
+/* rung nhẹ khi chạm nút trên điện thoại */
+document.addEventListener("click",e=>{if(devCur()==="mobile"&&e.target.closest?.(".six button,[data-cpm],.btn.primary"))try{navigator.vibrate?.(8)}catch{}},true);
+
+/* ---- quét tài liệu: làm rõ chữ trước khi Claude đọc ---- */
+const SCAN_MODES=[["doc","📄 Tài liệu in","Sách, giấy tờ, bản in: chữ đen, nền trắng"],["hand","✍️ Chữ viết tay","Gia phả chép tay, sổ ghi: giữ nét bút, tăng tương phản"],["photo","🖼️ Ảnh thường","Giữ nguyên ảnh"]];
+async function scanEnhance(file,mode){if(mode==="photo"||!/^image\//.test(file.type)||/heic|heif/i.test(file.type))return file;
+  try{const bmp=await createImageBitmap(file);const k=Math.min(1,2200/Math.max(bmp.width,bmp.height));const c=document.createElement("canvas");c.width=Math.round(bmp.width*k);c.height=Math.round(bmp.height*k);
+    const g=c.getContext("2d",{willReadFrequently:true});g.drawImage(bmp,0,0,c.width,c.height);const im=g.getImageData(0,0,c.width,c.height),d=im.data,n=d.length/4,gray=new Uint8ClampedArray(n),h=new Uint32Array(256);
+    for(let i=0;i<n;i++){const v=(d[i*4]*299+d[i*4+1]*587+d[i*4+2]*114)/1000|0;gray[i]=v;h[v]++}
+    const pct=p=>{let s=0,t=n*p;for(let v=0;v<256;v++){s+=h[v];if(s>=t)return v}return 255};const lo=pct(.02),hi=Math.max(lo+1,pct(mode==="doc"?.90:.97));
+    const W=c.width,out=new Uint8ClampedArray(n);
+    for(let i=0;i<n;i++){let v=(gray[i]-lo)*255/(hi-lo);v=v<0?0:v>255?255:v;out[i]=v}
+    if(mode==="hand"){/* làm nét nhẹ (unsharp 3x3) để nét bút rõ hơn */const s=new Uint8ClampedArray(out);for(let y=1;y<c.height-1;y++)for(let x=1;x<W-1;x++){const i=y*W+x;const v=5*s[i]-s[i-1]-s[i+1]-s[i-W]-s[i+W];out[i]=v<0?0:v>255?255:v}}
+    else{/* tài liệu in: nền về trắng, chữ đậm hơn */for(let i=0;i<n;i++){const v=out[i];out[i]=v>200?255:v<90?v*.6:v}}
+    for(let i=0;i<n;i++){d[i*4]=d[i*4+1]=d[i*4+2]=out[i];d[i*4+3]=255}g.putImageData(im,0,0);
+    const b=await new Promise(r=>c.toBlob(r,"image/jpeg",.9));return new File([b],file.name.replace(/\.\w+$/,"")+"-scan.jpg",{type:"image/jpeg"})}catch{return file}}
+const scanMaybe=f=>/-scan\.jpg$/.test(f?.name||"")?f:scanEnhance(f,lay.scan);
+gpiShrink=(o=>async function(f){const s=await o(f);return scanMaybe(s)})(gpiShrink);
+fromImage=(o=>async function(f){return o(await scanMaybe(f))})(fromImage);
+function scanHTML(){return`<div class="scanmode" role="radiogroup" aria-label="Chế độ chụp"><span class="src">Chế độ chụp:</span>${SCAN_MODES.map(([k,l,t])=>`<button role="radio" aria-checked="${lay.scan===k}" class="chip ${lay.scan===k?"on":""}" data-scan="${k}" title="${esc(t)}">${l}</button>`).join("")}</div>`}
+function scanInject(){const k=$("#gpImp .gpi-kinds");if(k&&!$("#gpImp .scanmode"))k.insertAdjacentHTML("afterend",scanHTML());$$(".six").forEach(s=>{if(s.closest("#gpImp"))return;const host=s.closest(".card");if(host&&!host.querySelector(".scanmode"))s.insertAdjacentHTML("afterend",scanHTML())})}
+renderGpi=(o=>function(){o();scanInject()})(renderGpi);
+document.addEventListener("click",e=>{const b=e.target.closest?.("[data-scan]");if(!b)return;lay.scan=b.dataset.scan;layOK();
+  if(lay.scan==="hand"&&typeof gpi!=="undefined"&&gpi.kind!=="han"){gpi.kind="hand";ls.set("gpiKind","hand")}
+  $$(".scanmode").forEach(x=>x.outerHTML=scanHTML());if(gpi?.open)renderGpi();toast("Chế độ chụp: "+SCAN_MODES.find(x=>x[0]===lay.scan)[1])});
+
+/* ---- toàn màn hình (nếu khung không cho thì dùng chế độ tập trung: ẩn menu và thanh trên) ---- */
+function fsOn(){return!!document.fullscreenElement||document.documentElement.classList.contains("focusmode")}
+async function fsToggle(){const r=document.documentElement;
+  if(fsOn()){if(document.fullscreenElement)await document.exitFullscreen().catch(()=>{});r.classList.remove("focusmode");fsBtn();return}
+  try{if(r.requestFullscreen&&document.fullscreenEnabled){await r.requestFullscreen();fsBtn();return}}catch{}
+  r.classList.add("focusmode");$("#app")?.classList.add("navless");toast("Chế độ toàn màn hình trong khung. Bấm ⛶ hoặc Esc để thoát.");fsBtn()}
+function fsBtn(){const b=$("#fsBtn");if(b){b.textContent=fsOn()?"🗗":"⛶";b.title=fsOn()?"Thoát toàn màn hình":"Toàn màn hình"}}
+document.addEventListener("fullscreenchange",fsBtn);
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&document.documentElement.classList.contains("focusmode")){document.documentElement.classList.remove("focusmode");fsBtn()}});
+(()=>{const top=$(".secsw");if(top&&!$("#fsBtn"))top.insertAdjacentHTML("afterend",`<button class="icon-btn fsbtn" id="fsBtn" title="Toàn màn hình" aria-label="Toàn màn hình">⛶</button>`)})();
+document.addEventListener("click",e=>{if(e.target.closest?.("#fsBtn"))fsToggle()});
+
+/* ---- menu trái: tự thu gọn sau 3 giây (máy tính), rê chuột sát mép để mở tạm ---- */
+let navT=null;
+function navMode(){return lay.nav==="auto"?(devCur()==="pc"?"auto3":"show"):lay.nav}
+function navAutoArm(){clearTimeout(navT);const app=$("#app");if(!app)return;const m=navMode();
+  if(m==="hide"){app.classList.add("navless");return}if(m==="show"){if(devCur()==="pc")app.classList.remove("navless");return}
+  if(m==="auto3")navT=setTimeout(()=>{if(!$(".side:hover")&&!app.classList.contains("drawer")){app.classList.add("navless");app.classList.remove("peek")}},3000)}
+document.addEventListener("mousemove",e=>{if(navMode()!=="auto3"||devCur()!=="pc")return;const app=$("#app");if(!app)return;
+  const edge=lay.navSide==="right"?e.clientX>innerWidth-10:e.clientX<10;
+  if(edge&&app.classList.contains("navless")){app.classList.add("peek");app.classList.remove("navless");clearTimeout(navT)}});
+document.addEventListener("mouseover",e=>{if(e.target.closest?.(".side"))clearTimeout(navT)});
+document.addEventListener("mouseout",e=>{if(e.target.closest?.(".side")&&!e.relatedTarget?.closest?.(".side"))navAutoArm()});
+document.addEventListener("click",e=>{if(e.target.closest?.("#showNav")&&navMode()==="auto3")setTimeout(navAutoArm,50)});
+
+/* ---- bảng bên phải (thẻ thành viên trong gia phả): ghim / nổi / rộng ---- */
+const RP_CSS={dock:"",float:".detail{position:fixed!important;right:12px!important;top:12px!important;bottom:12px!important;z-index:50;border-radius:18px;border-left:0!important;box-shadow:0 20px 50px rgba(0,0,0,.22);width:380px!important}",wide:".detail{width:520px!important}"};
+function rpApply(){$$(".gphost").forEach(h=>{const R=h.shadowRoot;if(!R)return;let s=R.getElementById("rpStyle");if(!s){s=document.createElement("style");s.id="rpStyle";R.appendChild(s)}s.textContent=devCur()==="mobile"?"":RP_CSS[lay.right]||""})}
+renderGiapha=(o=>function(){o();rpApply()})(renderGiapha);
+
+/* ---- Cài đặt › Màn hình & thiết bị ---- */
+function layHTML(){const seg=(k,opts)=>`<div class="dtabs setseg" role="radiogroup">${opts.map(([v,l])=>`<button data-lay="${k}:${v}" class="${lay[k]===v?"on":""}" role="radio" aria-checked="${lay[k]===v}">${l}</button>`).join("")}</div>`;
+  return`<div class="laybox" id="layBox"><h4>🖥️ Màn hình & thiết bị</h4><p class="src">Đang dùng: <b>${devLabel()}</b>. Trên điện thoại, Nói và Chụp ảnh được đưa lên đầu.</p>
+   <div class="setrow"><span><b>Thiết bị</b></span>${seg("dev",[["auto","Tự nhận"],["pc","💻 Máy tính"],["mobile","📱 Điện thoại"]])}</div>
+   <div class="setrow"><span><b>Menu chính</b><small>Tự thu gọn sau 3 giây khi không dùng; rê chuột sát mép để mở lại.</small></span>${seg("nav",[["auto","Tự động"],["auto3","Thu gọn sau 3s"],["show","Luôn hiện"],["hide","Ẩn"]])}</div>
+   <div class="setrow"><span><b>Menu nằm bên</b><small>Hợp tay trái hoặc tay phải.</small></span>${seg("navSide",[["left","Trái"],["right","Phải"]])}</div>
+   <div class="setrow"><span><b>Bảng bên phải</b><small>Thẻ thành viên trong cây gia phả.</small></span>${seg("right",[["dock","Ghim"],["float","Nổi"],["wide","Rộng"]])}</div>
+   <div class="setrow"><span><b>Chế độ chụp ảnh</b></span>${seg("scan",SCAN_MODES.map(([k,l])=>[k,l]))}</div>
+   <div class="btns"><button class="btn ghost sm" id="fsBtn2">⛶ Toàn màn hình</button></div></div>`}
+renderAcct=(o=>async function(){await o();if(view!=="acct"||acctTab!=="set"||$("#layBox"))return;const c=$$("#acct > .card"),body=c[c.length-1];body?.insertAdjacentHTML("beforeend",layHTML())})(renderAcct);
+document.addEventListener("click",e=>{const b=e.target.closest?.("[data-lay]");if(b){const [k,v]=b.dataset.lay.split(":");lay[k]=v;layOK();devApply();const x=$("#layBox");if(x)x.outerHTML=layHTML();$$(".scanmode").forEach(s=>s.outerHTML=scanHTML());return}
+  if(e.target.closest?.("#fsBtn2"))fsToggle()});
+FEATS.push(["Giao diện","⛶","Toàn màn hình",()=>fsToggle()],["Giao diện","🖥️","Màn hình & thiết bị: menu tự thu gọn, bên trái/phải, chế độ chụp",()=>{acctTab="set";show("acct");setTimeout(()=>$("#layBox")?.scrollIntoView({block:"center"}),200)}],
+  ["Nhập liệu","📄","Quét tài liệu, chữ viết tay khi chụp ảnh",()=>{lay.scan=lay.scan==="photo"?"doc":lay.scan;layOK();gpPrivOpen();setTimeout(()=>$("#gpImp .scanmode")?.scrollIntoView({block:"center"}),250)}]);
+setTimeout(()=>{devApply();scanInject()},0);
 
 if(!GP_SUB[gpSlot])gpSlot="chat";renderNav();acctInit();gsSync();
 {const ss=ls.get("startSec","");if(ss)view=ss==="gp"?"giapha":"chat"}
