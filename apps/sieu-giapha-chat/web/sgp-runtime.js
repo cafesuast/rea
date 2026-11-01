@@ -45,6 +45,44 @@
   const subs = new Set();
   const notify = (keys) => { const cols = new Set(keys.map(parentOf)); subs.forEach((s) => { if (s.doc ? keys.includes(s.path) : cols.has(s.path)) s.fire(); }); };
 
+  /* ================= Lưu trên máy để chạy offline (theo từng tài khoản) =================
+   * Bật bằng nút "Bắt đầu đồng bộ & lưu vào máy". Khi bật: mọi tài liệu đọc được lưu vào
+   * IndexedDB của máy, mở app khi mất mạng vẫn thấy dữ liệu; thay đổi lúc mất mạng xếp
+   * vào hàng đợi và tự gửi lên máy chủ khi có mạng lại. Mỗi tài khoản một vùng riêng. */
+  const OFF = (() => {
+    let idb = null;
+    const open = () => idb ? Promise.resolve(idb) : new Promise((res) => {
+      if (!("indexedDB" in window)) return res(null);
+      const r = indexedDB.open("sieu-giapha-offline", 1);
+      r.onupgradeneeded = () => { r.result.createObjectStore("docs"); r.result.createObjectStore("outbox"); };
+      r.onsuccess = () => res((idb = r.result)); r.onerror = () => res(null);
+    });
+    const range = (acc) => IDBKeyRange.bound(acc + "|", acc + "|\uffff");
+    const all = (st, acc) => new Promise((res) => {
+      if (!idb) return res([]);
+      const out = []; try { const c = idb.transaction(st, "readonly").objectStore(st).openCursor(range(acc));
+        c.onsuccess = () => { const cur = c.result; if (cur) { out.push(cur.value); cur.continue(); } else res(out); }; c.onerror = () => res(out); } catch { res(out); }
+    });
+    const run = (st, fn) => new Promise((res) => {
+      if (!idb) return res(false);
+      try { const t = idb.transaction(st, "readwrite"); fn(t.objectStore(st)); t.oncomplete = () => res(true); t.onerror = t.onabort = () => res(false); } catch { res(false); }
+    });
+    const flags = () => lsGet("offline", {});
+    return {
+      open, all,
+      on: (acc) => !!flags()[acc]?.on,
+      info: (acc) => flags()[acc] || {},
+      setInfo(acc, v) { const f = flags(); if (v) f[acc] = { ...(f[acc] || {}), ...v }; else delete f[acc]; lsSet("offline", f); },
+      putDocs: (acc, entries) => run("docs", (st) => entries.forEach(([k, v]) => v === undefined ? st.delete(acc + "|" + k) : st.put({ path: k, data: v }, acc + "|" + k))),
+      clearDocs: (acc) => run("docs", (st) => st.delete(range(acc))),
+      queue: (acc, key, val) => run("outbox", (st) => st.put({ path: key, data: val === undefined ? null : val, del: val === undefined, at: Date.now() }, acc + "|" + key)),
+      unqueue: (acc, key) => run("outbox", (st) => st.delete(acc + "|" + key)),
+      clearOutbox: (acc) => run("outbox", (st) => st.delete(range(acc))),
+    };
+  })();
+  const isNetErr = (e) => !navigator.onLine || /fetch|network|load failed|timed? ?out|offline/i.test(String(e?.message || e || ""));
+  const offEmit = () => { try { window.dispatchEvent(new CustomEvent("sgp-offline")); } catch {} };
+
   /* ================= Chế độ trên máy: IndexedDB, đồng bộ giữa các tab ================= */
   function localBackend() {
     let idb = null;
@@ -87,6 +125,11 @@
       },
       aiList: async () => AI_IDS.filter((i) => lsGet("keys", {})[i]),
       aiReady: () => AI_IDS.some((i) => lsGet("keys", {})[i]),
+      offline: {
+        acc: () => uid, flush: async () => ({ sent: 0, failed: 0 }), pending: async () => 0,
+        async sync() { OFF.setInfo(uid, { on: true, at: new Date().toISOString(), n: mem.size }); offEmit(); return { n: mem.size, sent: 0, failed: 0, local: true }; },
+        async off() { OFF.setInfo(uid, { on: false }); offEmit(); },
+      },
       exportDocs: async () => Object.fromEntries(mem),
       async importDocs(docs) { for (const [k, v] of Object.entries(docs)) { mem.set(k, v); idbPut(k, v); } notify(Object.keys(docs)); bc?.postMessage({ keys: Object.keys(docs) }); },
     };
@@ -104,6 +147,7 @@
       const col = parentOf(key);
       if (!loaded.has(col) && !docLoaded.has(key)) return;
       if (p.eventType === "DELETE") mem.delete(key); else mem.set(key, p.new.data);
+      keep([[key, p.eventType === "DELETE" ? undefined : p.new.data]]);
       notify([key]);
     };
     async function fetchAll(q) {
@@ -113,8 +157,58 @@
         out.push(...data); if (data.length < 1000) break;
       } return out;
     }
+    /* ---- offline: bộ nhớ trên máy + hàng đợi ---- */
+    const cached = new Set(); /* bộ sưu tập đã có bản trên máy */
+    const acc = () => session?.user?.id || "guest";
+    const offOn = () => OFF.on(acc());
+    const keep = (entries) => { if (offOn()) OFF.putDocs(acc(), entries); };
+    let flushing = null;
+    async function flush() {
+      if (flushing) return flushing;
+      flushing = (async () => {
+        let sent = 0, failed = 0;
+        if (!session || !navigator.onLine) return { sent, failed };
+        const items = (await OFF.all("outbox", acc())).sort((a, b) => a.at - b.at);
+        for (const it of items) {
+          const { error } = it.del ? await sb.from("docs").delete().eq("path", it.path) : await sb.from("docs").upsert(row(it.path, it.data));
+          if (error && isNetErr(error)) break;
+          if (error) failed++; else sent++;
+          await OFF.unqueue(acc(), it.path);
+        }
+        if (failed) OFF.setInfo(acc(), { failed: (OFF.info(acc()).failed || 0) + failed });
+        return { sent, failed };
+      })().finally(() => { flushing = null; });
+      return flushing;
+    }
+    const pending = async () => (await OFF.all("outbox", acc())).length;
+    async function sendOrQueue(key, val, send) {
+      if (offOn() && !navigator.onLine) { await OFF.queue(acc(), key, val); keep([[key, val]]); offEmit(); return; }
+      try { await send(); keep([[key, val]]); }
+      catch (e) { if (offOn() && isNetErr(e)) { await OFF.queue(acc(), key, val); keep([[key, val]]); offEmit(); return; } throw e; }
+    }
     return {
       mode: "supabase",
+      offline: {
+        acc, flush, pending,
+        async sync(say) {
+          if (!navigator.onLine) throw new Error("Máy đang mất mạng. Khi có mạng lại, bấm lần nữa để đồng bộ.");
+          OFF.setInfo(acc(), { on: true });
+          say?.("Đang gửi các thay đổi đang chờ...");
+          const f = await flush();
+          say?.("Đang tải toàn bộ dữ liệu bạn được xem về máy...");
+          const rows = await fetchAll(() => sb.from("docs").select("path,data").order("path"));
+          const keys = [];
+          await OFF.clearDocs(acc());
+          const waiting = new Set((await OFF.all("outbox", acc())).map((r) => r.path));
+          for (const r of rows) { if (!waiting.has(r.path)) mem.set(r.path, r.data); keys.push(r.path); cached.add(r.col || parentOf(r.path)); loaded.set(parentOf(r.path), Promise.resolve()); }
+          await OFF.putDocs(acc(), rows.map((r) => [r.path, r.data]));
+          OFF.setInfo(acc(), { on: true, at: new Date().toISOString(), n: rows.length, failed: 0 });
+          if (keys.length) notify(keys);
+          offEmit();
+          return { n: rows.length, sent: f.sent, failed: f.failed };
+        },
+        async off() { await OFF.clearDocs(acc()); OFF.setInfo(acc(), { on: false, at: "", n: 0 }); offEmit(); },
+      },
       async init() {
         if (!window.supabase?.createClient) throw new Error("Không tải được thư viện Supabase");
         sb = window.supabase.createClient(CFG.supabaseUrl, CFG.supabaseAnonKey, { auth: { persistSession: true, detectSessionInUrl: true, flowType: "pkce" } });
@@ -125,31 +219,53 @@
           const u = session.user, md = u.user_metadata || {};
           me = { name: md.full_name || md.name || (u.email || "").split("@")[0], avatarUrl: md.avatar_url || md.picture || "" };
           sb.from("profiles").upsert({ id: u.id, name: me.name, avatar_url: me.avatarUrl, updated_at: new Date().toISOString() }).then(() => {}, () => {});
-          const { data } = await sb.from("editors").select("user_id").eq("user_id", u.id).maybeSingle().then((r) => r, () => ({ data: null }));
-          editor = !!data;
+          const ed = await sb.from("editors").select("user_id").eq("user_id", u.id).maybeSingle().then((r) => r, (e) => ({ data: null, error: e }));
+          editor = ed.error ? !!lsGet("editor:" + u.id, false) : !!ed.data;
+          if (!ed.error) lsSet("editor:" + u.id, editor);
         }
+        await OFF.open();
+        if (OFF.on(acc())) {
+          for (const r of await OFF.all("docs", acc())) { mem.set(r.path, r.data); cached.add(parentOf(r.path)); }
+          for (const r of await OFF.all("outbox", acc())) { r.del ? mem.delete(r.path) : mem.set(r.path, r.data); cached.add(parentOf(r.path)); }
+        }
+        addEventListener("online", () => { flush().then(offEmit); });
+        addEventListener("offline", offEmit);
+        if (navigator.onLine) setTimeout(() => flush().then(offEmit), 1500);
         sb.channel("sgp-docs").on("postgres_changes", { event: "*", schema: "public", table: "docs" }, onChange).subscribe();
       },
       uid: () => session?.user?.id || null, signedIn: () => !!session, canEdit: () => editor,
       profile: () => me || { name: "", avatarUrl: "" },
       loadCol(col) {
-        if (!loaded.has(col)) loaded.set(col, fetchAll(() => sb.from("docs").select("path,data").eq("col", col).order("path")).then((rows) => { rows.forEach((r) => mem.set(r.path, r.data)); notify(rows.length ? rows.map((r) => r.path) : [col + "/_"]); }).catch((e) => { loaded.delete(col); throw e; }));
+        if (loaded.has(col)) return loaded.get(col);
+        const net = fetchAll(() => sb.from("docs").select("path,data").eq("col", col).order("path")).then(async (rows) => {
+          if (offOn()) { /* bản máy chủ thay bản trên máy, trừ mục còn chờ gửi */
+            const waiting = new Set((await OFF.all("outbox", acc())).map((r) => r.path)); const fresh = new Set(rows.map((r) => r.path)); const gone = [];
+            for (const k of [...mem.keys()]) if (parentOf(k) === col && !fresh.has(k) && !waiting.has(k)) { mem.delete(k); gone.push([k, undefined]); }
+            rows.forEach((r) => { if (!waiting.has(r.path)) mem.set(r.path, r.data); });
+            OFF.putDocs(acc(), [...gone, ...rows.map((r) => [r.path, r.data])]);
+          } else rows.forEach((r) => mem.set(r.path, r.data));
+          notify(rows.length ? rows.map((r) => r.path) : [col + "/_"]);
+        });
+        if (offOn()) { /* có mạng thì làm mới ngầm; mất mạng thì dùng bản trên máy */
+          loaded.set(col, Promise.resolve());
+          net.catch(() => loaded.delete(col));
+          return loaded.get(col);
+        }
+        loaded.set(col, net.catch((e) => { loaded.delete(col); throw e; }));
         return loaded.get(col);
       },
       loadDoc(key) {
         if (loaded.has(parentOf(key))) return loaded.get(parentOf(key));
-        if (!docLoaded.has(key)) docLoaded.set(key, sb.from("docs").select("path,data").eq("path", key).maybeSingle().then(({ data }) => { if (data) mem.set(key, data.data); }));
+        if (!docLoaded.has(key)) docLoaded.set(key, sb.from("docs").select("path,data").eq("path", key).maybeSingle().then(({ data, error }) => { if (error) throw error; if (data) { mem.set(key, data.data); keep([[key, data.data]]); } }).catch((e) => { docLoaded.delete(key); if (!(offOn() && mem.has(key))) throw e; }));
         return docLoaded.get(key);
       },
       async put(key, val) {
         if (!session) throw { code: "invalid_argument", message: "Cần đăng nhập để lưu" };
-        const { error } = await sb.from("docs").upsert(row(key, val));
-        if (error) throw { code: "invalid_argument", message: error.message };
+        await sendOrQueue(key, val, async () => { const { error } = await sb.from("docs").upsert(row(key, val)); if (error) throw isNetErr(error) ? error : { code: "invalid_argument", message: error.message }; });
       },
       async del(key) {
         if (!session) throw { code: "invalid_argument", message: "Cần đăng nhập để xóa" };
-        const { error } = await sb.from("docs").delete().eq("path", key);
-        if (error) throw { code: "invalid_argument", message: error.message };
+        await sendOrQueue(key, undefined, async () => { const { error } = await sb.from("docs").delete().eq("path", key); if (error) throw isNetErr(error) ? error : { code: "invalid_argument", message: error.message }; });
       },
       async profiles(ids) {
         const need = ids.filter((i) => !PROF.has(i) && /^[0-9a-f-]{36}$/.test(i));
@@ -330,6 +446,15 @@
   /* ================= Cài đặt app ================= */
   const SGP = (window.SGP = {
     standalone: true, mode: MODE,
+    /* Đồng bộ online/offline: SGP.offline.sync() tải hết về máy và gửi thay đổi đang chờ. */
+    offline: {
+      async sync(say) { await ready; return B.offline.sync(say); },
+      async off() { await ready; return B.offline.off(); },
+      async status() {
+        await ready; const a = B.offline.acc(), i = OFF.info(a);
+        return { mode: MODE, on: MODE === "local" || !!i.on, at: i.at || "", n: i.n || 0, failed: i.failed || 0, online: navigator.onLine, pending: await B.offline.pending(), signedIn: B.signedIn() };
+      },
+    },
     settingsCard() {
       if (MODE === "supabase") {
         return `<div class="card" id="sgpSet"><h3>⚙️ Tài khoản</h3>${B.signedIn() ? `<p>Đã đăng nhập. Dữ liệu chung được cập nhật trực tiếp cho mọi người; gia phả riêng chỉ bạn đọc được.</p>

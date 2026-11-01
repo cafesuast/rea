@@ -43,6 +43,16 @@ Có ở mọi chỗ nhập: tab Nhập liệu của hai phần, nút **+** trong
 - 😊 **Dễ dùng · Tiếng Anh:** Khóa tiếng Anh giao tiếp từ số 0: 14 bài hằng ngày và 8 bài phỏng vấn visa. Mỗi bài 5 bước: đọc truyện, học từ Anh Việt, hội thoại đóng vai, luyện tập, nói với Claude. Chế độ “Chạm & nghe” có ô hình lớn.
 - 📒 **Sổ tay & xuất:** Từ bạn đã lưu, ghi chú riêng, xuất .md hoặc .zip.
 
+## Đồng bộ và dùng khi mất mạng
+
+Vào **Gia phả › Nhập liệu** (hoặc nút 🔄 trên thanh gia phả) và bấm **Bắt đầu đồng bộ & lưu vào máy**. Một lần bấm sẽ:
+
+1. Lấy gia phả dòng họ và từ điển mới từ Google Drive (khi mở trong Claude và đã nối Drive).
+2. Gửi lên máy chủ các thay đổi bạn làm lúc mất mạng.
+3. Lưu toàn bộ dữ liệu tài khoản của bạn vào máy này.
+
+Sau đó, khi mất mạng app vẫn mở, vẫn xem và sửa được. Thay đổi được giữ trên máy và tự gửi lên khi có mạng lại. Mỗi tài khoản có vùng lưu riêng trên máy; nút **Xóa bản lưu trên máy** xóa bản đó (thay đổi chưa gửi vẫn được giữ). Chạy offline cần bản app cài trên máy (thư mục `web/`, xem CAI-DAT.md); bản mở trong Claude luôn cần mạng.
+
 ## Hỏi đáp
 
 **Dữ liệu lưu ở đâu?**  

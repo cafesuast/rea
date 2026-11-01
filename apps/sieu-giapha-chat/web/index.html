@@ -681,6 +681,11 @@ html[data-dev="mobile"] .six{display:flex;flex-wrap:wrap}html[data-dev="mobile"]
 .app.navright{flex-direction:row-reverse}.app.navright .side{border-right:0;border-left:1px solid var(--line)}.app.navright.navless .side{margin-left:0;margin-right:-236px}
 @media(min-width:761px){.app.peek .side{position:fixed;top:0;bottom:0;left:0;z-index:60;margin:0!important;box-shadow:0 0 40px rgba(0,0,0,.2)}.app.navright.peek .side{left:auto;right:0}}
 .laybox{border-top:1px solid var(--line,rgba(127,127,127,.2));margin-top:12px;padding-top:10px}.laybox h4{margin:0 0 4px}.laybox .setrow small{display:block;color:var(--muted)}
+/* Đồng bộ online/offline */
+.osync{border:1.5px solid var(--accent)!important}.osgo{min-height:44px;font-size:14.5px}
+.osdot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;vertical-align:1px}.osdot.on{background:var(--ok)}.osdot.off{background:var(--warn)}
+.osbtn.off{background:var(--warn);color:#fff}
+.gpbar{min-width:0}.gpbar>*{min-width:0;max-width:100%}.gpbar>.src{flex:1 1 220px}.gpbar .seg{flex-wrap:wrap}
 /* Toàn màn hình, tự co giãn theo màn hình đang dùng */
 .review,.imp,.plan,.easy,.gpi{max-width:none;margin:0;padding:clamp(12px,1.4vw,28px)}
 .gsf{max-width:none;width:100%}
@@ -4441,6 +4446,45 @@ document.addEventListener("click",e=>{const b=e.target.closest?.("[data-lay]");i
 FEATS.push(["Giao diện","⛶","Toàn màn hình",()=>fsToggle()],["Giao diện","🖥️","Màn hình & thiết bị: menu tự thu gọn, bên trái/phải, chế độ chụp",()=>{acctTab="set";show("acct");setTimeout(()=>$("#layBox")?.scrollIntoView({block:"center"}),200)}],
   ["Nhập liệu","📄","Quét tài liệu, chữ viết tay khi chụp ảnh",()=>{lay.scan=lay.scan==="photo"?"doc":lay.scan;layOK();gpPrivOpen();setTimeout(()=>$("#gpImp .scanmode")?.scrollIntoView({block:"center"}),250)}]);
 setTimeout(()=>{devApply();scanInject()},0);
+
+/* ===== Đồng bộ online/offline: một nút “Bắt đầu đồng bộ & lưu vào máy” =====
+   1) Lấy gia phả dòng họ và từ điển từ Google Drive (khi mở trong Claude và đã nối Drive).
+   2) Gửi các thay đổi làm lúc mất mạng lên máy chủ.
+   3) Tải toàn bộ dữ liệu tài khoản được xem về máy, để app mở và chạy được khi mất mạng.
+   Bản trong Claude cần mạng; chạy offline dùng bản app cài trên máy (thư mục web/). */
+let osBusy=false,osMsg="",osSt=null;
+async function osStatus(){try{osSt=window.SGP?.offline?await SGP.offline.status():null}catch{osSt=null}osPaint();return osSt}
+function osLine(){const on=navigator.onLine,st=osSt;
+  const net=on?`<span class="osdot on"></span>Đang online`:`<span class="osdot off"></span>Đang offline`;
+  if(!window.SGP)return`${net} · Bản trong Claude cần mạng. Để dùng khi mất mạng, cài bản app lên máy (xem CAI-DAT.md).`;
+  if(st?.mode==="local")return`${net} · Dữ liệu nằm sẵn trên máy này, dùng được cả khi mất mạng.`;
+  if(!st?.signedIn)return`${net} · Đăng nhập để lưu tài khoản của bạn vào máy.`;
+  if(!st.on)return`${net} · Chưa lưu vào máy: mất mạng sẽ không xem được dữ liệu.`;
+  return`${net} · Đã lưu ${st.n} mục vào máy${st.at?" lúc "+new Date(st.at).toLocaleString("vi-VN",{hour:"2-digit",minute:"2-digit",day:"2-digit",month:"2-digit"}):""}${st.pending?` · <b>${st.pending} thay đổi chờ gửi</b>`:" · không có thay đổi chờ gửi"}${st.failed?` · ${st.failed} thay đổi bị máy chủ từ chối`:""}`}
+function osHTML(){return`<div class="card osync" id="osCard"><h3>🔄 Đồng bộ & lưu vào máy <span class="tag ok">Online + Offline</span></h3>
+  <p class="src">Một lần bấm: lấy gia phả và từ điển mới từ Google Drive, gửi các thay đổi làm lúc mất mạng, rồi lưu toàn bộ dữ liệu tài khoản của bạn vào máy này. Khi mất mạng app vẫn mở và vẫn sửa được; có mạng lại thì tự gửi lên.</p>
+  <div class="btns"><button class="btn primary osgo" data-osync ${osBusy?"disabled":""}>${osBusy?"⏳ Đang đồng bộ...":"🔄 Bắt đầu đồng bộ & lưu vào máy"}</button>${osSt?.on&&osSt.mode!=="local"?`<button class="btn ghost" data-osoff>Xóa bản lưu trên máy</button>`:""}</div>
+  <p class="src osline" role="status">${osLine()}</p>${osMsg?`<p class="src" style="color:var(--accent)">${esc(osMsg)}</p>`:""}</div>`}
+function osPaint(){const c=$("#osCard");if(c)c.outerHTML=osHTML();$$(".osbtn").forEach(b=>{b.classList.toggle("off",!navigator.onLine);b.title=navigator.onLine?"Đang online · bấm để đồng bộ và lưu vào máy":"Đang offline · thay đổi được giữ trên máy";b.disabled=osBusy})}
+async function osRun(){if(osBusy)return;osBusy=true;osMsg="";osPaint();const say=t=>{osMsg=t;osPaint()};const out=[];
+  try{
+    if(navigator.onLine&&await getMcp()){say("Đang lấy gia phả và từ điển mới từ Google Drive...");
+      try{await autoDriveRun(true);if(autoDrive.msg)out.push("Drive: "+autoDrive.msg)}catch(e){out.push(driveErr(e))}}
+    if(window.SGP?.offline){const r=await SGP.offline.sync(say);
+      out.push(r.local?`Dữ liệu đã nằm trên máy (${r.n} mục), dùng được khi mất mạng.`:`Đã lưu ${r.n} mục vào máy${r.sent?`, gửi ${r.sent} thay đổi chờ`:""}${r.failed?`, ${r.failed} thay đổi bị từ chối`:""}.`)}
+    else out.push(navigator.onLine?"Bản trong Claude không lưu được vào máy để chạy offline. Hãy cài bản app (thư mục web/) rồi bấm nút này ở đó.":"Đang mất mạng.");
+    osMsg=out.join(" ");toast("🔄 "+osMsg)}
+  catch(e){osMsg="Chưa đồng bộ được: "+(e?.message||e);toast(osMsg)}
+  finally{osBusy=false;await osStatus()}}
+renderGpi=(o=>function(){o();const box=$("#gpImp");if(!box||box.hidden||gpi.res||$("#osCard"))return;const h=box.querySelector(".gpi-h");if(h){h.insertAdjacentHTML("afterend",osHTML());osStatus()}})(renderGpi);
+gpBar=(o=>function(){o();const b=$("#gpbar");if(!b)return;if(!b.querySelector(".osbtn"))b.insertAdjacentHTML("beforeend",`<button class="btn primary sm osbtn${navigator.onLine?"":" off"}" data-osync ${osBusy?"disabled":""}>🔄 Đồng bộ & lưu vào máy</button>`)})(gpBar);
+document.addEventListener("click",e=>{if(e.target.closest?.("[data-osync]")){osRun();return}
+  if(e.target.closest?.("[data-osoff]")&&confirm("Xóa bản lưu trên máy của tài khoản này? Thay đổi chưa gửi vẫn được giữ.")){SGP.offline.off().then(osStatus)}});
+addEventListener("online",()=>{toast("🌐 Có mạng lại"+(window.SGP?.offline?": đang gửi thay đổi lên máy chủ...":""));setTimeout(osStatus,2500)});
+addEventListener("offline",()=>{toast(window.SGP?.offline&&(osSt?.on||osSt?.mode==="local")?"📴 Mất mạng: vẫn dùng được, thay đổi giữ trên máy và tự gửi khi có mạng":"📴 Mất mạng");osStatus()});
+addEventListener("sgp-offline",()=>osStatus());
+FEATS.push(["Gia phả","🔄","Bắt đầu đồng bộ & lưu vào máy (online + offline)",()=>{gpPrivOpen();setTimeout(()=>$("#osCard")?.scrollIntoView({block:"center"}),250)}]);
+setTimeout(osStatus,1200);
 
 if(!GP_SUB[gpSlot])gpSlot="chat";renderNav();acctInit();gsSync();
 {const ss=ls.get("startSec","");if(ss)view=ss==="gp"?"giapha":"chat"}
