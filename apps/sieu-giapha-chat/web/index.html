@@ -637,6 +637,7 @@ body{-webkit-font-smoothing:antialiased;letter-spacing:-.01em}
 .laysw button{display:inline-flex;align-items:center;gap:2px}
 @media(max-width:760px){.laysw .ll{display:none}.laysw button span[aria-hidden]{font-size:16px}.g3leg{display:none}}
 .adimp{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:6px;padding:4px 12px;border-radius:12px;background:var(--panel-2)}.adimp .setrow{flex:1 1 320px}.adstate{display:block;color:var(--accent)}
+.hosel{min-height:34px;border-radius:10px;font-weight:600}.hoother{display:inline-flex;gap:6px}.hoother input{min-height:34px;border-radius:10px;padding:0 10px;width:150px}
 </style>
 
 <div class="app" id="app">
@@ -2418,26 +2419,26 @@ function clanParseGed(text){const L=unescapeMd(text).split("\n").map(s=>s.trim()
     return{id:p.id,name,alias:aka,gender:p.sex==="M"?"m":p.sex==="F"?"f":"",birth:p.bd||"",death:p.dd||(/deceased/.test(p.note||"")?"?":""),deathLunar:"",birthPlace:p.bp||"",burial:p.dp||"",
       fatherId:I[fc.h]?fc.h:"",motherId:I[fc.w]?fc.w:"",spouseIds:sp,branch:nm?nm[1].trim():"",job:"",residence:"",phone:"",order:"",
       notes:[p.note?"Ghi chú nguồn: "+p.note:"",p.sour?"Nguồn: "+p.sour:"","Dữ liệu lịch sử công khai (Wikidata CC0), chỉ đọc."].filter(Boolean).join("\n"),src:p.sour||"",ref:true}})}
-function clanId(title,part){return fold(title.replace(/^sieu-tu-dien-gia-pha-ho-le_/i,"").replace(/\.\w+$/,"")).replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"")+(part?"-"+part:"")}
+function clanId(title,part){return fold(title.replace(/^sieu-tu-dien-gia-pha-ho-le_/i,"").replace(/^sieu-tu-dien-gia-pha-(ho-[a-z0-9-]+)_/i,"$1-").replace(/\.\w+$/,"")).replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"")+(part?"-"+part:"")}
 async function clanInit(){try{const db=window.claude?.use?await window.claude.use("db"):null;if(!db)return;
   clanCol=db.collection("clan");clanCol.onSnapshot(s=>{clanDocs={};s.docs.forEach(d=>clanDocs[d.id]=d.data());if(view==="roots"&&rtab==="clan")renderRoots()},()=>{});
-  lineCol=db.collection("lineage_le");lineCol.onSnapshot(s=>{lineCount=s.docs.length;if(view==="roots"&&rtab==="clan")renderRoots();if(view==="giapha")gpBar()},()=>{})}catch{}}
+  clanDb=db;lineSub()}catch{}}
 async function clanSync(){if(clanBusy)return;const m=await getMcp();
   if(!m){clanMsg="Chỉ đồng bộ được khi mở trang trong Claude và đã kết nối Google Drive.";renderClanAny();return}
   if(canWrite===false){toast("Bạn chỉ có quyền xem, không đồng bộ được.");return}
   if(!clanCol||!lineCol){clanMsg="Kho dữ liệu chưa sẵn sàng, thử lại sau vài giây.";renderClanAny();return}
-  clanBusy=true;clanMsg="Đang tìm “Siêu từ điển gia phả họ Lê” trong Google Drive...";renderClanAny();
-  try{const files=(await driveSearchAll(m,"title contains 'sieu-tu-dien-gia-pha-ho-le_'")).filter(f=>!f.trashed&&/(INDEX-LE|FULL-LE)-\d+\.md$|\.ged$/i.test(f.title));
-    if(!files.length){clanMsg="Không thấy tệp INDEX-LE, FULL-LE hay trieu-le.ged trong Drive đang kết nối.";return}
+  clanBusy=true;clanMsg=`Đang tìm “Siêu từ điển gia phả họ ${hoName()}” trong Google Drive...`;renderClanAny();
+  try{const files=(await driveSearchAll(m,`title contains '${hoPrefix()}'`)).filter(f=>!f.trashed&&f.title.startsWith(hoPrefix())&&hoFileRe().test(f.title));
+    if(!files.length){clanMsg=`Không thấy tệp ${hoPrefix()}INDEX-…, FULL-… hay .ged của họ ${hoName()} trong Drive đang kết nối.`;return}
     let nr=0,ne=0,np=0;
     for(const f of files){clanMsg=`Đang đọc ${f.title}...`;renderClanAny();
       const p=payloadOf(await m.callTool(DRIVE,"read_file_content",{fileId:f.id}));const text=typeof p==="string"?p:p?.fileContent||"";
       if(/\.ged$/i.test(f.title)){const ps=clanParseGed(text);np+=ps.length;
         for(let i=0;i<ps.length;i+=10)await Promise.all(ps.slice(i,i+10).map(({id,...d})=>lineCol.doc(id).set({...d,at:Date.now()})));continue}
-      const isFull=/FULL-LE/i.test(f.title),items=isFull?clanParseFull(text):clanParseIndex(text),per=isFull?10:120;
+      const isFull=/FULL-/i.test(f.title),items=isFull?clanParseFull(text):clanParseIndex(text),per=isFull?10:120;
       isFull?ne+=items.length:nr+=items.length;
-      for(let i=0,k=0;i<items.length;i+=per,k++)await clanCol.doc(clanId(f.title,k)).set({title:f.title.replace(/^sieu-tu-dien-gia-pha-ho-le_/i,""),kind:isFull?"full":"index",part:k,[isFull?"entries":"rows"]:items.slice(i,i+per),fileId:f.id,at:Date.now()})}
-    clanMsg=`Xong: ${nr} mục INDEX, ${ne} mục 10 tầng, ${np} người trên cây triều Lê.`;toast("Đã đồng bộ từ điển gia phả họ Lê");
+      for(let i=0,k=0;i<items.length;i+=per,k++)await clanCol.doc(clanId(f.title,k)).set({title:f.title.replace(hoPrefix(),""),ho:gpHo,kind:isFull?"full":"index",part:k,[isFull?"entries":"rows"]:items.slice(i,i+per),fileId:f.id,at:Date.now()})}
+    clanMsg=`Xong: ${nr} mục INDEX, ${ne} mục 10 tầng, ${np} người trên cây họ ${hoName()}.`;toast("Đã đồng bộ gia phả họ "+hoName());
   }catch(e){clanMsg=e.code==="server_not_connected"?"Google Drive chưa được kết nối trong Claude.":e.code==="not_granted"?"Bạn chưa cho phép trang dùng Google Drive.":"Lỗi đồng bộ: "+(e.message||e.code)}
   finally{clanBusy=false;renderClanAny()}}
 function renderClanAny(){if(view==="roots")renderRoots();if(view==="giapha")gpBar()}
@@ -2458,7 +2459,7 @@ function rootsClan(){const rows=clanRows(),ents=clanEntries(),f=fold(cq).trim(),
 
 /* ---- view Gia phả: GIAPHA chat đầy đủ trong shadow DOM ---- */
 function gpBar(){const b=$("#gpbar");if(!b)return;
-  b.innerHTML=`<div class="seg" role="tablist" aria-label="Nguồn gia phả"><button data-gpsrc="mine" class="${gpSrc==="mine"?"on":""}">🔒 <span class="lg">Gia phả </span>riêng</button><button data-gpsrc="fam" class="${gpSrc==="fam"?"on":""}">👪 Dòng họ<span class="lg"> chung</span></button><button data-gpsrc="le" class="${gpSrc==="le"?"on":""}"><span class="lg">Cây </span>triều Lê${lineCount?` (${lineCount})`:""}</button></div>
+  b.innerHTML=`<div class="seg" role="tablist" aria-label="Nguồn gia phả"><button data-gpsrc="mine" class="${gpSrc==="mine"?"on":""}">🔒 <span class="lg">Gia phả </span>riêng</button><button data-gpsrc="fam" class="${gpSrc==="fam"?"on":""}">👪 Dòng họ<span class="lg"> chung</span></button><button data-gpsrc="le" class="${gpSrc==="le"?"on":""}">🏯 <span class="lg">Lịch sử </span>họ ${esc(hoName())}${lineCount?` (${lineCount})`:""}</button></div>
   <span class="src">${gpSrc==="le"?(lineCount?"Dữ liệu lịch sử từ Drive (Wikidata). Xem và tra cứu, nên sửa ở tệp gốc.":clanBusy?esc(clanMsg):"Chưa có dữ liệu."):gpSrc==="mine"?(acct.uid?"Chỉ mình bạn xem được. Chia sẻ lên dòng họ sẽ ẩn 4 đời gần nhất.":(window.SGP?"Chế độ khách: đăng nhập để lưu gia phả riêng.":"Chế độ khách: đăng nhập trong Claude để lưu gia phả riêng.")):"Ai được chia sẻ app đều xem được. Chỉ ghi người đã mất, không ghi 4 đời gần nhất."}</span>
   ${gpSrc==="mine"&&acct.uid?`<button class="btn ghost sm" id="gpShare">👪 Chia sẻ lên dòng họ</button>`:""}${gpSrc==="fam"?`<button class="btn ghost sm" id="gpScan">🛡️ Rà soát riêng tư</button>`:""}
   ${gpSrc==="le"&&!lineCount?`<button class="btn primary sm" id="clanSync" ${clanBusy?"disabled":""}>Đồng bộ từ Drive</button>`:""}
@@ -2468,7 +2469,7 @@ function renderGiapha(){gpBar();const box=$("#gpbox");if(gpMounted===gpSrc&&box.
   gpMounted=gpSrc;box.innerHTML="";const host=document.createElement("div");host.className="gphost";box.appendChild(host);
   if(!window.GPmount){host.textContent="Không tải được mô-đun gia phả.";return}
   const R=host.attachShadow({mode:"open"});R.innerHTML=`<style>${GPCSS}.gstrip .gt{display:none}.gstrip{justify-content:flex-end}.six{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px;padding:2px 4px}.six button{display:flex!important;flex-direction:column;align-items:center;gap:2px;padding:8px 4px!important;border-radius:10px;font-size:12px;text-align:center}.bubble{border:0;border-radius:18px 18px 18px 6px}.msg.me .bubble{background:var(--bubble-me);color:#fff;border-radius:18px 18px 6px 18px}.card{border:0;box-shadow:var(--shadow)}.composer{background:var(--bar);border-top:.5px solid var(--line)}.box{border-radius:22px}.six button span{font-size:20px}.six button:hover{background:var(--accent-soft)}</style>`+GPHTML;
-  try{gpApi=gpSrc==="le"?GPmount(R,"lineage_le","sgpl:",{demo:false}):gpSrc==="mine"?GPmount(R,acct.uid?`data/users/${acct.uid}/fam/people`:"_local","sgpm:",{demo:false,noDb:!acct.uid}):GPmount(R,"people","sgp:",{});if(GP_SUB[gpSlot])gpApi.show(GP_SUB[gpSlot])}catch(e){console.error(e);host.textContent="Lỗi mô-đun gia phả: "+e.message}}
+  try{gpApi=gpSrc==="le"?GPmount(R,lineName(),gpHo==="le"?"sgpl:":"sgpl"+gpHo+":",{demo:false}):gpSrc==="mine"?GPmount(R,acct.uid?`data/users/${acct.uid}/fam/people`:"_local","sgpm:",{demo:false,noDb:!acct.uid}):GPmount(R,famColName(),gpHo==="le"?"sgp:":"sgp"+gpHo+":",gpHo==="le"?{}:{demo:false});if(GP_SUB[gpSlot])gpApi.show(GP_SUB[gpSlot])}catch(e){console.error(e);host.textContent="Lỗi mô-đun gia phả: "+e.message}}
 document.addEventListener("click",e=>{const t=e.target;
   if(t.closest("#clanSync")){clanSync();return}
   const gs=t.closest("[data-gpsrc]");if(gs){gpSrc=gs.dataset.gpsrc;ls.set("gpsrc2",gpSrc);renderGiapha();return}
@@ -3183,11 +3184,11 @@ async function gpShareClan(){if(gpSrc!=="mine"||!gpApi){toast("Mở gia phả ri
   const fam=ls.get("famCode")||("f"+Math.random().toString(36).slice(2,8));ls.set("famCode",fam);const ids=new Set(ok.map(p=>p.id));const map=id=>id&&ids.has(id)?fam+"_"+id:"";
   const KEEP=["name","gender","alias","birth","death","deathLunar","order","branch","birthPlace","burial","job"];let n=0;
   for(const p of ok){const d={};KEEP.forEach(k=>{if(p[k])d[k]=p[k]});d.fatherId=map(p.fatherId);d.motherId=map(p.motherId);d.spouseIds=(p.spouseIds||[]).map(map).filter(Boolean);
-    try{await db.doc("people/"+fam+"_"+p.id).set(d);n++}catch(e){toast("Dừng: "+(e?.message||e));break}}
+    try{await db.doc(famColName()+"/"+fam+"_"+p.id).set(d);n++}catch(e){toast("Dừng: "+(e?.message||e));break}}
   toast(`Đã đưa ${n} người lên gia phả dòng họ. Đã ẩn ${hid.length} người.`)}
 function gpPrivacyScan(){if(!gpApi)return[];const P=gpApi.people.filter(p=>p.name);const {hid}=gpPublicSplit(P);const ph=P.filter(p=>p.phone||p.residence&&!String(p.death||"").trim());return[...new Map([...hid,...ph].map(p=>[p.id,p])).values()]}
 async function gpMoveToMine(list){const db=acct.db;if(!db||!acct.uid){toast("Cần đăng nhập trong Claude.");return}
-  let n=0;for(const p of list){const {id,...d}=p;try{await db.doc(`data/users/${acct.uid}/fam/people/${id}`).set(d);await db.doc("people/"+id).delete();n++}catch(e){toast("Dừng: "+(e?.code==="invalid_argument"?"bạn không có quyền xóa ở gia phả chung":e?.message||e));break}}
+  let n=0;for(const p of list){const {id,...d}=p;try{await db.doc(`data/users/${acct.uid}/fam/people/${id}`).set(d);await db.doc(famColName()+"/"+id).delete();n++}catch(e){toast("Dừng: "+(e?.code==="invalid_argument"?"bạn không có quyền xóa ở gia phả chung":e?.message||e));break}}
   toast(`Đã chuyển ${n} người vào gia phả riêng của bạn.`)}
 document.addEventListener("click",async e=>{const t=e.target;
   if(t.closest("#acctChip")||t.closest(".acctgo")){show("acct");return}
@@ -3681,15 +3682,44 @@ async function autoDriveRun(manual){if(autoBusy)return;const m=await getMcp();if
     for(const f of files){try{const p=payloadOf(await m.callTool(DRIVE,"read_file_content",{fileId:f.id}));const text=typeof p==="string"?p:p?.fileContent||"";
         const x=await importEntries(parseText(text,f.title.replace(/\.(md|txt)$/i,"")),null,()=>{});tot.add+=x.add;tot.upd+=x.upd;tot.skip+=x.skip}catch(e){bad++;if(["not_granted","permission_denied","server_not_connected"].includes(e?.code))throw e}}
     msg=files.length?`từ điển: ${files.length} tệp đổi, +${tot.add} từ mới, ${tot.upd} cập nhật${bad?`, ${bad} tệp lỗi`:""}`:"từ điển: không có tệp mới";
-    try{if(typeof clanSync==="function"&&clanCol&&lineCol){await clanSync();msg+=" · gia phả họ Lê: "+(clanMsg||"xong")}}catch{}
+    try{if(typeof clanSync==="function"&&clanCol&&lineCol){await clanSync();msg+=" · gia phả họ "+hoName()+": "+(clanMsg||"xong")}}catch{}
     autoDrive.last=ymd(new Date());autoDrive.lastAt=new Date().toISOString();autoDrive.msg=msg;saveAutoDrive();toast("☁️ Đã đồng bộ Google Drive: "+msg)}
   catch(e){autoDrive.msg=driveErr(e);saveAutoDrive();if(manual)toast(autoDrive.msg)}finally{autoBusy=false}}
 setInterval(()=>{if(autoDriveDue())autoDriveRun(false)},5*60*1000);setTimeout(()=>{if(autoDriveDue())autoDriveRun(false)},8000);
 document.addEventListener("change",e=>{const a=e.target.closest?.("[data-autodrive]");if(!a)return;autoDrive.on=a.checked;saveAutoDrive();
   toast(a.checked?`Đã bật: tự đồng bộ Google Drive mỗi ngày lúc ${autoDrive.hour}h sáng (khi app đang mở)`:"Đã tắt tự đồng bộ");if(a.checked&&autoDriveDue())autoDriveRun(false)});
 document.addEventListener("click",e=>{if(e.target.closest?.("#autoDriveNow")){autoDriveRun(true);toast("Đang đồng bộ Google Drive...")}});
-function autoDriveRow(){if(!autoDrive)return"";return`<label class="setrow"><span><b>☁️ Tự đồng bộ Google Drive mỗi ngày lúc ${autoDrive.hour}h sáng</b><small>Lấy tệp mới hoặc vừa sửa trong “Siêu Từ Điển - RAW” và gia phả họ Lê. Chạy khi app đang mở; nếu lúc 6h app đóng thì chạy ngay khi mở lại. <span class="adstate">${esc(autoDriveState())}</span></small></span><input type="checkbox" class="tgl" data-autodrive ${autoDrive.on?"checked":""}></label>`}
+function autoDriveRow(){if(!autoDrive)return"";return`<label class="setrow"><span><b>☁️ Tự đồng bộ Google Drive mỗi ngày lúc ${autoDrive.hour}h sáng</b><small>Lấy tệp mới hoặc vừa sửa trong “Siêu Từ Điển - RAW” và gia phả họ ${esc((()=>{try{return hoName()}catch{return"Lê"}})())}. Chạy khi app đang mở; nếu lúc 6h app đóng thì chạy ngay khi mở lại. <span class="adstate">${esc(autoDriveState())}</span></small></span><input type="checkbox" class="tgl" data-autodrive ${autoDrive.on?"checked":""}></label>`}
 (()=>{const b=$("#driveList")?.closest(".btns");if(b&&!$("#adImp"))b.insertAdjacentHTML("afterend",`<div id="adImp" class="adimp">${autoDriveRow()}<button class="btn ghost sm" id="autoDriveNow">Đồng bộ ngay</button></div>`)})();
+
+/* ===== v16: chọn dòng họ phổ biến Việt Nam; đồng bộ Google Drive ngay trong Nhập liệu gia phả ===== */
+const HO_EXTRA=["Lâm","Mai","Cao","Lương","Hà","Tạ","Thái","Lưu","Châu","Quách","Văn","Kiều","La","Tô","Đào","Đoàn","Vương","Phùng","Từ","Tăng"];
+const HO_LIST=[...SURNAMES.map(s=>s[0]),...HO_EXTRA.filter(x=>!SURNAMES.some(s=>s[0].includes(x)))];
+const hoSlug=n=>fold(String(n).split(" / ")[0]).replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"");
+let gpHo=ls.get("gpHo","le");
+function hoName(s=gpHo){const n=HO_LIST.find(x=>hoSlug(x)===s);return n?n.split(" / ")[0]:(ls.get("gpHoNames",{})[s]||s)}
+function hoPrefix(s=gpHo){return`sieu-tu-dien-gia-pha-ho-${s}_`}
+function hoFileRe(s=gpHo){const U=s.toUpperCase();return new RegExp(`(INDEX-${U}|FULL-${U}|INDEX|FULL)-\\d+\\.md$|\\.ged$`,"i")}
+function famColName(s=gpHo){return s==="le"?"people":"people_"+s}
+function lineName(s=gpHo){return"lineage_"+s}
+var clanDb,lineUnsub;
+function lineSub(){if(!clanDb)return;try{lineUnsub&&lineUnsub()}catch{}lineCount=0;lineCol=clanDb.collection(lineName());
+  lineUnsub=lineCol.onSnapshot(s=>{lineCount=s.docs.length;if(view==="roots"&&rtab==="clan")renderRoots();if(view==="giapha")gpBar()},()=>{})}
+function hoSet(s){if(!s||s===gpHo)return;gpHo=s;ls.set("gpHo",s);clanMsg="";lineSub();gpMounted=null;if(view==="giapha")renderGiapha();if(gpi.open)renderGpi();toast("Đã chọn dòng họ "+hoName())}
+function hoSelect(id){return`<select class="sel sm hosel" ${id?`id="${id}"`:""} data-gpho aria-label="Chọn dòng họ">${HO_LIST.map(n=>`<option value="${hoSlug(n)}" ${hoSlug(n)===gpHo?"selected":""}>Họ ${esc(n)}</option>`).join("")}${HO_LIST.some(n=>hoSlug(n)===gpHo)?"":`<option value="${esc(gpHo)}" selected>Họ ${esc(hoName())}</option>`}<option value="__other">Họ khác…</option></select>`}
+document.addEventListener("change",e=>{const s=e.target.closest?.("[data-gpho]");if(!s)return;
+  if(s.value==="__other"){const box=s.parentElement;s.insertAdjacentHTML("afterend",`<form class="hoother"><input id="hoOther" placeholder="Gõ họ, ví dụ: Khổng" maxlength="20"><button class="btn primary sm">Chọn</button></form>`);s.value=gpHo;setTimeout(()=>$("#hoOther")?.focus(),30);return}
+  hoSet(s.value)});
+document.addEventListener("submit",e=>{if(!e.target.classList?.contains("hoother"))return;e.preventDefault();const n=$("#hoOther").value.trim().replace(/^họ\s+/i,"");if(!n)return;const s=hoSlug(n);if(!s)return;
+  const names=ls.get("gpHoNames",{});names[s]=n.charAt(0).toUpperCase()+n.slice(1);ls.set("gpHoNames",names);hoSet(s)});
+/* thanh nguồn gia phả: thêm chọn dòng họ khi xem Dòng họ chung hoặc Lịch sử dòng họ */
+gpBar=(o=>function(){o();const b=$("#gpbar");if(!b)return;if(gpSrc==="fam"||gpSrc==="le"){const seg=b.querySelector('.seg[aria-label="Nguồn gia phả"]');seg?.insertAdjacentHTML("afterend",hoSelect())}})(gpBar);
+/* Nhập liệu gia phả: thẻ đồng bộ Google Drive */
+renderGpi=(o=>function(){o();const box=$("#gpImp");if(!box||box.hidden||gpi.res)return;const first=box.querySelector(".gpi .card");if(!first||$("#gpiDrive"))return;
+  first.insertAdjacentHTML("afterend",`<div class="card" id="gpiDrive"><h3>☁️ Đồng bộ Google Drive</h3><p class="src">Lấy gia phả dòng họ từ các tệp <code>${esc(hoPrefix())}INDEX-…md</code>, <code>FULL-…md</code> và <code>.ged</code> trên Google Drive đang kết nối trong Claude, rồi đưa vào mục Lịch sử dòng họ.</p>
+   <div class="btns" style="align-items:center">${hoSelect()}<button class="btn primary" id="clanSync" ${clanBusy?"disabled":""}>${clanBusy?"Đang đồng bộ...":"☁️ Đồng bộ họ "+esc(hoName())+" từ Drive"}</button><button class="btn ghost" data-gpgo="le">Xem cây (${lineCount})</button></div>
+   ${clanMsg?`<p class="src" style="color:var(--accent)">${esc(clanMsg)}</p>`:""}${autoDriveRow()}</div>`)})(renderGpi);
+const _rca=renderClanAny;renderClanAny=function(){_rca();if(gpi.open&&!gpi.res){$("#gpiDrive")?.remove();renderGpi()}};
 
 if(!GP_SUB[gpSlot])gpSlot="chat";renderNav();acctInit();gsSync();
 {const ss=ls.get("startSec","");if(ss)view=ss==="gp"?"giapha":"chat"}

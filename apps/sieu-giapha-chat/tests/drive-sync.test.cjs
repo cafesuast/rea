@@ -27,4 +27,11 @@ if(due!=='false,true,false,true')throw new Error('due logic '+due);
 await p.evaluate(()=>autoDriveRun(true));await p.waitForTimeout(1500);const ad=await p.evaluate(()=>({...autoDrive,words:words.length}));
 if(!ad.lastAt||!/12 tệp/.test(ad.msg))throw new Error('auto run '+JSON.stringify(ad));
 await p.evaluate(()=>{acctTab='set';show('acct')});await p.waitForTimeout(200);if(!(await p.evaluate(()=>!!document.querySelector('#acct [data-autodrive]'))))throw new Error('settings toggle');
+// chọn dòng họ + đồng bộ Drive trong Nhập liệu gia phả
+await p.evaluate(()=>{gpSrc='fam';ls.set('gpsrc2','fam');goSlot('gp','view')});await p.waitForTimeout(300);
+const nHo=await p.evaluate(()=>document.querySelectorAll('#gpbar [data-gpho] option').length);if(nHo<30)throw new Error('surname options '+nHo);
+await p.selectOption('#gpbar [data-gpho]','tran');await p.waitForTimeout(300);
+const ho=await p.evaluate(()=>[gpHo,famColName(),lineName(),document.querySelector('#gpbar').innerText.includes('họ Trần')]);if(ho.join()!=='tran,people_tran,lineage_tran,true')throw new Error('ho '+ho);
+await p.evaluate(()=>{gpi.open=true;renderGpi()});await p.waitForTimeout(150);if(!(await p.evaluate(()=>!!document.querySelector('#gpiDrive #clanSync')&&!!document.querySelector('#gpiDrive [data-autodrive]')&&/Đồng bộ họ Trần/.test(document.querySelector('#gpiDrive').innerText))))throw new Error('drive card in gp import');
+await p.screenshot({path:`ds-${nm}-gpi.png`});await p.evaluate(()=>{gpi.open=false;renderGpi();hoSet('le')});
 console.log(nm,variant,'listed',n,'msg',ad.msg,'sw',await p.evaluate(()=>document.documentElement.scrollWidth),'errs',JSON.stringify(errs));await ctx.close()}await b.close()})().catch(e=>{console.log('Error',e.message);process.exit(1)});
