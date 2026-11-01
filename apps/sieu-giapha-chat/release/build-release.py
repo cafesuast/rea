@@ -26,6 +26,9 @@ rep('const TERMS_V=1;','const TERMS_V=2;const SGP_OP=window.SGP_OPERATOR||{name:
 rep('["Mục đích","Siêu GiaPha chat là dự án cộng đồng, phi lợi nhuận, xây dựng Siêu Từ Điển Việt – Việt – Anh và Cây gia phả Việt Nam."]',
  '["Đơn vị vận hành và mục đích",SGP_OP.name+" vận hành Siêu GiaPha (gồm Siêu Gia Phả và Siêu Từ Điển) để xây dựng Siêu Từ Điển Việt – Việt – Anh và Cây gia phả Việt Nam. Một số tính năng có thể thu phí; giá và quyền lợi luôn được nêu rõ trước khi bạn trả tiền. Liên hệ: "+SGP_OP.contact+"."]')
 rep('["Thay đổi và luật áp dụng",','["Quyền của bạn với dữ liệu cá nhân","Bạn có quyền xem, sửa, tải về, xóa dữ liệu của mình và rút lại sự đồng ý bất cứ lúc nào trong Cài đặt, hoặc gửi yêu cầu tới địa chỉ liên hệ ở trên. App chỉ xử lý dữ liệu cá nhân cho đúng mục đích đã nêu và không bán dữ liệu cá nhân của bạn."],\n ["Thay đổi và luật áp dụng",')
+# 5. Link mời trỏ về bản chính thức; tên trang
+rep('const APP_LINK="https://claude.ai/artifact/CLY5d1T6dVzCHdiiNs5Cwk";','const APP_LINK=window.SGP_APP_LINK||"https://claude.ai/artifact/QnpFCfJB3y7jXTu2YSYzK6";')
+s=re.sub(r"<title>[^<]*</title>","<title>Siêu GiaPha</title>",s,count=1)
 # 3. Đánh dấu bản phát hành
 if 'SGP_RELEASE' not in s:s=s.replace('<script>','<script>window.SGP_RELEASE={v:"1.0.0",at:"2026-11-01",channel:"official"};',1)
 for bad in ["Bối Khê","BOIKE","BOIKHE","Lê Văn Phúc","Nguyễn Thị Hạnh","Lê Gia Bảo","Võ Minh Khang","Bảo Sơn"]:
