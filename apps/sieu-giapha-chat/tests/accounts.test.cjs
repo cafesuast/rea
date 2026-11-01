@@ -2,7 +2,7 @@
 const fs0=require('fs'),path0=require('path');const OUT=path0.join(__dirname,'out');fs0.mkdirSync(OUT,{recursive:true});process.chdir(OUT);
 const {chromium}=require('playwright');(async()=>{const b=await chromium.launch();
 for(const [W,H,nm] of [[1280,860,'d'],[390,820,'m']]){const ctx=await b.newContext({viewport:{width:W,height:H}});const errs=[];
-await ctx.addInitScript(()=>{
+await ctx.addInitScript(()=>{localStorage.setItem('stdien:clanProf',JSON.stringify({country:'Việt Nam',ho:'Lê',toc:'Không biết',chi:'Không biết',nhanh:'Không biết',dong:'Không biết',doi:'Không biết'}));
   const store=window.__store=JSON.parse(localStorage.getItem('__mockdb')||'{}');const subs=[];const persist=()=>localStorage.setItem('__mockdb',JSON.stringify(store));
   const merge=(a,b)=>{for(const k in b){if(b[k]&&typeof b[k]==='object'&&!Array.isArray(b[k])&&a[k]&&typeof a[k]==='object')merge(a[k],b[k]);else a[k]=b[k]}return a};
   const list=c=>Object.entries(store[c]||{}).map(([id,d])=>({id,data:()=>JSON.parse(JSON.stringify(d))}));
@@ -20,14 +20,14 @@ const mockSample=()=>p.evaluate(()=>{sample={json:async pr=>{await new Promise(r
   if(/KIỂM CHỨNG/.test(pr))return{verdict:'ok',label:'Fact',note:'Đúng'};
   if(/BIÊN SOẠN/.test(pr))return{items:[{w:'bánh chưng thử',pos:'danh từ',meaning:'bánh ngày Tết',en:'square sticky rice cake',example:'Tết gói bánh chưng.',source:'Từ điển tiếng Việt'}]};
   if(/SỬ HỌC/.test(pr))return{items:[{year:1513,lab:'1513',title:'Sự kiện thử nghiệm',desc:'Dữ liệu giả lập cho kiểm thử.',source:'https://vi.wikipedia.org/wiki/Chiếu_dời_đô'}]};return{}}}});
-await p.goto('file://'+path0.join(__dirname,'..','index.html'));await p.waitForTimeout(900);await mockSample();
+await p.goto('file://'+(process.env.SGP_FILE||path0.join(__dirname,'..','index.html')));await p.waitForTimeout(900);await mockSample();
 // 1. bot của An
 await p.evaluate(()=>document.querySelector('#acctChip').click());await p.waitForTimeout(200);await p.evaluate(()=>{acctTab='bot';renderAcct()});await p.waitForTimeout(250);await p.click('#botCreate');await p.waitForTimeout(200);
 await p.click('#botRun');await p.waitForFunction(()=>!acct.running,null,{timeout:8000});await p.waitForTimeout(200);
 const pend=await p.evaluate(()=>acct.props.filter(x=>x.status==='pending').length);if(pend<2)throw new Error('no proposals '+pend);
 await p.screenshot({path:`a-${nm}-bot.png`});
 // 2. bot của Bình và Chi kiểm chứng → vào thư viện
-for(const u of ['u_B','u_C']){await p.evaluate(u=>localStorage.setItem('__uid',u),u);await p.waitForTimeout(300);await p.reload();await p.waitForFunction(()=>typeof acct!=="undefined"&&acct.ready&&acct.bots.length>0);await p.waitForTimeout(200);await mockSample();
+for(const u of ['u_B','u_C']){await p.evaluate(u=>localStorage.setItem('__uid',u),u);await p.waitForTimeout(300);await p.reload();await p.waitForFunction(()=>typeof acct!=="undefined"&&acct.ready&&acct.bots.length>0,null,{timeout:8000}).catch(async e=>{console.log("DBG",await p.evaluate(()=>JSON.stringify({r:acct.ready,uid:acct.uid,b:acct.bots.length,db:!!acct.db,keys:Object.keys(window.__store||{}),len:(localStorage.getItem("__mockdb")||"").length})));throw e});await p.waitForTimeout(200);await mockSample();
   await p.evaluate(()=>show('acct'));await p.waitForTimeout(200);await p.evaluate(()=>{acctTab='bot';renderAcct()});await p.waitForTimeout(250);await p.click('#botCreate');await p.waitForTimeout(200);await p.click('#botRun');await p.waitForFunction(()=>!acct.running,null,{timeout:8000});await p.waitForTimeout(200)}
 const st=await p.evaluate(()=>({merged:acct.props.filter(x=>x.status==='merged').length,hist:(window.HISTV||[]).length,word:!!words.find(w=>w.w==='bánh chưng thử'),bots:acct.bots.length}));
 if(!st.merged||!st.hist||!st.word||st.bots!==3)throw new Error('merge '+JSON.stringify(st));
