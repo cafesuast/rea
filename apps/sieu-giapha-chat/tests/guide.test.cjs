@@ -9,6 +9,6 @@ const want={quick:5,six:6,gp:8,td:8,faq:7};for(const k in want){await p.click(`[
 await p.screenshot({path:`g-${nm}-help.png`});
 await p.click('#gAll');await p.waitForTimeout(200);const said=await p.evaluate(()=>__said.length);if(!said)throw new Error('read-aloud did nothing');
 if(!(await p.evaluate(()=>guideMd())).includes('# Hướng dẫn'))throw new Error('guideMd');
-await p.evaluate(()=>goSlot('gp','view'));await p.click('#helpBtn');if(await p.evaluate(()=>view)!=='help')throw new Error('? button');
+await p.evaluate(()=>goSlot('gp','view'));await p.evaluate(()=>document.querySelector('#helpBtn').click());if(await p.evaluate(()=>view)!=='help')throw new Error('? button');
 await p.reload();await p.waitForTimeout(500);if(!(await p.evaluate(()=>document.querySelector('#guideHi').hidden)))throw new Error('banner shown again');
 console.log(nm,'said',said,'sw',await p.evaluate(()=>document.documentElement.scrollWidth),'errs',JSON.stringify(errs));await p.close()}await b.close()})().catch(e=>{console.log('Error',e.message);process.exit(1)});

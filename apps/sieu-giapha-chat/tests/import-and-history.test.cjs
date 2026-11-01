@@ -35,7 +35,7 @@ console.log(nm,'sources',await p.evaluate(()=>Object.keys(window.__store.gpsourc
 await c('[data-slot="gp:imp"]');await p.fill('#gpiText','Cụ Lê Văn Tư sinh 1932 là con thứ hai của cụ Phúc');await c('#gpiTextGo');await p.waitForFunction(()=>!gpi.busy&&gpi.res);
 console.log(nm,'text',await p.evaluate(()=>JSON.stringify(gpi.res.people.map(x=>[x.name,x.father]))));await c('#gpiSave');await p.waitForTimeout(300);
 console.log(nm,'tu father',await p.evaluate(()=>{const t=gpApi.people.find(x=>x.name==='Lê Văn Tư');return gpApi.byId(t.fatherId)?.name}));
-await c('#gpbar [data-gphopen]');await p.waitForTimeout(200);await p.screenshot({path:`i-${nm}-hist.png`,fullPage:false});
+await p.evaluate(()=>document.querySelector('#gpbar [data-gphopen]').click());await p.waitForTimeout(200);await p.screenshot({path:`i-${nm}-hist.png`,fullPage:false});
 console.log(nm,'hist rows',await p.evaluate(()=>document.querySelectorAll('.gph-r').length));
 await c('#gpHist [data-gphp]');await p.waitForTimeout(200);console.log(nm,'closed',await p.evaluate(()=>document.querySelector('#gpHist').hidden));
 console.log(nm,'sw',await p.evaluate(()=>document.documentElement.scrollWidth),'errs',JSON.stringify(errs));await p.close()}

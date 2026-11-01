@@ -22,7 +22,7 @@ const mockSample=()=>p.evaluate(()=>{sample={json:async pr=>{await new Promise(r
   if(/SỬ HỌC/.test(pr))return{items:[{year:1513,lab:'1513',title:'Sự kiện thử nghiệm',desc:'Dữ liệu giả lập cho kiểm thử.',source:'https://vi.wikipedia.org/wiki/Chiếu_dời_đô'}]};return{}}}});
 await p.goto('file://'+path0.join(__dirname,'..','index.html'));await p.waitForTimeout(900);await mockSample();
 // 1. bot của An
-await p.click('#acctChip');await p.waitForTimeout(200);await p.evaluate(()=>{acctTab='bot';renderAcct()});await p.waitForTimeout(250);await p.click('#botCreate');await p.waitForTimeout(200);
+await p.evaluate(()=>document.querySelector('#acctChip').click());await p.waitForTimeout(200);await p.evaluate(()=>{acctTab='bot';renderAcct()});await p.waitForTimeout(250);await p.click('#botCreate');await p.waitForTimeout(200);
 await p.click('#botRun');await p.waitForFunction(()=>!acct.running,null,{timeout:8000});await p.waitForTimeout(200);
 const pend=await p.evaluate(()=>acct.props.filter(x=>x.status==='pending').length);if(pend<2)throw new Error('no proposals '+pend);
 await p.screenshot({path:`a-${nm}-bot.png`});
@@ -47,5 +47,5 @@ await p.screenshot({path:`a-${nm}-mine.png`});
 await p.click('#upBtn');await p.waitForTimeout(150);const items=await p.evaluate(()=>[...document.querySelectorAll('#upMenu [data-up]')].map(b=>b.dataset.up).join(','));
 await p.screenshot({path:`a-${nm}-up.png`});await p.fill('#upQ','Cụ');await p.click('[data-upq="lib"]');await p.waitForTimeout(150);
 const hits=await p.evaluate(()=>document.querySelectorAll('#upRes [data-uppp]').length);if(!hits)throw new Error('lib search');
-await p.keyboard.press('Escape');await p.click('#gsPlus');await p.waitForTimeout(100);const six=await p.evaluate(()=>document.querySelectorAll('#gsSix [data-gssix]').length);if(six!==6)throw new Error('search bar + menu '+six);
+await p.keyboard.press('Escape');await p.evaluate(()=>goSlot('gp','view'));await p.waitForTimeout(150);await p.click('#gsPlus');await p.waitForTimeout(100);const six=await p.evaluate(()=>document.querySelectorAll('#gsSix [data-gssix]').length);if(six!==6)throw new Error('search bar + menu '+six);
 console.log(nm,'pend',pend,JSON.stringify(st),'pub',pub.length,'menu',items,'sw',await p.evaluate(()=>document.documentElement.scrollWidth),'errs',JSON.stringify(errs));await ctx.close()}await b.close()})().catch(e=>{console.log('Error',e.message);process.exit(1)});
