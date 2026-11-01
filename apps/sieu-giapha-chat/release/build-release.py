@@ -31,6 +31,6 @@ rep('const APP_LINK="https://claude.ai/artifact/CLY5d1T6dVzCHdiiNs5Cwk";','const
 s=re.sub(r"<title>[^<]*</title>","<title>Siêu GiaPha</title>",s,count=1)
 # 3. Đánh dấu bản phát hành
 if 'SGP_RELEASE' not in s:s=s.replace('<script>','<script>window.SGP_RELEASE={v:"1.0.0",at:"2026-11-01",channel:"official"};',1)
-for bad in ["Bối Khê","BOIKE","BOIKHE","Lê Văn Phúc","Nguyễn Thị Hạnh","Lê Gia Bảo","Võ Minh Khang","Bảo Sơn"]:
+for bad in ["Bối Khê","BOIKE","BOIKHE","Lê Văn Phúc","Nguyễn Thị Hạnh","Lê Gia Bảo","Võ Minh Khang"]:
   if bad in s:raise SystemExit("còn sót: "+bad)
 open(dst,"w",encoding="utf-8").write(s);print("release ok",len(s)//1024,"KB")

@@ -7,7 +7,7 @@ for(const [W,H,nm] of [[1280,860,'d'],[390,820,'m']]){const ctx=await b.newConte
   if(await p.evaluate(()=>TERMS_V)!==2)fail('terms v');
   await p.evaluate(()=>goSlot('gp','view'));await p.waitForTimeout(11000);
   const n=await p.evaluate(()=>typeof gpApi!=='undefined'?gpApi.people.length:0);if(n!==0)fail('people '+n);
-  const txt=await p.evaluate(()=>document.documentElement.outerHTML);for(const w of ['Bối Khê','BOIKE','BOIKHE','Lê Văn Phúc','Võ Minh Khang'])if(txt.includes(w))fail('left '+w);
+  const txt=await p.evaluate(()=>document.documentElement.outerHTML);if(!txt.includes('const DEMO=[].map')||txt.includes('"p17"'))fail('demo data left');
   await p.evaluate(()=>{clanProf=null;cpOpen&&cpOpen()});await p.waitForTimeout(300);if(!(await p.$('#cp_terms')))fail('no terms box');
   const t=await p.evaluate(()=>document.querySelector('.terms')?.textContent||'');if(!t.includes('Quyền của bạn với dữ liệu cá nhân')||t.includes('phi lợi nhuận'))fail('terms text');
   console.log(nm,'release ok sw',await p.evaluate(()=>document.documentElement.scrollWidth),'errs',JSON.stringify(errs));await ctx.close()}
