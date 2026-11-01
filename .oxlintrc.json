@@ -182,6 +182,7 @@
   },
   "ignorePatterns": [
     "dist",
+    "apps/sieu-giapha-chat",
     "build",
     "node_modules",
     "docs/api",

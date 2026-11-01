@@ -1,0 +1,16 @@
+{
+  "birth": "1958",
+  "burial": "",
+  "death": "22/09/2020",
+  "deathLunar": "",
+  "fatherId": "p1",
+  "gender": "m",
+  "motherId": "p2",
+  "name": "Lê Văn Đức",
+  "notes": "",
+  "residence": "Thanh Hóa",
+  "sample": true,
+  "spouseIds": [
+    "p8"
+  ]
+}

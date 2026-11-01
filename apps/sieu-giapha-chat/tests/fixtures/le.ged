@@ -1,0 +1,54 @@
+0 HEAD  
+1 CHAR UTF-8  
+0 @Q1195391@ INDI  
+1 NAME Thái Tổ /Lê/  
+1 NAME 黎利  
+2 TYPE aka  
+1 SEX M  
+1 BIRT  
+2 DATE 1384  
+2 PLAC Thanh Hóa  
+1 DEAT  
+2 DATE 1433  
+1 FAMS @F22@  
+1 SOUR https://www.wikidata.org/wiki/Q1195391  
+1 NOTE nhom: Họ Lê (Lam Sơn); status: historical/deceased; han: label\_is\_title  
+0 @Q10807027@ INDI  
+1 NAME Phạm Thị Ngọc Trần  
+1 SEX F  
+1 DEAT  
+2 DATE 1425  
+1 FAMS @F22@  
+0 @Q2986223@ INDI  
+1 NAME Thái Tông /Lê/  
+1 SEX M  
+1 BIRT  
+2 DATE 1423  
+1 DEAT  
+2 DATE 1442  
+1 FAMC @F22@  
+1 FAMS @F23@  
+0 @Q13407950@ INDI  
+1 NAME Ngô Thị Ngọc Dao  
+1 SEX F  
+1 FAMS @F23@  
+0 @Q1771050@ INDI  
+1 NAME Thánh Tông /Lê/  
+1 SEX M  
+1 BIRT  
+2 DATE 1442  
+1 FAMC @F23@  
+0 @Q59729130@ INDI  
+1 NAME Q59729130  
+1 SEX U  
+1 FAMC @F23@  
+0 @F22@ FAM  
+1 HUSB @Q1195391@  
+1 WIFE @Q10807027@  
+1 CHIL @Q2986223@  
+0 @F23@ FAM  
+1 HUSB @Q2986223@  
+1 WIFE @Q13407950@  
+1 CHIL @Q1771050@  
+1 CHIL @Q59729130@  
+0 TRL

@@ -1,0 +1,16 @@
+{
+  "birth": "1980",
+  "burial": "",
+  "death": "",
+  "deathLunar": "",
+  "fatherId": "p3",
+  "gender": "m",
+  "motherId": "p4",
+  "name": "Lê Văn Nam",
+  "notes": "",
+  "residence": "Hà Nội",
+  "sample": true,
+  "spouseIds": [
+    "p10"
+  ]
+}
