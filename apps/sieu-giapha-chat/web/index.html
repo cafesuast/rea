@@ -1244,7 +1244,7 @@ $("#f-death").oninput=$("#f-gio").oninput=gioHint;
 $("#pform").onsubmit=saveForm;
 $("#formClose").onclick=$("#formCancel").onclick=()=>$("#formScrim").hidden=true;
 $("#formScrim").onclick=e=>{if(e.target.id==="formScrim")$("#formScrim").hidden=true};
-$("#meSel").onchange=e=>{me=e.target.value;ls.set("me",me);renderAll()};
+$("#meSel").onchange=e=>{me=e.target.value;ls.set("me",me);try{OPT.onMe?.(me)}catch{}renderAll()};
 $("#rootSel").onchange=e=>{rootId=e.target.value;ls.set("root",rootId);renderTree()};
 $("#tq").oninput=()=>{const h=renderTree();if(h.size)focusNode([...h][0])};
 $("#zIn").onclick=()=>{zoom=Math.min(1.6,zoom+.1);renderTree()};$("#zOut").onclick=()=>{zoom=Math.max(.4,zoom-.1);renderTree()};$("#zReset").onclick=()=>{zoom=1;renderTree()};
@@ -1263,7 +1263,7 @@ $("#send").onclick=()=>send(inp.value);
 show(view);renderSide();initStore();
 (async()=>{try{sample=window.claude?.use?await window.claude.use("sample"):null}catch{sample=null}if(view==="chat")renderChat()})();
 
-return{get people(){return people},get me(){return me},get mode(){return mode},gen,kin,gioOf,byId,isDead,life,openDetail,closeDetail,show,revealInTree,focusNode,renderAll,put:async(id,d)=>put(id,d),setMe:id=>{me=id;ls.set("me",me);renderAll()}};
+return{get people(){return people},get me(){return me},get mode(){return mode},gen,kin,gioOf,byId,isDead,life,openDetail,closeDetail,show,revealInTree,focusNode,renderAll,put:async(id,d)=>put(id,d),setMe:(id,quiet)=>{if(me===id)return;me=id;ls.set("me",me);if(!quiet)try{OPT.onMe?.(me)}catch{}renderAll()}};
 };
 
 </script>
@@ -2514,7 +2514,7 @@ function renderGiapha(){gpBar();const box=$("#gpbox");if(gpMounted===gpSrc&&box.
   gpMounted=gpSrc;box.innerHTML="";const host=document.createElement("div");host.className="gphost";box.appendChild(host);
   if(!window.GPmount){host.textContent="Không tải được mô-đun gia phả.";return}
   const R=host.attachShadow({mode:"open"});R.innerHTML=`<style>${GPCSS}.gstrip .gt{display:none}.gstrip{justify-content:flex-end}.six{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px;padding:2px 4px}.six button{display:flex!important;flex-direction:column;align-items:center;gap:2px;padding:8px 4px!important;border-radius:10px;font-size:12px;text-align:center}.bubble{border:0;border-radius:18px 18px 18px 6px}.msg.me .bubble{background:var(--bubble-me);color:#fff;border-radius:18px 18px 6px 18px}.card{border:0;box-shadow:var(--shadow)}.composer{background:var(--bar);border-top:.5px solid var(--line)}.box{border-radius:22px}.six button span{font-size:20px}.six button:hover{background:var(--accent-soft)}</style>`+GPHTML;
-  try{gpApi=gpSrc==="le"?GPmount(R,lineName(),gpHo==="le"?"sgpl:":"sgpl"+gpHo+":",{demo:false}):(gpSrc==="mine"||gpSrc==="me4")?GPmount(R,acct.uid?`data/users/${acct.uid}/fam/people`:"_local","sgpm:",{demo:false,noDb:!acct.uid,filter:gpNear(gpSrc==="me4"?4:20)}):GPmount(R,famColName(),gpHo==="le"?"sgp:":"sgp"+gpHo+":",gpHo==="le"?{}:{demo:false});if(GP_SUB[gpSlot])gpApi.show(GP_SUB[gpSlot])}catch(e){console.error(e);host.textContent="Lỗi mô-đun gia phả: "+e.message}}
+  try{gpApi=gpSrc==="le"?GPmount(R,lineName(),gpAccLSP(gpHo==="le"?"sgpl:":"sgpl"+gpHo+":"),{demo:false,onMe:gpMeSave}):(gpSrc==="mine"||gpSrc==="me4")?GPmount(R,acct.uid?`data/users/${acct.uid}/fam/people`:"_local",gpLSP(),{demo:false,noDb:!acct.uid,filter:gpNear(gpSrc==="me4"?4:20),onMe:gpMeSave}):GPmount(R,famColName(),gpAccLSP(gpHo==="le"?"sgp:":"sgp"+gpHo+":"),gpHo==="le"?{onMe:gpMeSave}:{demo:false,onMe:gpMeSave});if(GP_SUB[gpSlot])gpApi.show(GP_SUB[gpSlot])}catch(e){console.error(e);host.textContent="Lỗi mô-đun gia phả: "+e.message}}
 document.addEventListener("click",e=>{const t=e.target;
   if(t.closest("#clanSync")){clanSync();return}
   const gs=t.closest("[data-gpsrc]");if(gs){gpSrc=gs.dataset.gpsrc;ls.set("gpsrc2",gpSrc);renderGiapha();return}
@@ -3609,10 +3609,10 @@ function ringSVG(D){const W=800,C=W/2,R0=58,step=56,maxR=5;const groups=CAT.map(
   <p class="src" style="text-align:center;margin:4px 12px">Tâm là <b>${esc(me.name)}</b>. Vòng 1: cha mẹ, vợ chồng, con · vòng 2: ông bà, anh chị em, cháu · càng ra ngoài càng xa. Chấm mờ: người đã mất. Chạm một chấm để xem.</p>`}
 /* ---- Bộ vẽ 3D đơn giản (canvas, phối cảnh, kéo để xoay, cuộn hoặc chụm để thu phóng) ---- */
 function g3d(host,nodes,edges,opt){opt=opt||{};const cv=document.createElement("canvas");cv.className="g3d";host.appendChild(cv);const ctx=cv.getContext("2d");
-  let ry=opt.ry??.5,rx=opt.rx??-.18,zoom=1,auto=true,drag=null,hov=null,dpr=Math.min(2,devicePixelRatio||1),W=0,H=0,proj=[];
+  let ry=opt.ry??.5,rx=opt.rx??-.18,zoom=1,panX=0,panY=0,auto=true,drag=null,hov=null,dpr=Math.min(2,devicePixelRatio||1),W=0,H=0,proj=[];
   const size=()=>{const r=host.getBoundingClientRect();W=Math.max(200,r.width);H=Math.max(240,r.height);cv.width=W*dpr;cv.height=H*dpr;cv.style.width=W+"px";cv.style.height=H+"px"};size();
   const ext=Math.max(1,...nodes.map(n=>Math.hypot(n.x,n.y,n.z)));
-  const P3=(x,y,z)=>{const cy=Math.cos(ry),sy=Math.sin(ry),cx=Math.cos(rx),sx=Math.sin(rx);let X=x*cy+z*sy,Z=-x*sy+z*cy,Y=y*cx-Z*sx;Z=y*sx+Z*cx;const s=Math.min(W,H)*.42/ext*zoom,D=ext*3,f=D/(D+Z);return[W/2+X*s*f,H/2+Y*s*f,Z,f]};
+  const P3=(x,y,z)=>{const cy=Math.cos(ry),sy=Math.sin(ry),cx=Math.cos(rx),sx=Math.sin(rx);let X=x*cy+z*sy,Z=-x*sy+z*cy,Y=y*cx-Z*sx;Z=y*sx+Z*cx;const s=Math.min(W,H)*.42/ext*zoom,D=ext*3,f=D/(D+Z);return[W/2+panX+X*s*f,H/2+panY+Y*s*f,Z,f]};
   const dark=()=>matchMedia("(prefers-color-scheme: dark)").matches&&document.documentElement.dataset.theme!=="light"||document.documentElement.dataset.theme==="dark";
   function draw(){ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,W,H);const dk=dark();
     if(opt.rings)opt.rings.forEach(rg=>{ctx.beginPath();for(let i=0;i<=56;i++){const t=i/56*Math.PI*2,[x,y]=P3(rg.r*Math.cos(t),rg.y,rg.r*Math.sin(t));i?ctx.lineTo(x,y):ctx.moveTo(x,y)}ctx.strokeStyle=rg.c||(dk?"rgba(255,255,255,.12)":"rgba(0,0,0,.08)");ctx.lineWidth=1;ctx.stroke();
@@ -3629,17 +3629,17 @@ function g3d(host,nodes,edges,opt){opt=opt||{};const cv=document.createElement("
   const pick=(x,y)=>{let best=null,bd=1e9;proj.forEach(p=>{const d=Math.hypot(p.x-x,p.y-y);if(d<p.r+6&&p.z<bd){bd=p.z;best=p}});return best};
   const pt=e=>{const r=cv.getBoundingClientRect();return[e.clientX-r.left,e.clientY-r.top]};
   const pts=new Map();
-  cv.addEventListener("pointerdown",e=>{cv.setPointerCapture(e.pointerId);pts.set(e.pointerId,pt(e));drag={x:e.clientX,y:e.clientY,ry,rx,moved:false,z:zoom,d0:pts.size===2?(()=>{const [a,b]=[...pts.values()];return Math.hypot(a[0]-b[0],a[1]-b[1])})():0};auto=false});
+  cv.addEventListener("pointerdown",e=>{cv.setPointerCapture(e.pointerId);pts.set(e.pointerId,pt(e));drag={x:e.clientX,y:e.clientY,ry,rx,px:panX,py:panY,pan:e.shiftKey||e.button===1||e.button===2||e.ctrlKey||e.metaKey,moved:false,z:zoom,d0:pts.size===2?(()=>{const [a,b]=[...pts.values()];return Math.hypot(a[0]-b[0],a[1]-b[1])})():0};auto=false});
   cv.addEventListener("pointermove",e=>{if(pts.has(e.pointerId))pts.set(e.pointerId,pt(e));
     if(drag&&pts.size===2&&drag.d0){const [a,b]=[...pts.values()];zoom=Math.max(.4,Math.min(4,drag.z*Math.hypot(a[0]-b[0],a[1]-b[1])/drag.d0));drag.moved=true;draw();return}
-    if(drag){const dx=e.clientX-drag.x,dy=e.clientY-drag.y;if(Math.abs(dx)+Math.abs(dy)>3)drag.moved=true;ry=drag.ry+dx*.008;rx=Math.max(-1.4,Math.min(1.4,drag.rx+dy*.008));draw();return}
+    if(drag){const dx=e.clientX-drag.x,dy=e.clientY-drag.y;if(Math.abs(dx)+Math.abs(dy)>3)drag.moved=true;if(drag.pan){panX=drag.px+dx;panY=drag.py+dy;draw();return}ry=drag.ry+dx*.008;rx=Math.max(-1.4,Math.min(1.4,drag.rx+dy*.008));draw();return}
     const [x,y]=pt(e),h=pick(x,y);if(h!==hov){hov=h;cv.style.cursor=h?"pointer":"grab";draw()}});
   const up=e=>{pts.delete(e.pointerId);if(drag&&!drag.moved&&e.type==="pointerup"){const [x,y]=pt(e),h=pick(x,y);if(h&&opt.onPick)opt.onPick(h.n)}if(!pts.size)drag=null};
-  cv.addEventListener("pointerup",up);cv.addEventListener("pointercancel",up);
+  cv.addEventListener("pointerup",up);cv.addEventListener("pointercancel",up);cv.addEventListener("contextmenu",e=>e.preventDefault());
   cv.addEventListener("wheel",e=>{e.preventDefault();zoom=Math.max(.4,Math.min(4,zoom*(e.deltaY<0?1.1:.9)));draw()},{passive:false});
   let last=0;(function loop(t){if(!cv.isConnected)return;if(auto&&!document.hidden&&t-last>33){ry+=.004;last=t;draw()}requestAnimationFrame(loop)})(0);
   const ro=new ResizeObserver(()=>{size();draw()});ro.observe(host);draw();
-  return{redraw:draw,reset(){ry=opt.ry??.5;rx=opt.rx??-.18;zoom=1;auto=true;draw()},toggleAuto(){auto=!auto;return auto}}}
+  return{redraw:draw,reset(){ry=opt.ry??.5;rx=opt.rx??-.18;zoom=1;panX=0;panY=0;auto=true;draw()},toggleAuto(){auto=!auto;return auto}}}
 /* ---- bố cục 3D ---- */
 function lay3d(D,kind){const idx=new Map(D.N.map((n,i)=>[n.id,i])),E=D.edges.map(([a,b,k])=>[idx.get(a),idx.get(b),k]);
   const nodes=D.N.map(n=>({id:n.id,label:n.name,c:n.cat==="me"?AC.orange:catCol(n.cat),r:n.cat==="me"?14:n.d<=1?9:7,big:n.cat==="me",lab:n.d<=1,dead:n.dead,x:0,y:0,z:0}));
@@ -4051,7 +4051,7 @@ FEATS.push(["Tài khoản","🏯","Hồ sơ dòng họ: quốc gia, họ, tộc,
    🏠 Gia phả riêng: gia đình bạn trong 20 đời gần nhất; bật “Chia sẻ & đồng bộ” để đưa người đã mất ở các đời xa lên dòng họ chung.
    👪 Dòng họ chung: lịch sử dòng họ ráp vào nhánh của bạn.  🏯 Lịch sử họ: thư viện mở (nhà nước, quốc tế, nhà nghiên cứu, đã công bố, diễn đàn).
    Chỗ thiếu dữ liệu được gán một MÃ RÁP NỐI; mã giống nhau ở các tài khoản khác sẽ ráp vào nhau. */
-function gpMeId(){try{return JSON.parse(localStorage.getItem("sgpm:me")||"null")}catch{return null}}
+function gpMeId(){try{return JSON.parse(localStorage.getItem(gpLSP()+"me")||"null")}catch{return null}}
 function gpNear(n){return P=>{const me=gpMeId();if(!me||!P.some(p=>p.id===me))return P;const D=gpDepths(P),dm=D.get(me);return P.filter(p=>Math.abs((D.get(p.id)||1)-dm)<=n)}}
 gpBar=(o=>function(){o();const b=$("#gpbar");if(!b)return;const mine=b.querySelector('[data-gpsrc="mine"]');if(!mine)return;
   mine.innerHTML=`🏠 <span class="lg">Gia phả </span>riêng`;mine.title="Gia đình bạn trong 20 đời gần nhất";
@@ -4446,6 +4446,61 @@ document.addEventListener("click",e=>{const b=e.target.closest?.("[data-lay]");i
 FEATS.push(["Giao diện","⛶","Toàn màn hình",()=>fsToggle()],["Giao diện","🖥️","Màn hình & thiết bị: menu tự thu gọn, bên trái/phải, chế độ chụp",()=>{acctTab="set";show("acct");setTimeout(()=>$("#layBox")?.scrollIntoView({block:"center"}),200)}],
   ["Nhập liệu","📄","Quét tài liệu, chữ viết tay khi chụp ảnh",()=>{lay.scan=lay.scan==="photo"?"doc":lay.scan;layOK();gpPrivOpen();setTimeout(()=>$("#gpImp .scanmode")?.scrollIntoView({block:"center"}),250)}]);
 setTimeout(()=>{devApply();scanInject()},0);
+
+/* ===== Bấm giữ chuột rồi kéo để di chuyển sơ đồ (cây, vòng tròn) =====
+   Kéo trên vùng cây để cuộn theo tay; vòng tròn vừa khung thì kéo để dời hình. Không bôi đen chữ khi kéo.
+   Bấm (không kéo) vẫn mở thẻ người như cũ. 3D: kéo để xoay, giữ Shift hoặc chuột phải khi kéo để di chuyển. */
+(()=>{let d=null,eat=false;
+  const PAN=".tree-scroll,.gpalt";
+  document.addEventListener("pointerdown",e=>{if(e.pointerType!=="mouse"||e.button!==0)return;const path=e.composedPath();
+    if(path.some(el=>el.matches?.("input,select,textarea,canvas,[contenteditable],.g3ctl,.gpcard,.hp-a")))return;
+    const sc=path.find(el=>el.matches?.(PAN));if(!sc)return;
+    const mv=sc.querySelector(":scope > .ringwrap");
+    d={sc,mv,x:e.clientX,y:e.clientY,l:sc.scrollLeft,t:sc.scrollTop,tx:+(mv?.dataset.tx||0),ty:+(mv?.dataset.ty||0),moved:false};e.preventDefault()},true);
+  addEventListener("pointermove",e=>{if(!d)return;const dx=e.clientX-d.x,dy=e.clientY-d.y;
+    if(!d.moved&&Math.abs(dx)+Math.abs(dy)<5)return;if(!d.moved){d.moved=true;d.sc.classList.add("panning")}
+    if(d.mv){d.mv.dataset.tx=d.tx+dx;d.mv.dataset.ty=d.ty+dy;d.mv.style.transform=`translate(${d.tx+dx}px,${d.ty+dy}px)`}
+    else{d.sc.scrollLeft=d.l-dx;d.sc.scrollTop=d.t-dy}});
+  const end=()=>{if(!d)return;if(d.moved){eat=true;setTimeout(()=>eat=false,0)}d.sc.classList.remove("panning");d=null};
+  addEventListener("pointerup",end);addEventListener("pointercancel",end);
+  addEventListener("click",e=>{if(eat){e.stopPropagation();e.preventDefault();eat=false}},true);
+  const css="body,.app,.main,#v-giapha,#gpbox,.gphost{overflow:clip}.tree-scroll,.gpalt{cursor:grab}.tree-scroll.panning,.gpalt.panning{cursor:grabbing;user-select:none;-webkit-user-select:none}.tree-scroll.panning *,.gpalt.panning *{cursor:grabbing!important}";
+  const st=document.createElement("style");st.textContent=css;document.head.appendChild(st);
+  renderGiapha=(o=>function(){o();$$(".gphost").forEach(h=>{const R=h.shadowRoot;if(R&&!R.getElementById("panCss")){const x=document.createElement("style");x.id="panCss";x.textContent=css;R.appendChild(x)}})})(renderGiapha);
+})();
+
+/* ===== Tài khoản đăng nhập là trung tâm =====
+   Người “Tôi” (tâm của cây, vòng tròn, 3D và bộ lọc 8 đời) gắn với tài khoản, riêng cho từng
+   nguồn (gia phả riêng, dòng họ chung, lịch sử họ). Lưu ở data/users/<uid>/fam/prefs/giapha nên
+   đồng bộ mọi máy; bản trên máy theo từng tài khoản để dùng lúc offline.
+   Gia phả riêng chưa chọn “Tôi” thì tự tìm người còn sống trùng tên tài khoản. */
+function gpAccLSP(x){return acct?.uid?x+acct.uid+":":x}
+function gpLSP(){return gpAccLSP("sgpm:")}
+function gpMigrate(){try{if(!acct?.uid)return;const done=localStorage.getItem("sgpm:migrated");if(done&&done!==acct.uid)return;
+  const ks=[];for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(k&&/^sgp[a-z0-9]*:[^:]+$/.test(k)&&k!=="sgpm:migrated")ks.push(k)}
+  ks.forEach(k=>{const i=k.indexOf(":"),nk=k.slice(0,i+1)+acct.uid+":"+k.slice(i+1);if(localStorage.getItem(nk)==null)localStorage.setItem(nk,localStorage.getItem(k))});
+  localStorage.setItem("sgpm:migrated",acct.uid)}catch{}}
+const gpPrefDoc=()=>acct.db&&acct.uid?acct.db.doc(`data/users/${acct.uid}/fam/prefs/giapha`):null;
+const gpMeKey=()=>gpSrc==="mine"||gpSrc==="me4"?"mine":gpSrc+"_"+gpHo;
+let gpPref={},gpPrefUnsub=null,gpPrefUid=null;
+async function gpMeSave(id){const d=gpPrefDoc();if(!d)return;const k=gpMeKey(),p=(gpApi?.people||[]).find(x=>x.id===id);
+  gpPref={...gpPref,[k]:{id:id||"",name:p?.name||""}};try{await d.set({me:gpPref,at:Date.now()})}catch{}gpBar()}
+function gpAutoMe(){const n=fold(acct.me?.name||"").split(/\s+/).filter(t=>t.length>1);if(!n.length)return"";
+  const P=(gpApi?.people||[]).filter(p=>p.name&&!(()=>{try{return gpApi.isDead(p)}catch{return!!p.death}})());
+  const hit=P.filter(p=>{const t=fold(p.name).split(/\s+/);return n.every(x=>t.includes(x))});return hit.length===1?hit[0].id:""}
+function gpMeApply(tries=0){if(!gpApi||!acct?.uid)return;const ppl=gpApi.people||[],k=gpMeKey(),want=gpPref[k]?.id;
+  if(!ppl.length&&tries<12){setTimeout(()=>gpMeApply(tries+1),800);return}
+  if(want&&ppl.some(p=>p.id===want)){if(gpApi.me!==want){gpApi.setMe(want,true);if(gpSrc==="me4"){gpMounted=null;renderGiapha()}}gpBar();return}
+  const auto=k==="mine"?gpAutoMe():"",local=auto||(gpApi.me&&ppl.some(p=>p.id===gpApi.me)?gpApi.me:"");
+  if(local){if(gpApi.me!==local){gpApi.setMe(local,true);toast("Đã đặt “Tôi” theo tài khoản "+(acct.me?.name||""))}gpMeSave(local)}}
+function gpPrefWatch(){if(!acct.uid||gpPrefUid===acct.uid)return;gpPrefUid=acct.uid;try{gpPrefUnsub?.()}catch{}
+  const d=gpPrefDoc();if(!d)return;try{gpPrefUnsub=d.onSnapshot(s=>{const v=s.exists?s.data():null;gpPref=v?.me&&typeof v.me==="object"?v.me:{};
+    const m=gpPref.mine?.id;if(m)try{localStorage.setItem(gpLSP()+"me",JSON.stringify(m))}catch{}gpMeApply();gpBar()},()=>{})}catch{}}
+renderGiapha=(o=>function(){if(acct?.uid){gpMigrate();gpPrefWatch()}o();setTimeout(gpMeApply,300)})(renderGiapha);
+gpBar=(o=>function(){o();const b=$("#gpbar");if(!b||!acct?.uid)return;const sp=b.querySelector(":scope > .src");if(!sp||gpSrc==="le"&&!lineCount)return;
+  const k=gpMeKey(),id=gpPref[k]?.id||gpApi?.me,nm=(gpApi?.people||[]).find(p=>p.id===id)?.name||gpPref[k]?.name,an=esc(acct.me?.name||"của bạn");
+  sp.innerHTML=nm?`Tâm là <b>${esc(nm)}</b> · gắn với tài khoản <b>${an}</b>, đồng bộ trên mọi máy.${gpSrc==="me4"?" Hiện 4 đời trên và 4 đời dưới.":""}`
+    :`Tài khoản <b>${an}</b> chưa gắn với ai ở mục này. Chọn “Tôi là” để đặt tâm; lựa chọn đi theo tài khoản trên mọi máy.`})(gpBar);
 
 /* ===== Đồng bộ online/offline: một nút “Bắt đầu đồng bộ & lưu vào máy” =====
    1) Lấy gia phả dòng họ và từ điển từ Google Drive (khi mở trong Claude và đã nối Drive).
