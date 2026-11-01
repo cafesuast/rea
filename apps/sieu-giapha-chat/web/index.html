@@ -681,6 +681,9 @@ html[data-dev="mobile"] .six{display:flex;flex-wrap:wrap}html[data-dev="mobile"]
 .app.navright{flex-direction:row-reverse}.app.navright .side{border-right:0;border-left:1px solid var(--line)}.app.navright.navless .side{margin-left:0;margin-right:-236px}
 @media(min-width:761px){.app.peek .side{position:fixed;top:0;bottom:0;left:0;z-index:60;margin:0!important;box-shadow:0 0 40px rgba(0,0,0,.2)}.app.navright.peek .side{left:auto;right:0}}
 .laybox{border-top:1px solid var(--line,rgba(127,127,127,.2));margin-top:12px;padding-top:10px}.laybox h4{margin:0 0 4px}.laybox .setrow small{display:block;color:var(--muted)}
+/* Thiên hà 3DG */
+.g3host.space{background:#03040c;border-radius:0}.gpalt:has(.g3host.space){background:#03040c}.gpalt:has(.g3host.space) .glegend .lg{background:rgba(255,255,255,.08);color:#e5e7ff}
+.gpalt:has(.g3host.space) .g3ctl .btn{background:rgba(255,255,255,.1);color:#fff;border-color:rgba(255,255,255,.2)}
 /* Đồng bộ online/offline */
 .osync{border:1.5px solid var(--accent)!important}.osgo{min-height:44px;font-size:14.5px}
 .osdot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;vertical-align:1px}.osdot.on{background:var(--ok)}.osdot.off{background:var(--warn)}
@@ -3572,7 +3575,7 @@ renderView=function(){_renderView0();if(HOVER_VIEWS.includes(view))hovBars()};
 skInit();
 
 /* ===== v16: Cây gia phả, chọn kiểu xem: Cây · Vòng tròn · Mạng 3D · Xoắn 3D ===== */
-const LAYS=[["tree","🌳","Cây"],["ring","◎","Vòng tròn"],["net","✳️","Mạng 3D"],["helix","🧬","Xoắn 3D"]];
+const LAYS=[["tree","🌳","Cây"],["ring","◎","Vòng tròn"],["net","✳️","Mạng 3D"],["helix","🧬","Xoắn 3D"],["galaxy","🪐","Thiên hà 3DG"]];
 let gpLay=ls.get("gpLay","tree");if(!LAYS.some(x=>x[0]===gpLay))gpLay="tree";
 const CAT=[["anc","Tổ tiên",AC.green],["same","Cùng đời",AC.indigo],["desc","Con cháu",AC.orange],["inlaw","Dâu, rể",AC.pink],["far","Chưa nối",AC.gray]];
 const catCol=k=>(CAT.find(c=>c[0]===k)||CAT[4])[2];
@@ -3609,12 +3612,15 @@ function ringSVG(D){const W=800,C=W/2,R0=58,step=56,maxR=5;const groups=CAT.map(
   <p class="src" style="text-align:center;margin:4px 12px">Tâm là <b>${esc(me.name)}</b>. Vòng 1: cha mẹ, vợ chồng, con · vòng 2: ông bà, anh chị em, cháu · càng ra ngoài càng xa. Chấm mờ: người đã mất. Chạm một chấm để xem.</p>`}
 /* ---- Bộ vẽ 3D đơn giản (canvas, phối cảnh, kéo để xoay, cuộn hoặc chụm để thu phóng) ---- */
 function g3d(host,nodes,edges,opt){opt=opt||{};const cv=document.createElement("canvas");cv.className="g3d";host.appendChild(cv);const ctx=cv.getContext("2d");
-  let ry=opt.ry??.5,rx=opt.rx??-.18,zoom=1,panX=0,panY=0,auto=true,drag=null,hov=null,dpr=Math.min(2,devicePixelRatio||1),W=0,H=0,proj=[];
+  const stars=opt.space?Array.from({length:180},()=>[Math.random(),Math.random(),Math.random()*1.3+.2,Math.random()]):null;
+  let ry=opt.ry??.5,rx=opt.rx??-.18,zoom=opt.zoom||1,panX=0,panY=0,auto=true,drag=null,hov=null,dpr=Math.min(2,devicePixelRatio||1),W=0,H=0,proj=[];
   const size=()=>{const r=host.getBoundingClientRect();W=Math.max(200,r.width);H=Math.max(240,r.height);cv.width=W*dpr;cv.height=H*dpr;cv.style.width=W+"px";cv.style.height=H+"px"};size();
   const ext=Math.max(1,...nodes.map(n=>Math.hypot(n.x,n.y,n.z)));
   const P3=(x,y,z)=>{const cy=Math.cos(ry),sy=Math.sin(ry),cx=Math.cos(rx),sx=Math.sin(rx);let X=x*cy+z*sy,Z=-x*sy+z*cy,Y=y*cx-Z*sx;Z=y*sx+Z*cx;const s=Math.min(W,H)*.42/ext*zoom,D=ext*3,f=D/(D+Z);return[W/2+panX+X*s*f,H/2+panY+Y*s*f,Z,f]};
   const dark=()=>matchMedia("(prefers-color-scheme: dark)").matches&&document.documentElement.dataset.theme!=="light"||document.documentElement.dataset.theme==="dark";
-  function draw(){ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,W,H);const dk=dark();
+  function draw(){ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,W,H);const dk=opt.space||dark();
+    if(stars){const g=ctx.createRadialGradient(W/2+panX,H/2+panY,0,W/2,H/2,Math.max(W,H)*.75);g.addColorStop(0,"#1b1d4a");g.addColorStop(.55,"#0b0f2a");g.addColorStop(1,"#03040c");ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
+      stars.forEach(([x,y,r,a])=>{ctx.globalAlpha=.35+.5*a;ctx.fillStyle="#fff";ctx.beginPath();ctx.arc(((x*W+ry*40*r)%W+W)%W,y*H,r,0,7);ctx.fill()});ctx.globalAlpha=1}
     if(opt.rings)opt.rings.forEach(rg=>{ctx.beginPath();for(let i=0;i<=56;i++){const t=i/56*Math.PI*2,[x,y]=P3(rg.r*Math.cos(t),rg.y,rg.r*Math.sin(t));i?ctx.lineTo(x,y):ctx.moveTo(x,y)}ctx.strokeStyle=rg.c||(dk?"rgba(255,255,255,.12)":"rgba(0,0,0,.08)");ctx.lineWidth=1;ctx.stroke();
       if(rg.label){const [x,y]=P3(0,rg.y-rg.r*.02,-rg.r);ctx.fillStyle=dk?"rgba(255,255,255,.45)":"rgba(0,0,0,.4)";ctx.font="11px system-ui";ctx.textAlign="center";ctx.fillText(rg.label,x,y-4)}});
     proj=nodes.map((n,i)=>{const [x,y,z,f]=P3(n.x,n.y,n.z);return{i,n,x,y,z,f,r:Math.max(2.5,n.r*f*Math.sqrt(zoom))}});
@@ -3623,7 +3629,7 @@ function g3d(host,nodes,edges,opt){opt=opt||{};const cv=document.createElement("
     order.forEach(p=>{const {x,y,r}=p,c=p.n.c;ctx.globalAlpha=p.n.dead?.55:1;const g=ctx.createRadialGradient(x-r*.35,y-r*.4,r*.1,x,y,r);g.addColorStop(0,"#fff");g.addColorStop(.25,c);g.addColorStop(1,shade(c,-.35));ctx.beginPath();ctx.arc(x,y,r,0,7);ctx.fillStyle=g;ctx.fill();
       if(p.n.ring){ctx.beginPath();ctx.ellipse(x,y,r*1.7,r*.55,-.3,0,7);ctx.strokeStyle=c;ctx.lineWidth=1.5;ctx.stroke()}ctx.globalAlpha=1});
     const showAll=nodes.length<=(W<520?14:(opt.maxLabels||45));
-    order.forEach(p=>{if(!(showAll||p.n.big||p.n.lab||p===hov))return;const fs=Math.max(9,Math.min(15,(p.n.big?14:11.5)*p.f));ctx.font=`${p===hov||p.n.big?600:500} ${fs}px system-ui`;ctx.textAlign="center";
+    order.forEach(p=>{if(!(showAll&&!p.n.bot||p.n.big||p.n.lab||p===hov))return;const fs=Math.max(9,Math.min(15,(p.n.big?14:11.5)*p.f));ctx.font=`${p===hov||p.n.big?600:500} ${fs}px system-ui`;ctx.textAlign="center";
       ctx.lineWidth=3;ctx.strokeStyle=dk?"rgba(0,0,0,.6)":"rgba(255,255,255,.85)";ctx.strokeText(p.n.label,p.x,p.y-p.r-5);ctx.fillStyle=dk?"#f2f2f7":"#1c1c1e";ctx.fillText(p.n.label,p.x,p.y-p.r-5)})}
   function shade(h,k){const n=parseInt(h.slice(1),16);let r=n>>16,g=n>>8&255,b=n&255;const f=x=>Math.round(Math.max(0,Math.min(255,x+(k<0?x*k:(255-x)*k))));return`rgb(${f(r)},${f(g)},${f(b)})`}
   const pick=(x,y)=>{let best=null,bd=1e9;proj.forEach(p=>{const d=Math.hypot(p.x-x,p.y-y);if(d<p.r+6&&p.z<bd){bd=p.z;best=p}});return best};
@@ -3637,13 +3643,21 @@ function g3d(host,nodes,edges,opt){opt=opt||{};const cv=document.createElement("
   const up=e=>{pts.delete(e.pointerId);if(drag&&!drag.moved&&e.type==="pointerup"){const [x,y]=pt(e),h=pick(x,y);if(h&&opt.onPick)opt.onPick(h.n)}if(!pts.size)drag=null};
   cv.addEventListener("pointerup",up);cv.addEventListener("pointercancel",up);cv.addEventListener("contextmenu",e=>e.preventDefault());
   cv.addEventListener("wheel",e=>{e.preventDefault();zoom=Math.max(.4,Math.min(4,zoom*(e.deltaY<0?1.1:.9)));draw()},{passive:false});
-  let last=0;(function loop(t){if(!cv.isConnected)return;if(auto&&!document.hidden&&t-last>33){ry+=.004;last=t;draw()}requestAnimationFrame(loop)})(0);
+  let last=0;(function loop(t){if(!cv.isConnected)return;if((auto||opt.tick)&&!document.hidden&&t-last>33){if(auto)ry+=.004;opt.tick?.(t);last=t;draw()}requestAnimationFrame(loop)})(0);
   const ro=new ResizeObserver(()=>{size();draw()});ro.observe(host);draw();
-  return{redraw:draw,reset(){ry=opt.ry??.5;rx=opt.rx??-.18;zoom=1;panX=0;panY=0;auto=true;draw()},toggleAuto(){auto=!auto;return auto}}}
+  return{redraw:draw,reset(){ry=opt.ry??.5;rx=opt.rx??-.18;zoom=opt.zoom||1;panX=0;panY=0;auto=true;draw()},toggleAuto(){auto=!auto;return auto}}}
 /* ---- bố cục 3D ---- */
+/* Bot @ trong thiên hà 3DG: [tên, việc làm, màu] */
+const GALAXY_BOTS=[["AILA","Trợ lý chung: hỏi gì về gia phả cũng được","#4da3ff"],["Nguồn Cội","Lần ngược tổ tiên, quê gốc, chi phái","#ffb84d"],["Hôn Phối","Vợ chồng, thông gia, họ ngoại","#ff6fa8"],
+  ["Gia Huấn","Lời dạy, gia phong, nếp nhà","#ffd166"],["Lộ Trình","Đường đời từng người: học, làm, nơi ở","#7ae582"],["Sinh Mệnh","Ngày sinh, ngày mất, ngày giỗ âm lịch","#ff8a5c"],
+  ["Tiến Hóa","Dòng họ thay đổi qua các đời","#b892ff"],["Thời Gian","Dòng thời gian, song song lịch sử","#5ce1e6"],["Cộng Sinh","Kết nối người trong họ đang sống","#9be564"],
+  ["Ký Ức","Chuyện kể, ảnh, kỷ niệm","#f4a261"],["Thư Ký Dòng Họ","Ghi chép, nhập liệu, sắp xếp hồ sơ","#a8dadc"],["Truy Tìm","Tìm người thất lạc, đối chiếu nguồn","#e76f51"],
+  ["Hộ Pháp","Bảo vệ riêng tư và quyền xem","#c0c0ff"],["Đồng Hành","Nhắc việc, đồng hành mỗi ngày","#90e0ef"]];
+function gpBotPick(name){const b=GALAXY_BOTS.find(x=>x[0]===name);const q=$("#gsQ");if(q){q.value="@"+name+" ";q.focus();try{q.setSelectionRange(q.value.length,q.value.length)}catch{}}
+  toast(`@${name}: ${b?b[1]:""}. Gõ câu hỏi rồi bấm Enter.`)}
 function lay3d(D,kind){const idx=new Map(D.N.map((n,i)=>[n.id,i])),E=D.edges.map(([a,b,k])=>[idx.get(a),idx.get(b),k]);
   const nodes=D.N.map(n=>({id:n.id,label:n.name,c:n.cat==="me"?AC.orange:catCol(n.cat),r:n.cat==="me"?14:n.d<=1?9:7,big:n.cat==="me",lab:n.d<=1,dead:n.dead,x:0,y:0,z:0}));
-  let rings=null;
+  let rings=null,tick=null;
   if(kind==="helix"){const gens=new Map();D.N.forEach((n,i)=>{const k=n.d===99?"far":n.g;(gens.get(k)||gens.set(k,[]).get(k)).push(i)});
     const gl=[...gens.keys()].filter(k=>k!=="far").sort((a,b)=>a-b);rings=[];
     gl.forEach(g=>{const ids=gens.get(g).sort((a,b)=>(D.N[a].cat==="me"?-1:0)-(D.N[b].cat==="me"?-1:0)),y=(g-D.gc)*95,R=Math.max(40,Math.min(150,20*ids.length)),tw=(g-D.gc)*.7;
@@ -3651,14 +3665,26 @@ function lay3d(D,kind){const idx=new Map(D.N.map((n,i)=>[n.id,i])),E=D.edges.map
       rings.push({r:R,y,label:g===D.gc?"":`${g<D.gc?"↑":"↓"} Đời ${g}`})});
     const far=gens.get("far")||[];far.forEach((i,k)=>{const t=k/Math.max(1,far.length)*Math.PI*2;nodes[i].x=260*Math.cos(t);nodes[i].z=260*Math.sin(t);nodes[i].y=0;nodes[i].ring=true});
     if(far.length)rings.push({r:260,y:0,c:"rgba(142,142,147,.25)",label:"Chưa nối"})}
+  else if(kind==="galaxy"){ /* Thiên hà: bạn là mặt trời ở giữa (hiện tại), dưới là quá khứ, trên là tương lai; bot @ quay quanh bạn */
+    const gens=new Map();D.N.forEach((n,i)=>{const k=n.d===99?"far":n.g;(gens.get(k)||gens.set(k,[]).get(k)).push(i)});rings=[];
+    [...gens.keys()].filter(k=>k!=="far").sort((a,b)=>a-b).forEach(g=>{const ids=gens.get(g),y=(D.gc-g)*85,R=g===D.gc?175:Math.max(60,Math.min(200,24*ids.length)),tw=(g-D.gc)*.9;
+      let k=0;ids.forEach(i=>{const p=nodes[i];p.ring=true;if(D.N[i].cat==="me"){p.x=p.z=0;p.y=0;p.r=22;p.ring=false;return}const t=tw+k++/Math.max(1,ids.length-(g===D.gc?1:0))*Math.PI*2;p.x=R*Math.cos(t);p.z=R*Math.sin(t);p.y=y});
+      rings.push({r:R,y,c:"rgba(160,170,255,.16)",label:g===D.gc?"Hiện tại · bạn":g<D.gc?`↓ Quá khứ · đời ${g}`:`↑ Tương lai · đời ${g}`})});
+    const far=gens.get("far")||[];far.forEach((i,k)=>{const t=k/Math.max(1,far.length)*Math.PI*2;nodes[i].x=330*Math.cos(t);nodes[i].z=330*Math.sin(t);nodes[i].y=0;nodes[i].ring=true});
+    if(far.length)rings.push({r:330,y:0,c:"rgba(142,142,147,.18)",label:"Chưa nối"});
+    const bots=GALAXY_BOTS,base=nodes.length,orb=[];
+    bots.forEach(([name,,col],i)=>{const inner=i%2===0,R=inner?80:125,sp=inner?.00035:.00022,tilt=inner?.3:-.22,ph=i/bots.length*Math.PI*2;
+      orb.push({R,sp,tilt,ph});nodes.push({id:"bot:"+name,label:"@"+name,c:col,r:6,big:false,lab:true,bot:name,x:R,y:0,z:0})});
+    rings.push({r:80,y:0,c:"rgba(120,200,255,.22)"},{r:125,y:0,c:"rgba(200,140,255,.2)"});
+    tick=t=>{orb.forEach((o,i)=>{const a=o.ph+t*o.sp,p=nodes[base+i];p.x=o.R*Math.cos(a);p.z=o.R*Math.sin(a);p.y=Math.sin(a)*o.R*o.tilt;p.lab=Math.cos(a)>.15})};tick(0)}
   else{const n=nodes.length,R=Math.max(80,Math.cbrt(n)*45);nodes.forEach((p,i)=>{const t=Math.acos(1-2*(i+.5)/n),f=Math.PI*(1+Math.sqrt(5))*i;p.x=R*Math.sin(t)*Math.cos(f);p.y=(D.N[i].g-D.gc)*40+R*.3*Math.cos(t);p.z=R*Math.sin(t)*Math.sin(f)});
     const it=n>400?60:n>150?140:240,L=55;for(let s=0;s<it;s++){const T=1-s/it;
       for(let i=0;i<n;i++){const a=nodes[i];for(let j=i+1;j<n;j++){const b=nodes[j];let dx=a.x-b.x,dy=a.y-b.y,dz=a.z-b.z,d2=dx*dx+dy*dy+dz*dz+.01;if(d2>90000)continue;const f=1800/d2*T;dx*=f;dy*=f;dz*=f;a.x+=dx;a.y+=dy;a.z+=dz;b.x-=dx;b.y-=dy;b.z-=dz}}
       E.forEach(([i,j,k])=>{const a=nodes[i],b=nodes[j];const dx=b.x-a.x,dy=b.y-a.y,dz=b.z-a.z,d=Math.sqrt(dx*dx+dy*dy+dz*dz)+.01,f=(d-(k==="sp"?L*.5:L))/d*.08;a.x+=dx*f;a.y+=dy*f;a.z+=dz*f;b.x-=dx*f;b.y-=dy*f;b.z-=dz*f});
 }
     nodes.forEach((p,i)=>{if(D.N[i].d===99)p.ring=true})}
-  {const m=nodes.length||1,c=["x","y","z"].map(k=>nodes.reduce((t,p)=>t+p[k],0)/m);if(kind==="helix"){c[0]=c[2]=0}nodes.forEach(p=>{p.x-=c[0];p.y-=c[1];p.z-=c[2]});if(rings)rings.forEach(r=>r.y-=c[1])}
-  return{nodes,E,rings}}
+  {const m=nodes.length||1,c=["x","y","z"].map(k=>nodes.reduce((t,p)=>t+p[k],0)/m);if(kind==="helix"||kind==="galaxy"){c[0]=c[1]=c[2]=0}nodes.forEach(p=>{p.x-=c[0];p.y-=c[1];p.z-=c[2]});if(rings)rings.forEach(r=>r.y-=c[1])}
+  return{nodes,E,rings,tick}}
 /* ---- khung hiển thị ---- */
 let gpAltSig="",gpAltObj=null;
 function gpAltEl(){let a=$("#gpAlt");if(!a){a=document.createElement("div");a.id="gpAlt";a.className="gpalt";a.hidden=true;$("#gpbox")?.after(a)}return a}
@@ -3668,9 +3694,9 @@ function gpAltSync(force){const a=gpAltEl(),box=$("#gpbox");const on=view==="gia
   if(!D.N.length){a.innerHTML=`<div class="empty"><b>Gia phả chưa có ai</b>Thêm người ở kiểu xem 🌳 Cây, hoặc dùng ô ＋ để nhập.</div>`;return}
   const L=LAYS.find(x=>x[0]===gpLay);
   if(gpLay==="ring"){a.innerHTML=`<div class="ringwrap">${ringSVG(D)}</div><div class="gpcard" id="gpCard" hidden></div>`;return}
-  a.innerHTML=`<div class="g3host"></div><div class="g3ctl"><button class="btn ghost sm" data-g3="spin">⏯ Tự xoay</button><button class="btn ghost sm" data-g3="reset">↺ Về giữa</button></div><div class="g3leg glegend">${[["me","Bạn / tâm",AC.orange],...CAT].filter(([k])=>D.N.some(n=>n.cat===k)).map(([k,l,c])=>`<span class="lg"><i style="background:${c}"></i>${l}</span>`).join("")}<span class="lg"><i class="ln"></i>cha mẹ – con</span><span class="lg"><i class="ln sp"></i>vợ chồng</span></div><p class="g3tip">Kéo để xoay · cuộn hoặc chụm 2 ngón để phóng to · chạm một người để xem</p><div class="gpcard" id="gpCard" hidden></div>`;
-  const {nodes,E,rings}=lay3d(D,gpLay);
-  gpAltObj=g3d(a.querySelector(".g3host"),nodes,E,{rings,rx:gpLay==="helix"?-.22:-.12,maxLabels:gpLay==="helix"?60:40,onPick:n=>gpCard(n.id)})}
+  a.innerHTML=`<div class="g3host${gpLay==="galaxy"?" space":""}"></div><div class="g3ctl"><button class="btn ghost sm" data-g3="spin">⏯ Tự xoay</button><button class="btn ghost sm" data-g3="reset">↺ Về giữa</button></div><div class="g3leg glegend">${[["me","Bạn / tâm",AC.orange],...CAT].filter(([k])=>D.N.some(n=>n.cat===k)).map(([k,l,c])=>`<span class="lg"><i style="background:${c}"></i>${l}</span>`).join("")}${gpLay==="galaxy"?`<span class="lg"><i style="background:#b892ff"></i>Bot @ quay quanh bạn · bấm để hỏi</span>`:""}<span class="lg"><i class="ln"></i>cha mẹ – con</span><span class="lg"><i class="ln sp"></i>vợ chồng</span></div><p class="g3tip">Kéo để xoay · cuộn hoặc chụm 2 ngón để phóng to · chạm một người để xem</p><div class="gpcard" id="gpCard" hidden></div>`;
+  const {nodes,E,rings,tick}=lay3d(D,gpLay);
+  gpAltObj=g3d(a.querySelector(".g3host"),nodes,E,{rings,tick,space:gpLay==="galaxy",zoom:gpLay==="galaxy"?1.35:1,rx:gpLay==="helix"?-.22:gpLay==="galaxy"?-.32:-.12,maxLabels:gpLay==="helix"?60:gpLay==="galaxy"?70:40,onPick:n=>n.bot?gpBotPick(n.bot):gpCard(n.id)})}
 function gpCard(id){const c=$("#gpCard"),p=gpApi?.byId?.(id);if(!c||!p)return;let k="";try{k=gpApi.me&&gpApi.me!==id?gpApi.kin(gpApi.me,id)||"":gpApi.me===id?"Bạn":""}catch{}
   c.hidden=false;c.innerHTML=`<div class="hp-h"><b>${esc(p.name||"?")}</b><span style="flex:1"></span><button class="hp-b" data-gpc="x" aria-label="Đóng">✕</button></div><div class="src">${[k,gpApi.life?.(p),p.branch?"Chi "+p.branch:"",p.alias?"Tự/hiệu: "+p.alias:""].filter(Boolean).map(esc).join(" · ")||"Chưa có thông tin thêm"}</div><div class="hp-a"><button class="chip" data-gpc="open" data-id="${esc(id)}">🌳 Xem trong cây</button><button class="chip" data-gpc="center" data-id="${esc(id)}">◎ Đặt làm tâm</button></div>`}
 gpBar=(o=>function(){o();const b=$("#gpbar");if(b&&gpSlot==="view")b.insertAdjacentHTML("afterbegin",`<div class="seg laysw" role="radiogroup" aria-label="Kiểu xem cây">${LAYS.map(([k,i,l])=>`<button data-gplay="${k}" class="${gpLay===k?"on":""}" role="radio" aria-checked="${gpLay===k}" title="${l}"><span aria-hidden="true">${i}</span><span class="ll"> ${l}</span></button>`).join("")}</div>`)})(gpBar);
