@@ -10,7 +10,7 @@ for(const [W,H,nm] of [[1280,860,'d'],[390,820,'m']]){
   {const ctx=await b.newContext({viewport:{width:W,height:H},acceptDownloads:true});const p=await ctx.newPage();const errs=[];p.on('pageerror',e=>errs.push(e.message));
    await ctx.route(/fonts\.|cdnjs|jsdelivr/,r=>r.abort());
    await ctx.route('https://api.anthropic.com/**',r=>r.fulfill({status:200,contentType:'application/json',body:JSON.stringify({model:'claude-haiku-5-5',stop_reason:'end_turn',content:[{type:'text',text:'Kết quả: {"ok":true,"w":"xin chào"}'}]})}));
-   await p.goto(URL0);await p.waitForTimeout(1200);
+   await p.addInitScript(()=>localStorage.setItem('stdien:clanProf',JSON.stringify({country:'Việt Nam',ho:'Lê',toc:'Không biết',chi:'Không biết',nhanh:'Không biết',dong:'Không biết',doi:'Không biết'})));await p.goto(URL0);await p.waitForTimeout(1200);
    if(await p.locator('.sgp-login').count())fail('login sheet in local mode');
    const mode=await p.evaluate(()=>SGP.mode);if(mode!=='local')fail('mode '+mode);
    await p.evaluate(()=>show('acct'));await p.waitForTimeout(300);if(!await p.locator('#sgpSet').count())fail('settings card');
@@ -41,7 +41,7 @@ for(const [W,H,nm] of [[1280,860,'d'],[390,820,'m']]){
    await ctx.route('**/vendor/supabase-js-2.118.0.js',r=>r.fulfill({contentType:'text/javascript',body:MOCK}));
    let aiAuth='',aiProv='';await ctx.route('https://demo.supabase.co/functions/v1/ai',r=>{aiAuth=r.request().headers().authorization||'';if(r.request().method()==='GET')return r.fulfill({status:200,contentType:'application/json',body:JSON.stringify({providers:['claude','gpt','gemini']})});aiProv=JSON.parse(r.request().postData()).provider;r.fulfill({status:200,contentType:'application/json',body:JSON.stringify({text:'{"verdict":"ok","label":"Fact","note":"đúng"}',model:'m'})})});
    const p=await ctx.newPage();p.on('pageerror',e=>errs.push(e.message));
-   await p.goto(URL0);await p.waitForTimeout(1200);
+   await p.addInitScript(()=>localStorage.setItem('stdien:clanProf',JSON.stringify({country:'Việt Nam',ho:'Lê',toc:'Không biết',chi:'Không biết',nhanh:'Không biết',dong:'Không biết',doi:'Không biết'})));await p.goto(URL0);await p.waitForTimeout(1200);
    if(!await p.locator('.sgp-login').count())fail('no login sheet for guest');await p.screenshot({path:path0.join(OUT,`w-${nm}-login.png`)});
    await p.click('[data-sgpin="google"]');if(await p.evaluate(()=>window.__signin)!=='google')fail('google sign-in');
    await p.click('[data-sgpguest]');if(await p.locator('.sgp-login').count())fail('guest close');

@@ -632,6 +632,15 @@ body{-webkit-font-smoothing:antialiased;letter-spacing:-.01em}
 .cpin input:disabled{opacity:.7}.cpkb{white-space:nowrap}.cpkb.on{background:var(--accent);color:#fff}.cp-in .cpf.miss input,.cp-in .cpf.miss select{outline:2px solid #d33}
 .cpchk{display:flex;gap:8px;align-items:flex-start;font-size:13px;color:var(--muted)}.cpmsg{color:#c33}
 .gdscan{border-top:1px solid var(--line,rgba(127,127,127,.2));margin-top:12px;padding-top:10px}.gdscan h4{margin:0 0 4px}.gdrow{align-items:center}.linkb{color:var(--accent);font:inherit;padding:0;background:none;border:0;cursor:pointer;text-decoration:underline}
+.gpsw{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:600;white-space:nowrap}.tgl.sm{transform:scale(.8)}
+.gpc-in{width:min(680px,100%)}.gpc-sum{font-weight:600;margin:8px 0}.gpc-set{margin:6px 0 10px}.gpc-set summary{cursor:pointer;font-weight:600;padding:6px 0}.gpc-bar{align-items:center}
+.gpc-list{display:grid;gap:6px;margin-top:8px}.gpc-row{display:flex;gap:10px;align-items:flex-start;padding:8px 10px;border-radius:12px;background:var(--panel-2)}.gpc-row small{display:block;color:var(--muted)}.gpc-row small.warn{color:#c33}
+.gpc-st{width:26px;height:26px;border-radius:50%;display:inline-grid;place-items:center;font-weight:700;flex:none;background:var(--panel);}.gpc-row.ok .gpc-st{color:#1a8f4a}.gpc-row.bad .gpc-st{color:#c33}.gpc-row.mid .gpc-st{color:#b77a00}.gpc-row.none .gpc-st{color:var(--muted)}
+.gpc-code{display:block;font-size:12px;cursor:pointer;word-break:break-all}.gpc-row small.gpc-srcs{display:inline}.gpc-fill{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+@media(max-width:600px){#gpbar .seg button{font-size:12.5px;padding-left:6px;padding-right:6px;white-space:nowrap}}
+.rlform{display:grid;gap:8px}.rlnote{width:100%;border-radius:10px;border:0;background:var(--panel-2);padding:8px 10px;font:inherit;color:var(--fg);resize:vertical;box-sizing:border-box}
+.rllist{display:grid;gap:6px;margin-top:8px}.rlrow{display:flex;gap:10px;align-items:flex-start;padding:8px 10px;border-radius:12px;background:var(--panel-2)}.rlrow>div{flex:1;min-width:0}.rlrow small{display:block;color:var(--muted);overflow-wrap:anywhere}.rlic{font-size:20px}.rlacts{display:flex;gap:4px;align-items:center}
+.cpdis summary{cursor:pointer;font-weight:600;font-size:14px;padding:4px 0}.cpcons{margin:6px 0;line-height:1.45}.cpcons small{display:block}.consentbox{border-top:1px solid var(--line,rgba(127,127,127,.2));margin-top:12px;padding-top:10px}
 </style>
 
 <div class="app" id="app">
@@ -837,7 +846,7 @@ function kin(meId,oId){
 function newId(){return col?col.doc().id:"l"+Date.now().toString(36)+Math.random().toString(36).slice(2,6)}
 function clean(o){const r={};FIELDS.forEach(k=>{if(o[k]!==undefined)r[k]=o[k]});r.spouseIds=[...new Set((r.spouseIds||[]).filter(Boolean))];return r}
 function writeErr(e){toast(e&&(e.code==="not_granted"||e.code==="revoked")?"Bạn chỉ có quyền xem gia phả này, chưa sửa được.":"Chưa lưu được: "+(e?.message||"lỗi không rõ"))}
-async function put(id,data){data=clean(data);if(col){await col.doc(id).set(data)}else{const i=people.findIndex(p=>p.id===id);const rec={...data,id};i<0?people.push(rec):people[i]=rec;changed()}}
+async function put(id,data){data=clean(data);if(OPT.filter){const o=byId(id);if(o){["fatherId","motherId"].forEach(k=>{if(!data[k]&&o[k]&&!byId(o[k]))data[k]=o[k]});data.spouseIds=[...new Set([...data.spouseIds,...(o.spouseIds||[]).filter(x=>!byId(x))])]}}if(col){await col.doc(id).set(data)}else{const i=people.findIndex(p=>p.id===id);const rec={...data,id};i<0?people.push(rec):people[i]=rec;changed()}}
 async function patch(id,data){if(col)await col.doc(id).update(data);else{Object.assign(byId(id),data);changed()}}
 async function remove(id){if(col)await col.doc(id).delete();else{people=people.filter(p=>p.id!==id);changed()}}
 async function setSpouseLinks(id,newIds,oldIds){
@@ -853,7 +862,7 @@ async function initStore(){
     db=OPT.noDb?null:(window.claude?.use?await window.claude.use("db"):null);
     if(!db){clearTimeout(timer);fallback();return}
     col=db.collection(COL);
-    col.onSnapshot(snap=>{clearTimeout(timer);resolved=true;mode="db";people=snap.docs.map(d=>({...d.data(),id:d.id}));changed()},err=>{clearTimeout(timer);if(!resolved){col=null;fallback()}else toast("Mất kết nối dữ liệu: "+err.message)});
+    col.onSnapshot(snap=>{clearTimeout(timer);resolved=true;mode="db";people=snap.docs.map(d=>({...d.data(),id:d.id}));if(OPT.filter)people=OPT.filter(people);changed()},err=>{clearTimeout(timer);if(!resolved){col=null;fallback()}else toast("Mất kết nối dữ liệu: "+err.message)});
   }catch(e){clearTimeout(timer);col=null;fallback()}
 }
 
@@ -896,7 +905,7 @@ function renderAll(){renderSide();renderView();if(sel)renderDetail()}
 
 /* ===== Cây ===== */
 function treeRoots(){
-  const blood=p=>!!(p.fatherId||p.motherId);
+  const blood=p=>!!(byId(p.fatherId)||byId(p.motherId));
   const tops=people.filter(p=>!blood(p)&&!spousesOf(p).some(blood));
   const seen=new Set(),roots=[];
   tops.sort((a,b)=>(a.gender==="f")-(b.gender==="f")||byBirth(a,b)).forEach(p=>{if(seen.has(p.id))return;seen.add(p.id);spousesOf(p).forEach(s=>seen.add(s.id));roots.push(p)});
@@ -1777,7 +1786,7 @@ let nb=[],nbCol=null;
 async function initNotebook(){
   try{const db=window.claude?.use?await window.claude.use("db"):null,user=window.claude?.use?await window.claude.use("user"):null;if(!db||!user)throw 0;
     const uid=await user.id();if(!uid)throw 0;nbCol=db.collection("data/users/"+uid);
-    nbCol.onSnapshot(s=>{const all=s.docs.map(d=>({...d.data(),id:d.id}));nb=all.filter(x=>x.kind==="nb");famIn(all.filter(x=>x.kind==="person"));if(typeof cpIn==="function")cpIn(all.find(x=>x.kind==="clanprofile"));const pg=all.find(x=>x.kind==="prog");if(pg?.done){lDone={...lDone,...pg.done};ls.set("l100done",lDone)}nbChanged()},()=>{nbCol=null;nb=ls.get("nb",[]);famIn(ls.get("fam",[]));nbChanged()})}
+    nbCol.onSnapshot(s=>{const all=s.docs.map(d=>({...d.data(),id:d.id}));nb=all.filter(x=>x.kind==="nb");famIn(all.filter(x=>x.kind==="person"));if(typeof cpIn==="function")cpIn(all.find(x=>x.kind==="clanprofile"));if(typeof linksIn==="function")linksIn(all.filter(x=>x.kind==="rawlink"));const pg=all.find(x=>x.kind==="prog");if(pg?.done){lDone={...lDone,...pg.done};ls.set("l100done",lDone)}nbChanged()},()=>{nbCol=null;nb=ls.get("nb",[]);famIn(ls.get("fam",[]));nbChanged()})}
   catch{nbCol=null;nb=ls.get("nb",[]);famIn(ls.get("fam",[]));nbChanged()}}
 function nbChanged(){nb.sort((a,b)=>String(b.at).localeCompare(String(a.at)));const c=$("#cNb");if(c)c.textContent=nb.length;if(view==="notebook")renderNotebook()}
 async function nbAdd(w){if(!w||nb.some(x=>x.wid===w.id))return;const rec={kind:"nb",wid:w.id,w:w.w,meaning:strip(w.meaning||""),en:w.en||"",at:new Date().toISOString()};
@@ -2463,7 +2472,7 @@ function renderGiapha(){gpBar();const box=$("#gpbox");if(gpMounted===gpSrc&&box.
   gpMounted=gpSrc;box.innerHTML="";const host=document.createElement("div");host.className="gphost";box.appendChild(host);
   if(!window.GPmount){host.textContent="Không tải được mô-đun gia phả.";return}
   const R=host.attachShadow({mode:"open"});R.innerHTML=`<style>${GPCSS}.gstrip .gt{display:none}.gstrip{justify-content:flex-end}.six{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px;padding:2px 4px}.six button{display:flex!important;flex-direction:column;align-items:center;gap:2px;padding:8px 4px!important;border-radius:10px;font-size:12px;text-align:center}.bubble{border:0;border-radius:18px 18px 18px 6px}.msg.me .bubble{background:var(--bubble-me);color:#fff;border-radius:18px 18px 6px 18px}.card{border:0;box-shadow:var(--shadow)}.composer{background:var(--bar);border-top:.5px solid var(--line)}.box{border-radius:22px}.six button span{font-size:20px}.six button:hover{background:var(--accent-soft)}</style>`+GPHTML;
-  try{gpApi=gpSrc==="le"?GPmount(R,lineName(),gpHo==="le"?"sgpl:":"sgpl"+gpHo+":",{demo:false}):gpSrc==="mine"?GPmount(R,acct.uid?`data/users/${acct.uid}/fam/people`:"_local","sgpm:",{demo:false,noDb:!acct.uid}):GPmount(R,famColName(),gpHo==="le"?"sgp:":"sgp"+gpHo+":",gpHo==="le"?{}:{demo:false});if(GP_SUB[gpSlot])gpApi.show(GP_SUB[gpSlot])}catch(e){console.error(e);host.textContent="Lỗi mô-đun gia phả: "+e.message}}
+  try{gpApi=gpSrc==="le"?GPmount(R,lineName(),gpHo==="le"?"sgpl:":"sgpl"+gpHo+":",{demo:false}):(gpSrc==="mine"||gpSrc==="me4")?GPmount(R,acct.uid?`data/users/${acct.uid}/fam/people`:"_local","sgpm:",{demo:false,noDb:!acct.uid,filter:gpNear(gpSrc==="me4"?4:20)}):GPmount(R,famColName(),gpHo==="le"?"sgp:":"sgp"+gpHo+":",gpHo==="le"?{}:{demo:false});if(GP_SUB[gpSlot])gpApi.show(GP_SUB[gpSlot])}catch(e){console.error(e);host.textContent="Lỗi mô-đun gia phả: "+e.message}}
 document.addEventListener("click",e=>{const t=e.target;
   if(t.closest("#clanSync")){clanSync();return}
   const gs=t.closest("[data-gpsrc]");if(gs){gpSrc=gs.dataset.gpsrc;ls.set("gpsrc2",gpSrc);renderGiapha();return}
@@ -2817,7 +2826,7 @@ function gpiReview(R,P){const nOk=R.people.filter(p=>p.ok).length;
       ${p.match?`<small class="warn">Trùng tên với người đã có. Bỏ chọn để chỉ bổ sung thông tin còn thiếu cho người cũ, hoặc chọn để thêm thành người mới.</small>`:""}${p.page?`<small>Trang ${p.page}</small>`:""}</div></div>`}).join("")}</div>
   ${R.text.length?`<details><summary>Bản chép lại từ ảnh (${R.text.length} trang)</summary><pre class="gpi-pre">${esc(R.text.join("\n\n"))}</pre><button class="btn ghost sm" id="gpiDlTxt">Tải bản chép (.txt)</button></details>`:""}
   <div class="btns"><button class="btn ghost" id="gpiBack">← Nhập lại</button><span style="flex:1"></span><button class="btn primary" id="gpiSave" ${gpi.busy?"disabled":""}>💾 Lưu ${nOk} người mới vào gia phả</button></div></div>`}
-function gpiOpen(){gpi.open=true;if(gpSrc!=="fam"){gpSrc="fam";ls.set("gpsrc","fam")}if(view!=="giapha")show("giapha");else renderGiapha();renderGpi()}
+function gpiOpen(){gpi.open=true;if(gpSrc==="le"){gpSrc="mine";ls.set("gpsrc2","mine")}if(view!=="giapha")show("giapha");else renderGiapha();renderGpi()}
 document.addEventListener("click",e=>{const t=e.target;
   if(t.closest("[data-gpiopen]")){gpiOpen();return}
   if(!t.closest("#gpImp"))return;
@@ -3853,6 +3862,11 @@ const KB="Không biết";
 const CP_COUNTRIES=["Việt Nam","Hoa Kỳ","Úc","Canada","Pháp","Đức","Anh","Nhật Bản","Hàn Quốc","Đài Loan","Trung Quốc","Lào","Campuchia","Thái Lan","Nga","Séc","Ba Lan","Na Uy","Khác"];
 const CP_FIELDS=[["country","Quốc gia"],["ho","Họ"],["toc","Tộc / quê gốc","VD: Tộc Lê (Bối Khê)"],["chi","Chi","VD: Chi Giáp, chi thứ 2"],["nhanh","Nhánh / Phái","VD: Phái trưởng"],["dong","Dòng","VD: Dòng con trưởng"],["doi","Đời thứ","VD: 18"]];
 var clanProf=ls.get("clanProf",null),cpLoaded=false,cpLast=JSON.stringify(clanProf);
+const DISCLAIMER="Siêu GiaPha chat là công cụ hỗ trợ ghi chép, tra cứu và đối chiếu. Dữ liệu do người dùng nhập, do AI đọc từ ảnh, hoặc lấy từ nguồn mở có thể sai sót. Hãy đối chiếu với gia phả gốc và văn bản chính thức trước khi dùng vào việc quan trọng như thờ cúng, thủ tục pháp lý, thừa kế. App và người phát triển không chịu trách nhiệm về thiệt hại phát sinh từ việc dùng dữ liệu. Bạn chịu trách nhiệm về quyền chia sẻ tư liệu, hình ảnh và đường link mình đưa lên.";
+const CONSENT_TXT="Tôi đồng ý chia sẻ dữ liệu gia phả đã lọc riêng tư (chỉ người đã mất ở các đời xa, ngoài 4 đời gần nhất; không số điện thoại, nơi ở, ghi chú riêng) và tư liệu RAW tôi đưa lên, để app được dùng xây dựng Cơ sở dữ liệu và hệ thống Cây gia phả Việt Nam (Cây sự sống Việt Nam, Dân tộc Việt Nam).";
+function cpConsent(){return!!clanProf?.consent?.on}
+function CONSENT_HTML(on){return`<details class="cpdis"><summary>⚖️ Miễn trừ trách nhiệm</summary><p class="src">${DISCLAIMER}</p></details>
+   <label class="cpchk cpcons"><input type="checkbox" id="cp_consent" ${on?"checked":""}> <span>${CONSENT_TXT} <small>Không bắt buộc, rút lại bất cứ lúc nào trong Cài đặt.</small></span></label>`}
 function cpDone(){return!!clanProf&&CP_FIELDS.every(([k])=>clanProf[k])}
 function cpLine(p=clanProf){if(!p)return"";const v=k=>p[k]&&p[k]!==KB?p[k]:"";
   return[v("toc")||(v("ho")?"Họ "+v("ho"):""),v("chi")&&(/^chi\b/i.test(v("chi"))?v("chi"):"Chi "+v("chi")),v("nhanh"),v("dong")&&(/^dòng\b/i.test(v("dong"))?v("dong"):"Dòng "+v("dong")),v("doi")&&(/^đời\b/i.test(v("doi"))?v("doi"):"Đời "+v("doi")),v("country")&&v("country")!=="Việt Nam"?v("country"):""].filter(Boolean).join(" · ")}
@@ -3875,13 +3889,14 @@ function cpOpen(first){let s=$("#cpSheet");if(!s){document.body.insertAdjacentHT
    ${CP_FIELDS.map(fld).join("")}
    <div class="cpf"><label for="cp_line">Dòng trực hệ <small class="src">(không bắt buộc)</small></label><textarea id="cp_line" rows="4" placeholder="VD: Tôi là Lê Văn A, đời 16, con ông Lê Văn B đời 15, cháu ông Lê Văn C đời 14...">${esc(p.line||"")}</textarea>
    <label class="cpchk"><input type="checkbox" id="cp_lineGo" ${p.line?"":"checked"}> Lưu xong thì đưa dòng này vào gia phả riêng 🔒 (Claude tách người, bạn kiểm tra trước khi lưu)</label></div>
+   ${CONSENT_HTML(p.consent?.on)}
    <p class="src cpmsg" role="status"></p>
    <div class="btns"><button class="btn ghost" id="cpLater">${first?"Để sau":"Huỷ"}</button><span style="flex:1"></span><button class="btn ghost sm" id="cpAllKb">Mục trống = ${KB}</button><button class="btn primary" id="cpSave">Lưu hồ sơ</button></div>
    <small class="src">🔒 Hồ sơ lưu trong vùng riêng của tài khoản bạn, không đưa lên kho chung.</small>`;
   s.hidden=false;setTimeout(()=>s.querySelector("select,input")?.focus(),50)}
 function cpRead(){const s=$("#cpSheet"),g=id=>s.querySelector("#"+id);const x={};
   x.country=g("cp_country").value;const h=g("cp_ho").value;x.ho=h==="__o"?g("cp_ho_o").value.trim():h;
-  CP_FIELDS.slice(2).forEach(([k])=>x[k]=g("cp_"+k).value.trim());x.line=g("cp_line")?.value.trim()||"";return x}
+  CP_FIELDS.slice(2).forEach(([k])=>x[k]=g("cp_"+k).value.trim());x.line=g("cp_line")?.value.trim()||"";const ck=g("cp_consent");x.consent=ck?.checked?{on:true,v:1,at:clanProf?.consent?.on?clanProf.consent.at:new Date().toISOString()}:{on:false,at:new Date().toISOString()};return x}
 /* ảnh và dòng trực hệ của gia đình chỉ vào gia phả RIÊNG 🔒 (không vào Dòng họ chung) */
 function gpPrivOpen(){gpSrc="mine";ls.set("gpsrc2","mine");gpi.open=true;if(view!=="giapha")show("giapha");else renderGiapha();renderGpi()}
 function cpClose(){const s=$("#cpSheet");if(s)s.hidden=true}
@@ -3894,7 +3909,7 @@ document.addEventListener("click",e=>{const t=e.target;
   if(t.closest?.("#cpAllKb")){$$("#cpSheet .cpf[data-cpf]").forEach(f=>{const k=f.dataset.cpf;if(k==="country"||k==="ho"){const sel=$("#cp_"+k);if(!sel.value||(sel.value==="__o"&&!$("#cp_ho_o").value.trim()))sel.value=KB,$("#cp_ho_o").hidden=true}else{const i=$("#cp_"+k);if(!i.value.trim()){i.value=KB;i.disabled=true;f.querySelector(".cpkb")?.classList.add("on")}}f.classList.remove("miss")});return}
   if(t.closest?.("#cpSave")){const x=cpRead();const miss=CP_FIELDS.filter(([k])=>!x[k]);$$("#cpSheet .cpf").forEach(f=>f.classList.toggle("miss",miss.some(([k])=>k===f.dataset.cpf)));
     if(miss.length){$("#cpSheet .cpmsg").textContent=`Còn ${miss.length} mục chưa chọn: ${miss.map(m=>m[1]).join(", ")}. Điền vào, hoặc bấm “${KB}”.`;return}
-    const go=x.line&&$("#cp_lineGo")?.checked;cpSave(x);cpClose();toast("Đã lưu hồ sơ dòng họ: "+(cpLine(x)||KB));if(view==="acct")renderAcct();
+    const go=x.line&&$("#cp_lineGo")?.checked;if(cpConsent()&&!x.consent.on&&typeof gpSync!=="undefined"&&gpSync.on){gpSync.on=false;gpSaveCfg();toast("Đã rút đồng ý: tắt chia sẻ & đồng bộ")}cpSave(x);cpClose();toast("Đã lưu hồ sơ dòng họ: "+(cpLine(x)||KB));if(view==="acct")renderAcct();
     if(go){gpi.res=null;gpi.text=`Gia phả ${cpLine(x)}.\n${x.line}`;gpPrivOpen();setTimeout(()=>gpiRunText("type"),300)}else if(gpi.open)renderGpi()}});
 document.addEventListener("keydown",e=>{if(e.key==="Escape"&&$("#cpSheet")&&!$("#cpSheet").hidden)cpClose()});
 renderProfRow=(o=>function(){o();const sm=$("#profRow small");if(sm)sm.textContent=cpLine()||"Hồ sơ, bot, cài đặt"})(renderProfRow);
@@ -3926,12 +3941,12 @@ async function gdList(m,folder,path="",depth=0){const kids=await driveSearchAll(
   return out}
 function gdB64File(b64,type,name){const bin=atob(b64),u=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);return new File([u],name,{type})}
 function gdSay(t){gd.msg=t;const st=$("#gdState");if(st)st.textContent=t}
-async function gdScan(){if(gd.busy)return;const m=await getMcp();if(!m){gdSay(NO_DRIVE_MSG());return}
-  gd.name=($("#gdFolder")?.value||gd.name).trim();if(!gd.name){gdSay("Gõ tên thư mục trên Drive");return}ls.set("gdFolder",gd.name);
+async function gdScan(fo){if(gd.busy)return;const m=await getMcp();if(!m){gdSay(NO_DRIVE_MSG());return}
+  if(!fo){gd.name=($("#gdFolder")?.value||gd.name).trim();if(!gd.name){gdSay("Gõ tên thư mục trên Drive");return}ls.set("gdFolder",gd.name)}
   gd.batch=+($("#gdBatch")?.value??gd.batch);ls.set("gdBatch",gd.batch);
   if(gpSrc!=="mine")gpPrivOpen();
   gd.busy=true;renderGpi();
-  try{gdSay(`Đang tìm thư mục “${gd.name}” trên Google Drive...`);const r=await gdFindFolder(m,gd.name);
+  try{gdSay(`Đang tìm thư mục “${gd.name}” trên Google Drive...`);const r=fo?{folder:fo,near:[]}:await gdFindFolder(m,gd.name);
     if(!r.folder){gdSay(r.near.length?`Không thấy đúng thư mục “${gd.name}”. Thư mục gần giống: ${r.near.map(f=>"“"+f.title+"”").join(", ")}. Gõ lại đúng tên rồi bấm Quét.`:`Không tìm thấy thư mục “${gd.name}” trên Google Drive đang kết nối trong Claude. Kiểm tra tên thư mục, và Claude đang nối đúng tài khoản Google có thư mục này.`);return}
     gd.folder=r.folder;gdSay(`Đang liệt kê ảnh trong “${r.folder.title}”...`);gd.files=await gdList(m,r.folder);
     const done=gd.done[r.folder.id]||{};const todo=gd.files.filter(f=>!done[f.id]);const pick=gd.batch?todo.slice(0,gd.batch):todo;
@@ -3962,6 +3977,191 @@ document.addEventListener("click",e=>{const t=e.target;if(t.closest?.("#gdScan")
   if(t.closest?.("#gdReset")){if(gd.folder){delete gd.done[gd.folder.id];ls.set("gdDone",gd.done)}gd.msg="Sẽ quét lại từ ảnh đầu tiên.";renderGpi()}});
 FEATS.push(["Tài khoản","🏯","Hồ sơ dòng họ: quốc gia, họ, tộc, chi, nhánh, dòng, đời",()=>cpOpen(false)],
   ["Gia phả","📁","Quét ảnh gia phả từ thư mục Google Drive",()=>{gpPrivOpen();setTimeout(()=>{$("#gdFolder")?.scrollIntoView({block:"center"});$("#gdFolder")?.focus()},250)}]);
+
+/* ===== v21: 4 tầng gia phả + mã ráp nối + đối chiếu 3 nguồn =====
+   🔒 Cá nhân: 4 đời trên và 4 đời dưới bạn (8 đời), chỉ mình bạn xem.
+   🏠 Gia phả riêng: gia đình bạn trong 20 đời gần nhất; bật “Chia sẻ & đồng bộ” để đưa người đã mất ở các đời xa lên dòng họ chung.
+   👪 Dòng họ chung: lịch sử dòng họ ráp vào nhánh của bạn.  🏯 Lịch sử họ: thư viện mở (nhà nước, quốc tế, nhà nghiên cứu, đã công bố, diễn đàn).
+   Chỗ thiếu dữ liệu được gán một MÃ RÁP NỐI; mã giống nhau ở các tài khoản khác sẽ ráp vào nhau. */
+function gpMeId(){try{return JSON.parse(localStorage.getItem("sgpm:me")||"null")}catch{return null}}
+function gpNear(n){return P=>{const me=gpMeId();if(!me||!P.some(p=>p.id===me))return P;const D=gpDepths(P),dm=D.get(me);return P.filter(p=>Math.abs((D.get(p.id)||1)-dm)<=n)}}
+gpBar=(o=>function(){o();const b=$("#gpbar");if(!b)return;const mine=b.querySelector('[data-gpsrc="mine"]');if(!mine)return;
+  mine.innerHTML=`🏠 <span class="lg">Gia phả </span>riêng`;mine.title="Gia đình bạn trong 20 đời gần nhất";
+  mine.insertAdjacentHTML("beforebegin",`<button data-gpsrc="me4" class="${gpSrc==="me4"?"on":""}" title="4 đời trên và 4 đời dưới bạn, chỉ mình bạn xem">🔒 Cá nhân</button>`);
+  if(gpSrc==="me4")mine.classList.remove("on");
+  const sp=b.querySelector(":scope > .src");const meOk=!!gpMeId();
+  if(sp&&(gpSrc==="me4"||gpSrc==="mine"))sp.textContent=gpSrc==="me4"?`Chỉ mình bạn xem: 4 đời trên và 4 đời dưới bạn (8 đời).${meOk?"":" Hãy đặt một người là “Tôi” để lọc đúng 8 đời."}`
+    :`Gia đình bạn trong 20 đời gần nhất. Chỉ mình bạn xem, trừ khi bật Chia sẻ & đồng bộ.`;
+  const sh=b.querySelector("#gpShare");if(sh&&gpSrc==="mine")sh.insertAdjacentHTML("afterend",`<label class="gpsw" title="Mỗi ngày đưa người đã mất ở các đời xa (ngoài 4 đời gần nhất) lên dòng họ chung, kèm mã ráp nối"><input type="checkbox" class="tgl sm" data-gpsync ${gpSync.on?"checked":""}> Chia sẻ & đồng bộ</label>`);
+  const acts=b.querySelector(".gpacts");if(acts&&!acts.querySelector("[data-gpcmp]"))acts.insertAdjacentHTML("afterbegin",`<button class="btn ghost sm" data-gpcmp>🔗 Đối chiếu 3 nguồn</button>`)})(gpBar);
+
+/* ---- mã ráp nối ---- */
+const CODE_FIELDS=[["birth","năm sinh"],["fatherId","cha"],["death","năm mất"],["deathLunar","ngày giỗ"],["burial","nơi an táng"]];
+const codeKey=s=>fold(s).toUpperCase().replace(/[^A-Z0-9]+/g,"");
+function tocKey(){const t=clanProf?.toc&&clanProf.toc!==KB?clanProf.toc:"";const m=t.match(/\(([^)]+)\)/);return codeKey(m?m[1]:t.replace(/^(tộc|họ|dòng họ)\s+\S+\s*/i,""))||"X"}
+function nameKey(name,ho=hoName()){const w=String(name||"").trim().split(/\s+/);if(w.length>1&&fold(w[0])===fold(ho))w.shift();return codeKey(w.join(""))}
+function gpCodeOf(p,P,D){const me=gpMeId(),doi=+clanProf?.doi;D=D||gpDepths(P);
+  const abs=me&&D.has(me)&&doi>0?doi-(D.get(me)-(D.get(p.id)||1)):null;
+  return`${codeKey(hoName())}-${tocKey()}-${abs>0?"D"+abs:"R"+(D.get(p.id)||1)}-${nameKey(p.name)}`}
+function gpMissing(p){const dead=!!String(p.death||"").trim();return CODE_FIELDS.filter(([k])=>(k==="deathLunar"||k==="burial")?dead&&!p[k]:!p[k]||(Array.isArray(p[k])&&!p[k].length)).map(x=>x[1])}
+const yr4=s=>{const m=String(s||"").match(/(\d{4})/);return m?m[1]:""};
+
+/* ---- đọc 3 nguồn ---- */
+function snapOnce(col){return new Promise(res=>{let done=false,u;const t=setTimeout(()=>{if(!done){done=true;res([])}},5000);
+  try{u=col.onSnapshot(s=>{if(done)return;done=true;clearTimeout(t);res(s.docs.map(d=>({...d.data(),id:d.id})));setTimeout(()=>{try{u&&u()}catch{}},0)},()=>{if(!done){done=true;clearTimeout(t);res([])}})}catch{done=true;clearTimeout(t);res([])}})}
+async function gpPrivPeople(){if(acct.uid&&acct.db)return snapOnce(acct.db.collection(`data/users/${acct.uid}/fam/people`));return(gpSrc==="mine"||gpSrc==="me4")?(gpApi?.people||[]).filter(p=>!p.sample):[]}
+async function gpSources(){const db=acct.db||clanDb;const P=await gpPrivPeople();
+  const S=db?await snapOnce(db.collection(famColName())):[];const H=db?await snapOnce(db.collection(lineName())):[];return{P,S,H}}
+const SRC_TYPES=[["state","🏛️ Nhà nước",/gov\.vn|nhà nước|viện|cục văn thư|lưu trữ quốc gia|bảo tàng|sắc phong/i],["intl","🌐 Quốc tế",/familysearch|archive\.org|bnf\.fr|loc\.gov|britannica|geni\.com|ancestry/i],["res","🔬 Nhà nghiên cứu",/nghiên cứu|tạp chí|journal|luận án|giáo sư|pgs|ts\./i],["open","📖 Mở, đã công bố",/wikidata|wikipedia|sách|công bố|xuất bản|cc0/i],["forum","💬 Diễn đàn",/diễn đàn|forum|facebook|group|blog/i]];
+function srcType(p){const s=[p.src,p.notes,p.source].filter(Boolean).join(" ");for(const [k,l,re] of SRC_TYPES)if(re.test(s))return k;return"other"}
+
+/* ---- đối chiếu ---- */
+var gpSync={on:false,last:"",msg:"",...ls.get("gpSync",{})};
+var gpChk={daily:true,bot:"week",last:"",lastBot:"",sum:null,...ls.get("gpChk",{})};
+var gpCmpRes=null,gpCmpBusy=false,gpCmpQ="";
+function gpSaveCfg(){ls.set("gpSync",gpSync);ls.set("gpChk",{...gpChk});if(typeof nbCol!=="undefined"&&nbCol){try{nbCol.doc("gpcheck").set({kind:"gpcheck",sync:gpSync,chk:{...gpChk},at:new Date().toISOString()})}catch{}}}
+async function gpCompare(){const {P,S,H}=await gpSources();const D=gpDepths(P),ho=hoName();
+  const sCode=new Map(),sName=new Map(),hName=new Map();
+  S.forEach(s=>{if(s.code)(sCode.get(s.code)||sCode.set(s.code,[]).get(s.code)).push(s);const k=nameKey(s.name,ho);(sName.get(k)||sName.set(k,[]).get(k)).push(s)});
+  H.forEach(h=>{const k=nameKey(h.name,ho);(hName.get(k)||hName.set(k,[]).get(k)).push(h)});
+  const myFam=ls.get("famCode");const byIdP=new Map(P.map(p=>[p.id,p]));const rows=[];let agree=0,conflict=0,matched=0;
+  for(const p of P.filter(p=>p.name)){const code=gpCodeOf(p,P,D),k=nameKey(p.name,ho);
+    const s=(sCode.get(code)||[]).find(x=>!myFam||!String(x.id).startsWith(myFam+"_"))||(sName.get(k)||[]).find(x=>(!myFam||!String(x.id).startsWith(myFam+"_"))&&(!yr4(p.birth)||!yr4(x.birth)||yr4(p.birth)===yr4(x.birth)));
+    const h=(hName.get(k)||[]).find(x=>!yr4(p.birth)||!yr4(x.birth)||yr4(p.birth)===yr4(x.birth));
+    const cmp=[],fill={};let a=0,c=0;
+    for(const [src,x] of [["Dòng họ chung",s],["Lịch sử họ",h]]){if(!x)continue;
+      for(const [f,l] of [["birth","Năm sinh"],["death","Năm mất"],["deathLunar","Ngày giỗ"],["burial","Nơi an táng"]]){const pv=f==="birth"||f==="death"?yr4(p[f]):fold(p[f]||"").trim(),xv=f==="birth"||f==="death"?yr4(x[f]):fold(x[f]||"").trim();
+        if(pv&&xv){if(pv===xv)a++;else{c++;cmp.push(`${l}: bạn ghi “${p[f]}”, ${src} ghi “${x[f]}”`)}}else if(!pv&&xv&&!fill[f])fill[f]={v:x[f],src}}
+      const pf=byIdP.get(p.fatherId)?.name,xf=x.fatherId&&(src==="Dòng họ chung"?S:H).find(y=>y.id===x.fatherId)?.name;
+      if(pf&&xf){nameKey(pf,ho)===nameKey(xf,ho)?a++:(c++,cmp.push(`Cha: bạn ghi “${pf}”, ${src} ghi “${xf}”`))}}
+    if(s||h)matched++;agree+=a;conflict+=c;
+    rows.push({id:p.id,name:p.name,code,missing:gpMissing(p),st:c?"bad":a?"ok":(s||h)?"name":"none",cmp,fill,srcs:[s&&"👪",h&&"🏯"].filter(Boolean).join(" "),htype:h?srcType(h):""})}
+  const ht={};H.forEach(h=>{const t=srcType(h);ht[t]=(ht[t]||0)+1});
+  const sum={n:P.length,s:S.length,h:H.length,matched,agree,conflict,acc:agree+conflict?Math.round(agree*100/(agree+conflict)):null,miss:rows.filter(r=>r.missing.length).length,ht,at:new Date().toISOString()};
+  gpCmpRes={rows,sum};gpChk.sum=sum;gpSaveCfg();return gpCmpRes}
+function gpSumLine(s=gpChk.sum){if(!s)return"Chưa đối chiếu lần nào";return`${s.n} người · đối chiếu được ${s.matched} · ${s.acc==null?"chưa có trường để so":`độ khớp ${s.acc}% (${s.agree} khớp, ${s.conflict} lệch)`} · ${s.miss} người thiếu dữ liệu`}
+
+/* ---- chia sẻ & đồng bộ gia phả riêng lên dòng họ chung (kèm mã ráp nối), không hỏi lại ---- */
+async function gpShareSync(manual){const db=acct.db;if(!db||!acct.uid){if(manual)toast("Cần đăng nhập trong Claude để chia sẻ.");return}
+  const P=(await gpPrivPeople()).filter(p=>p.name);const {ok,hid,max}=gpPublicSplit(P);const D=gpDepths(P);
+  const fam=ls.get("famCode")||("f"+Math.random().toString(36).slice(2,8));ls.set("famCode",fam);const ids=new Set(ok.map(p=>p.id));const map=id=>id&&ids.has(id)?fam+"_"+id:"";
+  const KEEP=["name","gender","alias","birth","death","deathLunar","order","branch","birthPlace","burial","job"];let n=0;
+  for(const p of ok){const d={};KEEP.forEach(k=>{if(p[k])d[k]=p[k]});d.fatherId=map(p.fatherId);d.motherId=map(p.motherId);d.spouseIds=(p.spouseIds||[]).map(map).filter(Boolean);
+    d.code=gpCodeOf(p,P,D);d.missing=gpMissing(p);d.at=Date.now();try{await db.doc(famColName()+"/"+fam+"_"+p.id).set(d);n++}catch{break}}
+  gpSync.last=ymd(new Date());gpSync.msg=`${n} người đã mất ở các đời xa đã lên dòng họ chung, ${hid.length} người được giữ kín (4 đời gần nhất hoặc còn sống). Gia phả có ${max} đời.`;gpSaveCfg();if(manual)toast("👪 "+gpSync.msg)}
+
+/* ---- bảng đối chiếu ---- */
+function gpCmpOpen(q){let s=$("#gpCmp");if(!s){document.body.insertAdjacentHTML("beforeend",`<div class="featsheet" id="gpCmp" hidden role="dialog" aria-modal="true" aria-labelledby="gpcT"><div class="fs-in gpc-in"></div></div>`);s=$("#gpCmp")}
+  if(q!=null)gpCmpQ=q;s.hidden=false;gpCmpRender();if(!gpCmpRes&&!gpCmpBusy)gpCmpRun()}
+async function gpCmpRun(){gpCmpBusy=true;gpCmpRender();try{await gpCompare()}catch(e){toast("Không đối chiếu được: "+(e?.message||e))}finally{gpCmpBusy=false;gpChk.last=ymd(new Date());gpSaveCfg();gpCmpRender()}}
+const ST_L={ok:["✓","Khớp nguồn khác","ok"],bad:["⚠","Lệch với nguồn khác","bad"],name:["≈","Trùng tên, chưa đủ để so","mid"],none:["?","Chưa có nguồn khác","none"]};
+function gpCmpRender(){const box=$("#gpCmp .gpc-in");if(!box)return;const R=gpCmpRes,s=R?.sum||gpChk.sum,f=fold(gpCmpQ).trim();
+  const rows=(R?.rows||[]).filter(r=>!f||fold(r.name+" "+r.code).includes(f)).sort((a,b)=>({bad:0,none:1,name:2,ok:3}[a.st]-{bad:0,none:1,name:2,ok:3}[b.st]));
+  box.innerHTML=`<div class="gpi-h"><h3 id="gpcT">🔗 Đối chiếu 3 nguồn</h3><button class="icon-btn" id="gpcX" aria-label="Đóng">${ic.close}</button></div>
+  <p class="src">So gia phả riêng của bạn với <b>Dòng họ chung</b> và <b>Lịch sử họ ${esc(hoName())}</b> (thư viện mở) để ước lượng độ chính xác. Người thiếu dữ liệu có <b>mã ráp nối</b>: tài khoản khác chia sẻ cùng mã thì app ráp vào để bạn lấy thêm thông tin.</p>
+  <div class="stat3"><div><b>${s?.n??"…"}</b><small>🏠 Gia phả riêng</small></div><div><b>${s?.s??"…"}</b><small>👪 Dòng họ chung</small></div><div><b>${s?.h??"…"}</b><small>🏯 Lịch sử (thư viện mở)</small></div></div>
+  ${s?.h?`<p class="src">Nguồn lịch sử: ${SRC_TYPES.filter(([k])=>s.ht?.[k]).map(([k,l])=>`${l} ${s.ht[k]}`).concat(s.ht?.other?[`Khác ${s.ht.other}`]:[]).join(" · ")}</p>`:""}
+  <p class="gpc-sum" role="status">${gpCmpBusy?'<span class="dots"><i></i><i></i><i></i></span> Đang đối chiếu...':esc(gpSumLine(s))}</p>
+  <details class="gpc-set"><summary>⚙️ Lịch đối chiếu và chia sẻ</summary>
+   <label class="setrow"><span><b>Đối chiếu hằng ngày</b><small>Chạy một lần mỗi ngày khi mở app. ${gpChk.last?"Lần gần nhất: "+esc(gpChk.last):""}</small></span><input type="checkbox" class="tgl" data-gpchk="daily" ${gpChk.daily?"checked":""}></label>
+   <label class="setrow"><span><b>🤖 Bot kiểm tra gia phả</b><small>Bot so lại toàn bộ 3 nguồn và báo chỗ lệch. ${gpChk.lastBot?"Lần gần nhất: "+esc(gpChk.lastBot):""}</small></span><select class="sel sm" data-gpchk="bot"><option value="week" ${gpChk.bot==="week"?"selected":""}>Hằng tuần</option><option value="month" ${gpChk.bot==="month"?"selected":""}>Hằng tháng</option><option value="off" ${gpChk.bot==="off"?"selected":""}>Tắt</option></select></label>
+   <label class="setrow"><span><b>👪 Chia sẻ & đồng bộ gia phả riêng</b><small>Mỗi ngày đưa người đã mất ở các đời xa lên dòng họ chung kèm mã ráp nối. 4 đời gần nhất và người còn sống luôn được giữ kín. ${esc(gpSync.msg||"")}</small></span><input type="checkbox" class="tgl" data-gpsync ${gpSync.on?"checked":""}></label>
+   <div class="btns"><button class="btn ghost sm" id="gpcShare">Chia sẻ ngay</button></div></details>
+  <div class="btns gpc-bar"><input id="gpcQ" class="gdin" placeholder="Tìm tên hoặc mã, VD: LE-BOIKHE-D12" value="${esc(gpCmpQ)}" aria-label="Tìm theo tên hoặc mã ráp nối"><button class="btn primary sm" id="gpcRun" ${gpCmpBusy?"disabled":""}>Đối chiếu lại</button></div>
+  <div class="gpc-list">${R?rows.slice(0,200).map(r=>{const [i,l,c]=ST_L[r.st];return`<div class="gpc-row ${c}"><span class="gpc-st" title="${l}">${i}</span><div><b>${esc(r.name)}</b> <small class="gpc-srcs">${r.srcs}</small><code class="gpc-code" data-gpccopy="${esc(r.code)}" title="Bấm để chép mã">${esc(r.code)}</code>
+     ${r.missing.length?`<small class="gpc-miss">Thiếu: ${esc(r.missing.join(", "))}</small>`:""}${r.cmp.map(x=>`<small class="warn">${esc(x)}</small>`).join("")}
+     ${Object.keys(r.fill).length?`<div class="gpc-fill">${Object.entries(r.fill).map(([k,v])=>`<button class="btn ghost sm" data-gpcfill="${esc(r.id)}:${k}">Lấy ${esc({birth:"năm sinh",death:"năm mất",deathLunar:"ngày giỗ",burial:"nơi an táng"}[k])} “${esc(v.v)}” từ ${esc(v.src)}</button>`).join("")}</div>`:""}</div></div>`}).join("")+(rows.length>200?`<p class="src">Còn ${rows.length-200} người, gõ tên hoặc mã để lọc.</p>`:""):""}
+   ${R&&!R.rows.length?`<p class="src">Gia phả riêng chưa có ai. Vào 📥 Nhập liệu để thêm.</p>`:""}</div>`}
+async function gpFill(id,k){const r=gpCmpRes?.rows.find(x=>x.id===id),v=r?.fill[k];if(!v)return;
+  try{if(acct.uid&&acct.db)await acct.db.doc(`data/users/${acct.uid}/fam/people/${id}`).update({[k]:v.v});else if(gpApi?.put)await gpApi.put(id,{[k]:v.v});
+    delete r.fill[k];r.missing=r.missing.filter(m=>m!=={birth:"năm sinh",death:"năm mất",deathLunar:"ngày giỗ",burial:"nơi an táng"}[k]);toast("Đã bổ sung vào gia phả riêng");gpCmpRender()}catch(e){toast("Chưa lưu được: "+(e?.message||e))}}
+document.addEventListener("input",e=>{if(e.target.id==="gpcQ"){gpCmpQ=e.target.value;const p=e.target.selectionStart;gpCmpRender();const i=$("#gpcQ");i.focus();i.setSelectionRange(p,p)}});
+document.addEventListener("change",e=>{const t=e.target;
+  const c=t.closest?.("[data-gpchk]");if(c){gpChk[c.dataset.gpchk]=c.type==="checkbox"?c.checked:c.value;gpSaveCfg();toast("Đã lưu lịch đối chiếu");return}
+  if(t.matches?.("[data-gpsync]")){if(t.checked&&!cpConsent()){t.checked=false;toast("Cần đồng ý chia sẻ dữ liệu trước khi bật");cpOpen(false);setTimeout(()=>{$("#cp_consent")?.scrollIntoView({block:"center"});$("#cp_consent")?.focus()},80);return}gpSync.on=t.checked;gpSaveCfg();$$("[data-gpsync]").forEach(x=>x.checked=gpSync.on);
+    toast(t.checked?"Đã bật chia sẻ & đồng bộ: 4 đời gần nhất và người còn sống luôn được giữ kín":"Đã tắt chia sẻ & đồng bộ");if(t.checked)gpShareSync(true)}});
+document.addEventListener("click",e=>{const t=e.target;
+  if(t.closest?.("[data-gpcmp]")){gpCmpOpen();return}
+  if(t.id==="gpCmp"||t.closest?.("#gpcX")){$("#gpCmp").hidden=true;return}
+  if(t.closest?.("#gpcRun")){gpCmpRun();return}
+  if(t.closest?.("#gpcShare")){gpShareSync(true).then(gpCmpRender);return}
+  const cp=t.closest?.("[data-gpccopy]");if(cp){navigator.clipboard?.writeText(cp.dataset.gpccopy).catch(()=>{});toast("Đã chép mã "+cp.dataset.gpccopy);return}
+  const fl=t.closest?.("[data-gpcfill]");if(fl){const [id,k]=fl.dataset.gpcfill.split(":");gpFill(id,k)}});
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&$("#gpCmp")&&!$("#gpCmp").hidden)$("#gpCmp").hidden=true});
+
+/* ---- lịch: đối chiếu hằng ngày, bot hằng tuần/tháng, chia sẻ hằng ngày (khi app đang mở) ---- */
+function gpDueBot(now=new Date()){if(gpChk.bot==="off")return false;if(!gpChk.lastBot)return true;const d=(now-new Date(gpChk.lastBot))/864e5;return d>=(gpChk.bot==="month"?30:7)}
+async function gpSchedule(){const today=ymd(new Date());
+  try{if(gpSync.on&&gpSync.last!==today&&acct.uid)await gpShareSync(false)}catch{}
+  const bot=gpDueBot(),day=gpChk.daily&&gpChk.last!==today;if(!bot&&!day)return;
+  try{const R=await gpCompare();gpChk.last=today;if(bot)gpChk.lastBot=today;gpSaveCfg();
+    if(R.sum.n&&(bot||R.sum.conflict))toast(`${bot?"🤖 Bot đã kiểm tra gia phả":"🔗 Đối chiếu hằng ngày"}: ${gpSumLine(R.sum)}`)}catch{}}
+setTimeout(gpSchedule,12000);setInterval(gpSchedule,60*60*1000);
+
+FEATS.push(["Gia phả","🔒","Gia phả cá nhân 8 đời (4 đời trên, 4 đời dưới, chỉ mình bạn xem)",()=>{gpSrc="me4";ls.set("gpsrc2","me4");goSlot("gp","view");renderGiapha()}],
+  ["Gia phả","🏠","Gia phả riêng 20 đời",()=>{gpSrc="mine";ls.set("gpsrc2","mine");goSlot("gp","view");renderGiapha()}],
+  ["Gia phả","🔗","Đối chiếu 3 nguồn: gia phả riêng, dòng họ chung, lịch sử họ",()=>gpCmpOpen()],
+  ["Gia phả","🧩","Tìm theo mã ráp nối (dữ liệu còn thiếu)",()=>gpCmpOpen("")],
+  ["Gia phả","👪","Chia sẻ & đồng bộ gia phả riêng lên dòng họ chung",()=>{gpCmpOpen();setTimeout(()=>{const d=$("#gpCmp details.gpc-set");if(d)d.open=true},50)}],
+  ["Gia phả","🤖","Bot kiểm tra gia phả hằng tuần hoặc hằng tháng",()=>{gpCmpOpen();setTimeout(()=>{const d=$("#gpCmp details.gpc-set");if(d)d.open=true},50)}]);
+
+/* ===== v21: link kho lưu trữ của tài khoản + ô dán link tư liệu RAW (có ghi chú link nói về gì) cho cả Gia phả và Từ điển ===== */
+var rawLinks=ls.get("rawLinks",[]),rlBusy=false,rlMsg="";
+function linksIn(list){rawLinks=list.sort((a,b)=>String(b.at).localeCompare(String(a.at)));ls.set("rawLinks",rawLinks);rlRefresh()}
+const RL_PLAT=[["Google Drive","☁️",/drive\.google|docs\.google/i],["Dropbox","📦",/dropbox\.com/i],["OneDrive","🗂️",/onedrive|1drv\.ms|sharepoint/i],["iCloud","🍎",/icloud\.com/i],["MEGA","🔐",/mega\.nz/i],["Box","📁",/box\.com/i],["GitHub","🐙",/github\.com/i],["YouTube","▶️",/youtu\.?be/i],["Facebook","💬",/facebook\.com|fb\.com/i]];
+function rlPlat(u){for(const [n,i,re] of RL_PLAT)if(re.test(u))return{name:n,icon:i};return{name:"Trang web",icon:"🌐"}}
+function rlDrive(u){let m=String(u).match(/\/folders\/([\w-]{10,})/);if(m)return{kind:"folder",id:m[1]};m=String(u).match(/\/(?:file|document|spreadsheets|presentation)\/d\/([\w-]{10,})/)||String(u).match(/[?&]id=([\w-]{10,})/);return m?{kind:"file",id:m[1]}:null}
+function rlValid(u){try{const x=new URL(u);return x.protocol==="https:"||x.protocol==="http:"}catch{return false}}
+async function rlSave(rec){rec={kind:"rawlink",...rec,at:rec.at||new Date().toISOString()};const id=rec.id||("rl"+Date.now().toString(36));delete rec.id;
+  if(typeof nbCol!=="undefined"&&nbCol){try{await nbCol.doc(id).set(rec);return id}catch{}}rawLinks=[{...rec,id},...rawLinks.filter(x=>x.id!==id)];ls.set("rawLinks",rawLinks);rlRefresh();return id}
+async function rlDel(id){if(typeof nbCol!=="undefined"&&nbCol){try{await nbCol.doc(id).delete();return}catch{}}rawLinks=rawLinks.filter(x=>x.id!==id);ls.set("rawLinks",rawLinks);rlRefresh()}
+function rlStore(){return rawLinks.find(x=>x.store)}
+function rlHTML(tgt){const L=rawLinks.filter(x=>x.target===tgt||x.store).slice(0,12);
+  return`<div class="card rlcard" data-rlbox="${tgt}"><h3>🔗 Dán link tư liệu</h3><p class="src">Dán link thư mục hoặc tệp trên Google Drive, Dropbox, OneDrive, iCloud, trang web... để bổ sung tư liệu <b>RAW</b> cho ${tgt==="gp"?"gia phả":"từ điển"}. Ghi rõ link này nói về gì. Link Google Drive quét được ngay; nền tảng khác được lưu làm nguồn tham khảo (tải tệp về rồi đưa vào ô Ảnh, PDF hoặc Tệp).</p>
+   <div class="rlform"><input class="gdin" data-rlurl placeholder="https://drive.google.com/drive/folders/..." inputmode="url" aria-label="Link tư liệu">
+   <textarea class="rlnote" data-rlnote rows="2" placeholder="Link này nói về gì? VD: Ảnh chụp gia phả Tộc Lê Bối Khê, bản chép tay năm 1969" aria-label="Ghi chú link nói về gì"></textarea>
+   <label class="cpchk"><input type="checkbox" data-rlstore> Đây là kho lưu trữ chính của tài khoản tôi</label>
+   <div class="btns"><button class="btn primary" data-rlsave="${tgt}">Lưu link</button><button class="btn ghost" data-rlsave="${tgt}" data-rlscan="1">Lưu & quét</button></div></div>
+   <p class="src rlmsg" role="status">${esc(rlMsg)}</p>
+   ${L.length?`<div class="rllist">${L.map(x=>{const pl=rlPlat(x.url),dr=rlDrive(x.url);return`<div class="rlrow"><span class="rlic" title="${esc(pl.name)}">${pl.icon}</span><div><b>${esc(x.note||"(chưa ghi chú)")}</b>${x.store?` <span class="tag ok">Kho của tôi</span>`:""}<small><a href="${esc(x.url)}" target="_blank" rel="noopener">${esc(x.url.replace(/^https?:\/\/(www\.)?/,"").slice(0,60))}</a> · ${esc(pl.name)} · ${new Date(x.at).toLocaleDateString("vi-VN")}${x.scan?" · "+esc(x.scan):""}</small></div>
+     <span class="rlacts">${dr?`<button class="btn ghost sm" data-rlgo="${esc(x.id)}">Quét</button>`:""}<button class="mini" data-rldel="${esc(x.id)}" aria-label="Xoá link">✕</button></span></div>`}).join("")}</div>`:""}</div>`}
+function rlRefresh(){$$("[data-rlbox]").forEach(b=>{const t=b.dataset.rlbox;b.outerHTML=rlHTML(t)});const s=$("#rlStoreRow small");if(s)s.textContent=rlStore()?`${rlPlat(rlStore().url).name}: ${rlStore().note||rlStore().url}`:"Chưa có"}
+function rlSay(t){rlMsg=t;$$(".rlmsg").forEach(x=>x.textContent=t)}
+async function rlScan(x){const dr=rlDrive(x.url);if(!dr){rlSay(`${rlPlat(x.url).name} chưa đọc trực tiếp được. Hãy tải tệp về máy rồi đưa vào ô Ảnh, PDF hoặc Tệp.`);return}
+  const m=await getMcp();if(!m){rlSay(NO_DRIVE_MSG());return}if(rlBusy)return;rlBusy=true;
+  try{if(x.target==="gp"){if(dr.kind==="folder"){gpPrivOpen();rlSay("Đang quét thư mục Drive vào gia phả riêng...");await gdScan({id:dr.id,title:x.note||"Thư mục từ link"});rlSay(gd.msg)}
+      else{rlSay("Đang đọc tệp...");const p=payloadOf(await m.callTool(DRIVE,"read_file_content",{fileId:dr.id}));const t=typeof p==="string"?p:p?.fileContent||"";
+        if(!t.trim()){rlSay("Tệp không có chữ đọc được. Nếu là ảnh, hãy để ảnh trong một thư mục rồi dán link thư mục.");return}
+        gpi.res=null;gpi.text=[gpi.text,`— ${x.note||"Tệp từ link"} —\n${t.trim()}`].filter(Boolean).join("\n\n");gpPrivOpen();rlSay("Đã đưa chữ của tệp vào ô 2. Bấm “Tách người từ văn bản”, kiểm tra rồi lưu.")}}
+    else{const files=dr.kind==="folder"?(await driveSearchAll(m,`parentId = '${dr.id}'`)).filter(f=>/\.(md|txt|csv)$/i.test(f.title||"")||/document|text/.test(f.mimeType||"")):[{id:dr.id,title:x.note||"tep-tu-link"}];
+      let tot={add:0,upd:0},n=0;for(const f of files){rlSay(`Đang đọc ${f.title}...`);const p=payloadOf(await m.callTool(DRIVE,"read_file_content",{fileId:f.id}));const t=typeof p==="string"?p:p?.fileContent||"";
+        const r=await importEntries(parseText(t,String(f.title).replace(/\.(md|txt|csv)$/i,"")),null,()=>{});tot.add+=r.add;tot.upd+=r.upd;n++}
+      rlSay(`Đã đọc ${n} tệp: +${tot.add} từ mới vào RAW, ${tot.upd} cập nhật.`)}
+    await rlSave({...x,scan:`quét ${new Date().toLocaleDateString("vi-VN")}`})}
+  catch(e){rlSay(driveErr(e))}finally{rlBusy=false}}
+document.addEventListener("click",async e=>{const t=e.target;
+  const sv=t.closest?.("[data-rlsave]");if(sv){const box=sv.closest("[data-rlbox]");const url=box.querySelector("[data-rlurl]").value.trim(),note=box.querySelector("[data-rlnote]").value.trim(),store=box.querySelector("[data-rlstore]").checked;
+    if(!rlValid(url)){rlSay("Link chưa đúng, cần bắt đầu bằng https://");box.querySelector("[data-rlurl]").focus();return}
+    if(!note){rlSay("Ghi vài chữ: link này nói về gì?");box.querySelector("[data-rlnote]").focus();return}
+    if(store)for(const o of rawLinks.filter(x=>x.store))await rlSave({...o,store:false});
+    const rec={url,note,target:sv.dataset.rlsave,platform:rlPlat(url).name,store};const id=await rlSave(rec);rlSay("Đã lưu link vào vùng riêng 🔒 của bạn.");
+    if(sv.dataset.rlscan)rlScan({...rec,id});return}
+  const g=t.closest?.("[data-rlgo]");if(g){const x=rawLinks.find(y=>y.id===g.dataset.rlgo);if(x)rlScan(x);return}
+  const d=t.closest?.("[data-rldel]");if(d){if(confirm("Xoá link này khỏi danh sách? Tệp gốc không bị ảnh hưởng."))rlDel(d.dataset.rldel)}});
+/* gắn vào Nhập liệu của Gia phả và Từ điển */
+renderGpi=(o=>function(){o();const c=$("#gpiDrive");if(c&&!$('[data-rlbox="gp"]'))c.insertAdjacentHTML("afterend",rlHTML("gp"))})(renderGpi);
+(()=>{const a=$("#adImp");if(a&&!$('[data-rlbox="td"]'))a.insertAdjacentHTML("afterend",rlHTML("td"))})();
+/* Cài đặt: kho lưu trữ của tôi, đồng ý chia sẻ, miễn trừ trách nhiệm */
+renderAcct=(o=>async function(){await o();if(view!=="acct")return;const c=$$("#acct > .card"),body=c[c.length-1];if(!body)return;
+  if(acctTab==="set"&&!$("#rlStoreRow")){const s=rlStore();($("#cpRow")||body.firstChild)?.insertAdjacentHTML?.("afterend",`<div class="setrow" id="rlStoreRow"><span><b>☁️ Kho lưu trữ của tôi</b><small>${esc(s?`${rlPlat(s.url).name}: ${s.note||s.url}`:"Chưa có. Dán link thư mục Drive, Dropbox, OneDrive... ở Nhập liệu.")}</small></span><button class="btn ghost sm" data-featgo2="links">${s?"Đổi":"Thêm"}</button></div>`)}
+  if(acctTab==="priv"&&!$("#consentBox"))body.insertAdjacentHTML("beforeend",`<div id="consentBox" class="consentbox"><h4>🌳 Cơ sở dữ liệu Cây gia phả Việt Nam</h4><label class="cpchk"><input type="checkbox" id="consentSet" ${cpConsent()?"checked":""}> <span>${CONSENT_TXT}</span></label>${clanProf?.consent?.at?`<small class="src">${cpConsent()?"Đồng ý":"Đã rút"} lúc ${new Date(clanProf.consent.at).toLocaleString("vi-VN")}</small>`:""}<details class="cpdis" open><summary>⚖️ Miễn trừ trách nhiệm</summary><p class="src">${DISCLAIMER}</p></details></div>`)})(renderAcct);
+document.addEventListener("change",e=>{if(e.target.id!=="consentSet")return;const on=e.target.checked;
+  cpSave({...(clanProf||{}),consent:{on,v:1,at:new Date().toISOString()}});if(!on&&gpSync.on){gpSync.on=false;gpSaveCfg()}toast(on?"Cảm ơn bạn đã đồng ý chia sẻ cho Cây gia phả Việt Nam":"Đã rút đồng ý. Chia sẻ & đồng bộ đã tắt.");renderAcct()});
+document.addEventListener("click",e=>{if(e.target.closest?.('[data-featgo2="links"]')){gpPrivOpen();setTimeout(()=>{const b=$('[data-rlbox="gp"] [data-rlurl]');b?.scrollIntoView({block:"center"});b?.focus()},250)}});
+FEATS.push(["Gia phả","🔗","Dán link tư liệu (Drive, Dropbox, OneDrive...) để nhập gia phả",()=>{gpPrivOpen();setTimeout(()=>$('[data-rlbox="gp"] [data-rlurl]')?.focus(),250)}],
+  ["Từ điển","🔗","Dán link tư liệu RAW cho từ điển",()=>{goSlot("td","imp");setTimeout(()=>{const b=$('[data-rlbox="td"] [data-rlurl]');b?.scrollIntoView({block:"center"});b?.focus()},250)}],
+  ["Tài khoản","☁️","Kho lưu trữ của tôi (link)",()=>{acctTab="set";show("acct")}],
+  ["Tài khoản","🌳","Đồng ý chia sẻ cho Cây gia phả Việt Nam · Miễn trừ trách nhiệm",()=>{acctTab="priv";ls.set("acctTab2","priv");show("acct")}]);
 
 if(!GP_SUB[gpSlot])gpSlot="chat";renderNav();acctInit();gsSync();
 {const ss=ls.get("startSec","");if(ss)view=ss==="gp"?"giapha":"chat"}
