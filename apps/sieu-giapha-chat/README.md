@@ -43,7 +43,7 @@ Với gia phả, ảnh chụp **bản viết tay, sách in, bản in hoặc Hán
 Thư mục [`web/`](web/) là bản web chạy độc lập, cài được lên điện thoại như app và mở được khi mất mạng. Có hai chế độ: **trên máy** (không cần máy chủ) và **Supabase** (đăng nhập Google/email, dữ liệu chung, gia phả riêng, bot, AI qua máy chủ). Hướng dẫn từng bước: [CAI-DAT.md](CAI-DAT.md).
 
 - `web/sgp-runtime.js`: lớp thay cho môi trường Claude, cùng một app chạy được cả hai nơi.
-- `supabase/schema.sql`: bảng và Row Level Security. `supabase/functions/claude`: máy chủ AI giữ khóa Claude API.
+- `supabase/schema.sql`: bảng và Row Level Security. `supabase/functions/ai`: máy chủ AI giữ khóa của 7 hãng (Claude, ChatGPT, Gemini, Grok, DeepSeek, Mistral, Qwen). Mỗi tài khoản và mỗi bot chọn hãng riêng.
 - `node web/build.cjs`: tạo lại `web/index.html` từ `index.html`.
 
 ## Chạy thử

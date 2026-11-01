@@ -22,6 +22,24 @@
   const idOf = (key) => key.slice(key.lastIndexOf("/") + 1);
   const privOwner = (key) => (key.startsWith("data/users/") ? key.split("/")[2] : null);
 
+  /* ================= 7 hãng AI ================= */
+  /* Tên mô hình mặc định có thể đổi trong Cài đặt (chế độ trên máy) hoặc biến môi trường của máy chủ. */
+  const PROVIDERS = {
+    claude:   { name: "Claude", by: "Anthropic", kind: "anthropic", url: "https://api.anthropic.com/v1/messages", quick: "claude-haiku-5-5", model: "claude-sonnet-5-5", images: true, key: "sk-ant-", site: "console.anthropic.com" },
+    gpt:      { name: "ChatGPT", by: "OpenAI", kind: "openai", url: "https://api.openai.com/v1/chat/completions", quick: "gpt-5-mini", model: "gpt-5", images: true, key: "sk-", site: "platform.openai.com" },
+    gemini:   { name: "Gemini", by: "Google", kind: "openai", url: "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions", quick: "gemini-2.5-flash", model: "gemini-2.5-pro", images: true, key: "AI", site: "aistudio.google.com" },
+    grok:     { name: "Grok", by: "xAI", kind: "openai", url: "https://api.x.ai/v1/chat/completions", quick: "grok-4-fast", model: "grok-4", images: true, key: "xai-", site: "console.x.ai" },
+    deepseek: { name: "DeepSeek", by: "DeepSeek", kind: "openai", url: "https://api.deepseek.com/chat/completions", quick: "deepseek-chat", model: "deepseek-chat", images: false, key: "sk-", site: "platform.deepseek.com" },
+    mistral:  { name: "Mistral", by: "Mistral AI", kind: "openai", url: "https://api.mistral.ai/v1/chat/completions", quick: "mistral-small-latest", model: "mistral-large-latest", images: false, key: "", site: "console.mistral.ai" },
+    qwen:     { name: "Qwen", by: "Alibaba", kind: "openai", url: "https://dashscope-intl.aliyuncs.com/compatible-mode/v1/chat/completions", quick: "qwen-turbo", model: "qwen-plus", images: false, key: "sk-", site: "dashscope (Alibaba Cloud)" },
+  };
+  const AI_IDS = Object.keys(PROVIDERS);
+  /* Chuyển tin nhắn dạng Anthropic sang dạng OpenAI (dùng chung cho 6 hãng còn lại) */
+  const toOpenAI = (msgs) => msgs.map((m) => ({ role: m.role, content: typeof m.content === "string" ? m.content : m.content.map((c) => c.type === "image" ? { type: "image_url", image_url: { url: `data:${c.source.media_type};base64,${c.source.data}` } } : { type: "text", text: c.text }) }));
+  const readAI = (kind, j) => kind === "anthropic"
+    ? { text: (j.content || []).filter((c) => c.type === "text").map((c) => c.text).join(""), truncated: j.stop_reason === "max_tokens", model: j.model }
+    : { text: j.choices?.[0]?.message?.content || "", truncated: j.choices?.[0]?.finish_reason === "length", model: j.model };
+
   /* ================= Bộ nhớ đệm + thông báo thay đổi (dùng chung 2 chế độ) ================= */
   const mem = new Map(); /* "col/.../id" -> object */
   const subs = new Set();
@@ -56,12 +74,19 @@
       async put(key, val) { idbPut(key, val); bc?.postMessage({ keys: [key] }); },
       async del(key) { idbPut(key, undefined); bc?.postMessage({ keys: [key] }); },
       async profiles() { return {}; },
-      async ai(body, signal) {
-        const key = lsGet("apikey", "");
-        if (!key) throw { code: "not_granted", message: "Chưa có khóa Claude API. Mở Tài khoản › Cài đặt app để thêm." };
-        return fetch("https://api.anthropic.com/v1/messages", { method: "POST", signal, headers: { "content-type": "application/json", "x-api-key": key, "anthropic-version": "2023-06-01", "anthropic-dangerous-direct-browser-access": "true" }, body: JSON.stringify(body) });
+      async ai({ provider, tier, messages, max_tokens }, signal) {
+        const P = PROVIDERS[provider], key = lsGet("keys", {})[provider];
+        if (!key) throw { code: "not_granted", message: `Chưa có khóa ${P.name}. Mở Tài khoản › Cài đặt app để thêm.` };
+        const model = (tier === "quick" ? lsGet("models", {})[provider + ":quick"] : "") || lsGet("models", {})[provider] || (tier === "quick" ? P.quick : P.model);
+        const r = await fetch(P.url, P.kind === "anthropic"
+          ? { method: "POST", signal, headers: { "content-type": "application/json", "x-api-key": key, "anthropic-version": "2023-06-01", "anthropic-dangerous-direct-browser-access": "true" }, body: JSON.stringify({ model, max_tokens, messages }) }
+          : { method: "POST", signal, headers: { "content-type": "application/json", authorization: "Bearer " + key }, body: JSON.stringify({ model, max_tokens, messages: toOpenAI(messages) }) })
+          .catch((e) => { throw { code: e?.name === "AbortError" ? "aborted" : "unavailable", message: `Không gọi được ${P.name} từ trình duyệt (${e?.message || e}). Hãng này có thể chặn gọi trực tiếp; hãy dùng chế độ Supabase.` }; });
+        if (!r.ok) return r;
+        return { ok: true, json: async () => readAI(P.kind, await r.json()) };
       },
-      aiReady: () => !!lsGet("apikey", ""),
+      aiList: async () => AI_IDS.filter((i) => lsGet("keys", {})[i]),
+      aiReady: () => AI_IDS.some((i) => lsGet("keys", {})[i]),
       exportDocs: async () => Object.fromEntries(mem),
       async importDocs(docs) { for (const [k, v] of Object.entries(docs)) { mem.set(k, v); idbPut(k, v); } notify(Object.keys(docs)); bc?.postMessage({ keys: Object.keys(docs) }); },
     };
@@ -134,7 +159,15 @@
       async ai(body, signal) {
         if (!session) throw { code: "not_granted", message: "Cần đăng nhập để dùng AI" };
         const s = (await sb.auth.getSession()).data.session;
-        return fetch(CFG.supabaseUrl.replace(/\/$/, "") + "/functions/v1/claude", { method: "POST", signal, headers: { "content-type": "application/json", apikey: CFG.supabaseAnonKey, authorization: "Bearer " + s.access_token }, body: JSON.stringify(body) });
+        const r = await fetch(CFG.supabaseUrl.replace(/\/$/, "") + "/functions/v1/ai", { method: "POST", signal, headers: { "content-type": "application/json", apikey: CFG.supabaseAnonKey, authorization: "Bearer " + s.access_token }, body: JSON.stringify(body) });
+        if (!r.ok) return r;
+        return { ok: true, json: async () => r.json() };
+      },
+      async aiList() {
+        if (this._ai) return this._ai;
+        try { const s = (await sb.auth.getSession()).data.session; if (!s) return []; const r = await fetch(CFG.supabaseUrl.replace(/\/$/, "") + "/functions/v1/ai", { headers: { apikey: CFG.supabaseAnonKey, authorization: "Bearer " + s.access_token } }); this._ai = r.ok ? ((await r.json()).providers || []).filter((i) => PROVIDERS[i]) : ["claude"]; }
+        catch { this._ai = ["claude"]; }
+        return this._ai;
       },
       aiReady: () => !!session,
       async exportDocs() { const out = {}; for (const [k, v] of mem) if (privOwner(k) === session?.user?.id) out[k] = v; const rows = await fetchAll(() => sb.from("docs").select("path,data").like("path", `data/users/${session.user.id}/%`).order("path")); rows.forEach((r) => (out[r.path] = r.data)); return out; },
@@ -144,6 +177,7 @@
     };
   }
 
+  { const old = lsGet("apikey", ""); if (old) { const keys = lsGet("keys", {}); keys.claude = keys.claude || old; lsSet("keys", keys); lsSet("apikey", ""); } }
   const B = MODE === "supabase" ? supabaseBackend() : localBackend();
   const ready = B.init().catch((e) => { console.error(e); window.SGP_INIT_ERROR = String(e?.message || e); });
 
@@ -229,24 +263,30 @@
     },
   });
 
-  /* ================= AI (Claude) ================= */
-  const MODELS = { quick: "claude-haiku-5-5", default: "claude-sonnet-5-5", complex: "claude-sonnet-5-5" };
+  /* ================= AI (chọn 1 trong 7 hãng) ================= */
   const toB64 = (blob) => new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(String(r.result).split(",")[1]); r.onerror = rej; r.readAsDataURL(blob); });
-  async function callClaude(input, opts = {}, wantJson) {
+  const aiPref = () => { const p = lsGet("ai", "claude"); return PROVIDERS[p] ? p : "claude"; };
+  async function callAI(input, opts = {}, wantJson) {
+    let provider = PROVIDERS[opts.provider] ? opts.provider : aiPref();
+    const avail = await B.aiList();
+    if (!avail.includes(provider)) provider = avail.includes(aiPref()) ? aiPref() : avail[0];
+    if (!provider) throw { code: "not_granted", message: "Chưa có hãng AI nào sẵn sàng. Mở Tài khoản › Cài đặt app." };
+    const P = PROVIDERS[provider];
+    if ((opts.images || []).length && !P.images) throw { code: "unsupported", message: `${P.name} chưa đọc được ảnh trong app. Hãy chọn Claude, ChatGPT, Gemini hoặc Grok để đọc ảnh.` };
     const msgs = typeof input === "string" ? [{ role: "user", content: input }] : clone(input);
     const imgs = [];
     for (const b of opts.images || []) imgs.push({ type: "image", source: { type: "base64", media_type: /^image\/(png|jpeg|gif|webp)$/.test(b.type) ? b.type : "image/jpeg", data: await toB64(b) } });
     const last = msgs[msgs.length - 1];
     last.content = [...imgs, { type: "text", text: String(last.content) + (wantJson ? "\n\nChỉ trả về một đối tượng JSON hợp lệ, không thêm chữ nào khác." : "") }];
-    const r = await B.ai({ model: MODELS[opts.modelTier] || MODELS.default, max_tokens: 8000, messages: msgs }, opts.signal).catch((e) => { throw e?.code ? e : { code: e?.name === "AbortError" ? "aborted" : "unavailable", message: String(e?.message || e) }; });
-    if (!r.ok) { const t = await r.text(); throw { code: r.status === 429 ? "rate_limited" : r.status === 401 || r.status === 403 ? "not_granted" : "unavailable", message: `AI ${r.status}: ${t.slice(0, 200)}` }; }
-    const j = await r.json(); const text = (j.content || []).filter((c) => c.type === "text").map((c) => c.text).join("");
-    opts.onText?.({ text, delta: text });
-    return { text, truncated: j.stop_reason === "max_tokens", modelApplied: j.model };
+    const r = await B.ai({ provider, tier: opts.modelTier === "quick" ? "quick" : "default", max_tokens: 8000, messages: msgs }, opts.signal).catch((e) => { throw e?.code ? e : { code: e?.name === "AbortError" ? "aborted" : "unavailable", message: String(e?.message || e) }; });
+    if (!r.ok) { const t = await r.text(); throw { code: r.status === 429 ? "rate_limited" : r.status === 401 || r.status === 403 ? "not_granted" : "unavailable", message: `${P.name} ${r.status}: ${t.slice(0, 200)}` }; }
+    const j = await r.json();
+    opts.onText?.({ text: j.text, delta: j.text });
+    return { text: j.text, truncated: !!j.truncated, modelApplied: j.model, provider };
   }
   const parseJson = (t) => { const s = t.indexOf("{"), a = t.indexOf("["); const i = s < 0 ? a : a < 0 ? s : Math.min(s, a); const e = Math.max(t.lastIndexOf("}"), t.lastIndexOf("]")); if (i < 0 || e < i) throw { code: "invalid_output", message: "AI không trả JSON" }; return JSON.parse(t.slice(i, e + 1)); };
-  const sample = Object.assign((input, opts) => callClaude(input, opts, false), {
-    json: async (input, opts) => parseJson((await callClaude(input, opts, true)).text),
+  const sample = Object.assign((input, opts) => callAI(input, opts, false), {
+    json: async (input, opts) => parseJson((await callAI(input, opts, true)).text),
     limits: async () => ({ images: true }),
   });
   const permissions = Object.freeze({
@@ -293,16 +333,26 @@
     settingsCard() {
       if (MODE === "supabase") {
         return `<div class="card" id="sgpSet"><h3>⚙️ Tài khoản</h3>${B.signedIn() ? `<p>Đã đăng nhập. Dữ liệu chung được cập nhật trực tiếp cho mọi người; gia phả riêng chỉ bạn đọc được.</p>
+          ${SGP.aiPicker()}
           <div class="btns"><button class="btn ghost" id="sgpExport">⬇️ Sao lưu dữ liệu riêng (.json)</button><button class="btn ghost" id="sgpImport">⬆️ Khôi phục</button><button class="btn ghost" id="sgpOut">Đăng xuất</button></div>`
           : `<p>Bạn đang xem như khách: chỉ xem dữ liệu chung.</p><div class="btns"><button class="btn primary" id="sgpIn">Đăng nhập</button></div>`}${window.SGP_INIT_ERROR ? `<p class="src">Lỗi kết nối máy chủ: ${esc(window.SGP_INIT_ERROR)}</p>` : ""}</div>`;
       }
-      const k = lsGet("apikey", "");
+      const cur = aiPref(), P = PROVIDERS[cur], k = lsGet("keys", {})[cur] || "";
       return `<div class="card" id="sgpSet"><h3>⚙️ Cài đặt app trên máy này</h3>
         <p>App đang chạy trên máy: dữ liệu lưu trong trình duyệt của máy này, không gửi lên máy chủ nào. Hãy sao lưu thường xuyên.</p>
         <label class="field">Tên của bạn<input id="sgpName" maxlength="60" value="${esc(lsGet("name", ""))}" placeholder="Ví dụ: Lê Văn An"></label>
-        <label class="field">Khóa Claude API (để dùng AI)<input id="sgpKey" type="password" autocomplete="off" value="${k ? "••••••••" + esc(k.slice(-4)) : ""}" placeholder="sk-ant-..."></label>
-        <p class="src">Lấy khóa ở console.anthropic.com. Khóa chỉ lưu trên máy này và chỉ gửi tới api.anthropic.com. Không dùng trên máy dùng chung.</p>
-        <div class="btns"><button class="btn primary" id="sgpSave">Lưu</button>${k ? `<button class="btn ghost" id="sgpKeyDel">Xóa khóa</button>` : ""}<button class="btn ghost" id="sgpExport">⬇️ Sao lưu toàn bộ (.json)</button><button class="btn ghost" id="sgpImport">⬆️ Khôi phục</button></div></div>`;
+        ${SGP.aiPicker()}
+        <label class="field">Khóa API của ${esc(P.name)}<input id="sgpKey" type="password" autocomplete="off" value="${k ? "••••••••" + esc(k.slice(-4)) : ""}" placeholder="${esc(P.key || "")}..."></label>
+        <label class="field">Mô hình (để trống = mặc định ${esc(P.model)})<input id="sgpModel" value="${esc(lsGet("models", {})[cur] || "")}" placeholder="${esc(P.model)}"></label>
+        <p class="src">Lấy khóa ở ${esc(P.site)}. Khóa chỉ lưu trên máy này và chỉ gửi tới máy chủ của ${esc(P.by)}. Không dùng trên máy dùng chung. Một số hãng chặn gọi trực tiếp từ trình duyệt; khi đó hãy dùng chế độ Supabase.</p>
+        <div class="btns"><button class="btn primary" id="sgpSave">Lưu</button>${k ? `<button class="btn ghost" id="sgpKeyDel">Xóa khóa ${esc(P.name)}</button>` : ""}<button class="btn ghost" id="sgpExport">⬇️ Sao lưu toàn bộ (.json)</button><button class="btn ghost" id="sgpImport">⬆️ Khôi phục</button></div></div>`;
+    },
+    providers: PROVIDERS,
+    aiPref, aiList: () => B.aiList(),
+    aiName: (id) => (PROVIDERS[id] ? PROVIDERS[id].name : ""),
+    aiPicker() {
+      const cur = aiPref(), have = SGP._have || [];
+      return `<label class="field">🧠 AI dùng cho tài khoản này<select id="sgpAi">${AI_IDS.map((i) => `<option value="${i}" ${i === cur ? "selected" : ""}>${esc(PROVIDERS[i].name)} · ${esc(PROVIDERS[i].by)}${MODE === "supabase" && !have.includes(i) ? " (máy chủ chưa bật)" : MODE === "local" && !(lsGet("keys", {})[i]) ? " (chưa có khóa)" : ""}${PROVIDERS[i].images ? "" : " · không đọc ảnh"}</option>`).join("")}</select></label>`;
     },
     openSettings() { document.querySelector("#acctChip")?.click(); },
     async exportAll() { await ready; await downloads.save({ filename: `sieu-giapha-chat-sao-luu-${new Date().toISOString().slice(0, 10)}.json`, data: JSON.stringify({ app: "sieu-giapha-chat", v: 1, at: new Date().toISOString(), docs: await B.exportDocs() }) }); },
@@ -312,21 +362,25 @@
       await ready; await B.importDocs(j.docs); alert("Đã khôi phục. App sẽ tải lại."); location.reload();
     },
   });
+  document.addEventListener("change", (e) => {
+    if (e.target.id === "sgpAi") { lsSet("ai", e.target.value); if (MODE === "supabase") { const n = document.createElement("p"); n.className = "src"; n.textContent = "Đã chọn " + PROVIDERS[e.target.value].name + "."; e.target.closest("label").after(n); setTimeout(() => n.remove(), 2500); } else location.reload(); }
+  });
   document.addEventListener("click", async (e) => {
     const t = e.target;
     if (t.closest("#sgpSave")) {
       lsSet("name", document.querySelector("#sgpName").value.trim());
-      const k = document.querySelector("#sgpKey").value.trim();
-      if (k && !k.startsWith("••")) { if (!/^sk-ant-/.test(k)) { alert("Khóa Claude API thường bắt đầu bằng sk-ant-"); return; } lsSet("apikey", k); }
+      const cur = aiPref(), k = document.querySelector("#sgpKey").value.trim();
+      if (k && !k.startsWith("••")) { const keys = lsGet("keys", {}); keys[cur] = k; lsSet("keys", keys); }
+      const m = document.querySelector("#sgpModel")?.value.trim(), ms = lsGet("models", {}); if (m) ms[cur] = m; else delete ms[cur]; lsSet("models", ms);
       alert("Đã lưu. App sẽ tải lại để áp dụng."); location.reload();
     }
-    if (t.closest("#sgpKeyDel")) { lsSet("apikey", ""); location.reload(); }
+    if (t.closest("#sgpKeyDel")) { const keys = lsGet("keys", {}); delete keys[aiPref()]; lsSet("keys", keys); location.reload(); }
     if (t.closest("#sgpExport")) SGP.exportAll().catch((er) => alert(er.message || er));
     if (t.closest("#sgpImport")) { const i = document.createElement("input"); i.type = "file"; i.accept = "application/json,.json"; i.onchange = () => i.files[0] && SGP.importAll(i.files[0]).catch((er) => alert(er.message || er)); i.click(); }
     if (t.closest("#sgpOut")) { await B.signOut(); location.reload(); }
     if (t.closest("#sgpIn")) { sessionStorage.removeItem("sgp-guest"); loginSheet(); }
   });
-  ready.then(() => { if (document.readyState === "loading") addEventListener("DOMContentLoaded", loginSheet); else loginSheet(); });
+  ready.then(async () => { SGP._have = await B.aiList().catch(() => []); try { window.renderAcct && window.renderAcct(); } catch {} }).then(() => { if (document.readyState === "loading") addEventListener("DOMContentLoaded", loginSheet); else loginSheet(); });
 
   if ("serviceWorker" in navigator && location.protocol.startsWith("http")) addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(() => {}));
 })();

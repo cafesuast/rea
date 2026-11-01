@@ -4,8 +4,8 @@ Bản web nằm trong thư mục `web/`. App có hai chế độ:
 
 | Chế độ | Khi nào | Có gì |
 |---|---|---|
-| **Trên máy** | `web/config.js` để trống | Chạy ngay, miễn phí. Dữ liệu lưu trong trình duyệt của từng máy. AI dùng khóa Claude API riêng của người dùng (nhập trong Tài khoản › Cài đặt app). Không có dữ liệu chung, bot chỉ chạy một mình. |
-| **Supabase** | `web/config.js` có địa chỉ Supabase | Đăng nhập Google hoặc email, dữ liệu chung cho cả dòng họ, gia phả riêng của từng người, bot trao đổi với nhau, AI qua máy chủ (người dùng không cần khóa riêng). |
+| **Trên máy** | `web/config.js` để trống | Chạy ngay, miễn phí. Dữ liệu lưu trong trình duyệt của từng máy. AI dùng khóa API riêng của người dùng cho 1 trong 7 hãng (nhập trong Tài khoản › Cài đặt app; vài hãng có thể chặn gọi thẳng từ trình duyệt). Không có dữ liệu chung, bot chỉ chạy một mình. |
+| **Supabase** | `web/config.js` có địa chỉ Supabase | Đăng nhập Google hoặc email, dữ liệu chung cho cả dòng họ, gia phả riêng của từng người, bot trao đổi với nhau, AI qua máy chủ với 7 hãng để chọn (người dùng không cần khóa riêng). |
 
 Cả hai chế độ đều cài được lên điện thoại như app (PWA) và mở được khi mất mạng.
 
@@ -36,20 +36,43 @@ Tệp này tạo bảng `docs` (mọi dữ liệu của app), `profiles` (tên, 
    - **Site URL**: địa chỉ web của app (bước 6), ví dụ `https://cafesuast.github.io/sieu-giapha-chat/`.
    - **Redirect URLs**: thêm cùng địa chỉ đó.
 
-## Bước 4. Máy chủ AI (Edge Function)
+## Bước 4. Máy chủ AI (Edge Function), chọn được 7 hãng
+
+App dùng được 7 hãng AI: **Claude** (Anthropic), **ChatGPT** (OpenAI), **Gemini** (Google), **Grok** (xAI), **DeepSeek**, **Mistral**, **Qwen** (Alibaba). Hãng nào bạn đặt khóa thì hãng đó được bật; mỗi người chọn hãng cho tài khoản của mình, và chọn riêng cho bot của mình.
 
 Cần cài [Supabase CLI](https://supabase.com/docs/guides/cli) trên máy tính, rồi trong thư mục `apps/sieu-giapha-chat`:
 
 ```bash
 supabase login
 supabase init                                     # chỉ lần đầu, nếu CLI báo thiếu cấu hình
-supabase link --project-ref <mã-dự-án>          # mã nằm trong địa chỉ dự án
-supabase secrets set ANTHROPIC_API_KEY=sk-ant-... # khóa Claude API của bạn
-supabase secrets set DAILY_LIMIT=200              # số lượt AI tối đa mỗi người mỗi ngày
-supabase functions deploy claude
+supabase link --project-ref <mã-dự-án>            # mã nằm trong địa chỉ dự án
+# Đặt khóa cho các hãng muốn bật (không cần đủ 7):
+supabase secrets set ANTHROPIC_API_KEY=sk-ant-...   # Claude   · console.anthropic.com
+supabase secrets set OPENAI_API_KEY=sk-...          # ChatGPT  · platform.openai.com
+supabase secrets set GEMINI_API_KEY=AI...           # Gemini   · aistudio.google.com
+supabase secrets set XAI_API_KEY=xai-...            # Grok     · console.x.ai
+supabase secrets set DEEPSEEK_API_KEY=sk-...        # DeepSeek · platform.deepseek.com
+supabase secrets set MISTRAL_API_KEY=...            # Mistral  · console.mistral.ai
+supabase secrets set DASHSCOPE_API_KEY=sk-...       # Qwen     · Alibaba Cloud Model Studio (bản quốc tế)
+supabase secrets set DAILY_LIMIT=200                # số lượt AI tối đa mỗi người mỗi ngày
+supabase functions deploy ai
 ```
 
-Khóa Claude API lấy ở https://console.anthropic.com (Settings › API Keys). Khóa chỉ nằm trên máy chủ Supabase, không bao giờ gửi xuống trình duyệt. Mọi lượt AI của mọi người đều tính tiền vào tài khoản Claude API này, nên hãy đặt `DAILY_LIMIT` và giới hạn chi tiêu trong console.anthropic.com.
+Mô hình mặc định:
+
+| Hãng | Mặc định | Nhanh | Đọc ảnh |
+|---|---|---|---|
+| Claude | claude-sonnet-5-5 | claude-haiku-5-5 | Có |
+| ChatGPT | gpt-5 | gpt-5-mini | Có |
+| Gemini | gemini-2.5-pro | gemini-2.5-flash | Có |
+| Grok | grok-4 | grok-4-fast | Có |
+| DeepSeek | deepseek-chat | deepseek-chat | Không |
+| Mistral | mistral-large-latest | mistral-small-latest | Không |
+| Qwen | qwen-plus | qwen-turbo | Không |
+
+Tên mô hình các hãng đổi thường xuyên. Hãy kiểm tra trang của từng hãng, và đổi bằng secret nếu cần, ví dụ `supabase secrets set GPT_MODEL=... GPT_MODEL_QUICK=...` (tên biến: `CLAUDE_`, `GPT_`, `GEMINI_`, `GROK_`, `DEEPSEEK_`, `MISTRAL_`, `QWEN_` + `MODEL` hoặc `MODEL_QUICK`). Đọc ảnh gia phả viết tay chỉ chạy với hãng có cột "Đọc ảnh: Có".
+
+Các khóa chỉ nằm trên máy chủ Supabase, không bao giờ gửi xuống trình duyệt. Mọi lượt AI của mọi người đều tính tiền vào tài khoản của bạn ở từng hãng, nên hãy đặt `DAILY_LIMIT` và giới hạn chi tiêu ở trang của từng hãng.
 
 Có thể đặt thêm `ALLOWED_ORIGIN` bằng địa chỉ web của app để chỉ trang của bạn gọi được máy chủ AI.
 

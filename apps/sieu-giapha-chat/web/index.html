@@ -2969,6 +2969,9 @@ let acct={uid:null,me:null,user:null,db:null,bots:[],props:[],histv:[],running:f
 window.HISTV=[];
 const today=()=>new Date().toISOString().slice(0,10);
 const myBot=()=>acct.bots.find(b=>b.id===acct.uid)||null;
+const botAiId=b=>window.SGP?(b?.ai||SGP.aiPref()):"claude";
+const aiLabel=id=>window.SGP?SGP.aiName(id)||"Claude":"Claude";
+const botAI=o=>window.SGP?{...o,provider:botAiId(myBot())}:o;
 async function acctInit(){
   try{acct.user=window.claude?.use?await window.claude.use("user"):null;acct.db=window.claude?.use?await window.claude.use("db"):null;
     if(acct.user){acct.uid=await acct.user.id().catch(()=>null);acct.me=await acct.user.me().catch(()=>null);acct.canEdit=!!acct.me?.canEdit}}catch{}
@@ -2990,7 +2993,7 @@ function renderAcctChip(){const c=$("#acctChip");if(!c)return;
 function botName(b,ps){return b?.nick||("Bot của "+(ps?.[b?.id]?.name||"một thành viên"))}
 async function botCreate(){if(!acct.db||!acct.uid){toast("Mở trang trong Claude và đăng nhập để tạo bot.");return}
   const nick=($("#botNick")?.value||"").trim().slice(0,40);const focus=$$("#botFocus input:checked").map(x=>x.value);
-  try{await acct.db.doc("bots/"+acct.uid).set({nick,focus:focus.length?focus:["word","event"],auto:true,created:new Date().toISOString(),lastRun:"",stats:{p:0,v:0,m:0},log:[]});toast("Đã tạo bot của bạn")}
+  try{await acct.db.doc("bots/"+acct.uid).set({nick,focus:focus.length?focus:["word","event"],ai:botAiId(null),auto:true,created:new Date().toISOString(),lastRun:"",stats:{p:0,v:0,m:0},log:[]});toast("Đã tạo bot của bạn")}
   catch(e){toast(e?.code==="invalid_argument"?"Tài khoản của bạn chỉ có quyền xem, chưa tạo được bot.":"Chưa tạo được bot: "+(e?.message||e))}}
 async function botSet(d){if(!acct.db||!acct.uid||!myBot())return;try{await acct.db.doc("bots/"+acct.uid).update(d)}catch(e){toast("Chưa lưu được: "+(e?.message||e))}}
 async function botAuto(){const b=myBot();if(!b||!b.auto||b.lastRun===today()||acct.running||!sample)return;
@@ -3008,9 +3011,9 @@ async function runBot(auto){
     const todo=acct.props.filter(p=>p.status==="pending"&&p.by!==acct.uid&&!(p.votes||{})[acct.uid]).slice(0,6);
     botLog(todo.length?`Kiểm chứng ${todo.length} đề xuất của bot khác`:"Không có đề xuất nào chờ kiểm chứng");
     for(const p of todo){
-      const r=await sample.json(`Bạn là bot KIỂM CHỨNG độc lập của "Siêu GiaPha chat". Kiểm tra mục ${p.kind==="word"?"từ điển tiếng Việt":"sự kiện lịch sử Việt Nam"} sau có chính xác không:\n${JSON.stringify(p.data)}\nNguồn bot đề xuất ghi: ${p.data?.source||"không có"}\nChỉ trả "ok" khi chắc chắn đúng theo tri thức phổ biến và sử sách. Sai năm, sai nghĩa, sai tên, hoặc có thông tin về người đang sống thì trả "no". Không chắc thì "unsure".\nTrả JSON: {"verdict":"ok"|"no"|"unsure","label":"Fact"|"Inference"|"Unknown","note":"tối đa 30 từ, nêu chỗ sai nếu có"}`,{modelTier:"complex",cache:false});
+      const r=await sample.json(`Bạn là bot KIỂM CHỨNG độc lập của "Siêu GiaPha chat". Kiểm tra mục ${p.kind==="word"?"từ điển tiếng Việt":"sự kiện lịch sử Việt Nam"} sau có chính xác không:\n${JSON.stringify(p.data)}\nNguồn bot đề xuất ghi: ${p.data?.source||"không có"}\nChỉ trả "ok" khi chắc chắn đúng theo tri thức phổ biến và sử sách. Sai năm, sai nghĩa, sai tên, hoặc có thông tin về người đang sống thì trả "no". Không chắc thì "unsure".\nTrả JSON: {"verdict":"ok"|"no"|"unsure","label":"Fact"|"Inference"|"Unknown","note":"tối đa 30 từ, nêu chỗ sai nếu có"}`,botAI({modelTier:"complex",cache:false}));
       const v=["ok","no","unsure"].includes(r?.verdict)?r.verdict:"unsure";
-      await acct.db.doc("botx/"+p.id).update({votes:{[acct.uid]:{v,label:String(r?.label||"Unknown").slice(0,12),note:String(r?.note||"").slice(0,300),at:new Date().toISOString()}}});
+      await acct.db.doc("botx/"+p.id).update({votes:{[acct.uid]:{v,label:String(r?.label||"Unknown").slice(0,12),note:String(r?.note||"").slice(0,300),ai:botAiId(myBot()),at:new Date().toISOString()}}});
       st.v++;botLog(`${v==="ok"?"✓ Đúng":v==="no"?"✗ Sai":"? Chưa chắc"}: ${p.kind==="word"?p.data.w:p.data.year+" "+p.data.title}`)}
     /* 2. Đưa vào thư viện các mục đủ xác nhận */
     st.m+=await botMergeReady();
@@ -3019,13 +3022,13 @@ async function runBot(auto){
     if(focus.includes("word")){const field=BOT_FIELDS[(new Date().getDate()+acct.uid.length)%BOT_FIELDS.length];
       const ex=words.filter(w=>!w.domain||w.domain.includes(field.split(",")[0])).slice(0,150).map(w=>w.w).join(", ");
       botLog(`Đề xuất từ mới, lĩnh vực ${field}`);
-      const r=await sample.json(`Bạn là bot BIÊN SOẠN của Siêu Từ Điển Việt–Anh. Đề xuất 3 từ tiếng Việt thông dụng, có thật, thuộc lĩnh vực "${field}", không trùng các từ: ${ex||"(chưa có)"}.\nMỗi từ gồm: w, pos (danh từ/động từ/tính từ...), meaning (ngắn, chính xác), en (tiếng Anh), example (một câu ví dụ tự nhiên), source (tên một từ điển uy tín, ví dụ "Từ điển tiếng Việt, Hoàng Phê"). Không bịa từ, không bịa nguồn.\nTrả JSON {"items":[...]}`,{modelTier:"default",cache:false});
+      const r=await sample.json(`Bạn là bot BIÊN SOẠN của Siêu Từ Điển Việt–Anh. Đề xuất 3 từ tiếng Việt thông dụng, có thật, thuộc lĩnh vực "${field}", không trùng các từ: ${ex||"(chưa có)"}.\nMỗi từ gồm: w, pos (danh từ/động từ/tính từ...), meaning (ngắn, chính xác), en (tiếng Anh), example (một câu ví dụ tự nhiên), source (tên một từ điển uy tín, ví dụ "Từ điển tiếng Việt, Hoàng Phê"). Không bịa từ, không bịa nguồn.\nTrả JSON {"items":[...]}`,botAI({modelTier:"default",cache:false}));
       for(const it of (r?.items||[]).slice(0,3)){if(!it?.w||!it?.meaning)continue;const d={w:String(it.w).trim(),pos:it.pos||"",meaning:it.meaning,en:it.en||"",example:it.example||"",domain:field,source:it.source||""};
         if(byId(wid(d.w))||have.has(propKey({kind:"word",data:d})))continue;await botPropose("word",d);st.p++}}
     if(focus.includes("event")){const H=histAll();const per=[[1000,1400],[1400,1700],[1700,1858],[1858,1945],[1945,1975],[1975,2000],[2000,2025]];
       const cnt=per.map(([a,z])=>H.filter(h=>h.year>=a&&h.year<z).length);const k=cnt.indexOf(Math.min(...cnt));const [a,z]=per[k];
       botLog(`Đề xuất sự kiện lịch sử ${a}–${z}`);
-      const r=await sample.json(`Bạn là bot SỬ HỌC của Siêu GiaPha chat. Đề xuất 2 sự kiện lịch sử Việt Nam có thật, được sử sách ghi rõ, trong giai đoạn ${a}–${z}, không trùng: ${H.filter(h=>h.year>=a&&h.year<z).map(h=>h.year+" "+h.title).join("; ")||"(chưa có)"}.\nMỗi sự kiện: year (số), lab (ngày tháng năm như sử ghi), title (ngắn), desc (1–2 câu), source (URL bài Wikipedia tiếng Việt). Không nêu người đang sống. Không bịa.\nTrả JSON {"items":[...]}`,{modelTier:"default",cache:false});
+      const r=await sample.json(`Bạn là bot SỬ HỌC của Siêu GiaPha chat. Đề xuất 2 sự kiện lịch sử Việt Nam có thật, được sử sách ghi rõ, trong giai đoạn ${a}–${z}, không trùng: ${H.filter(h=>h.year>=a&&h.year<z).map(h=>h.year+" "+h.title).join("; ")||"(chưa có)"}.\nMỗi sự kiện: year (số), lab (ngày tháng năm như sử ghi), title (ngắn), desc (1–2 câu), source (URL bài Wikipedia tiếng Việt). Không nêu người đang sống. Không bịa.\nTrả JSON {"items":[...]}`,botAI({modelTier:"default",cache:false}));
       for(const it of (r?.items||[]).slice(0,2)){const y=+it?.year;if(!y||!it.title)continue;const d={year:y,lab:it.lab||String(y),title:it.title,desc:it.desc||"",source:it.source||""};
         if(have.has(propKey({kind:"event",data:d}))||H.some(h=>h.year===y&&fold(h.title)===fold(d.title)))continue;await botPropose("event",d);st.p++}}
     const s0=b.stats||{p:0,v:0,m:0};
@@ -3034,7 +3037,7 @@ async function runBot(auto){
   }catch(e){botLog("Dừng: "+(e?.code==="not_granted"?"chưa cho phép dùng Claude":e?.message||e));if(e?.code==="rate_limited")botLog("Claude đang bận, thử lại sau.")}
   acct.running=false;if(view==="acct")renderAcct()}
 async function botPropose(kind,data){const id="x"+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
-  await acct.db.doc("botx/"+id).set({kind,data,by:acct.uid,at:new Date().toISOString(),status:"pending",votes:{}});botLog(`Đề xuất: ${kind==="word"?data.w:data.year+" "+data.title}`)}
+  await acct.db.doc("botx/"+id).set({kind,data,by:acct.uid,ai:botAiId(myBot()),at:new Date().toISOString(),status:"pending",votes:{}});botLog(`Đề xuất: ${kind==="word"?data.w:data.year+" "+data.title}`)}
 function propTally(p){const vs=Object.entries(p.votes||{}).filter(([u])=>u!==p.by).map(([,v])=>v);return{ok:vs.filter(v=>v.v==="ok").length,no:vs.filter(v=>v.v==="no").length,un:vs.filter(v=>v.v==="unsure").length,n:vs.length}}
 async function botMerge(p,by){
   if(p.kind==="word"){await importEntries([{w:p.data.w,pos:p.data.pos,meaning:p.data.meaning,en:p.data.en,example:p.data.example,domain:p.data.domain,note:`Bot đề xuất, ${by}. Nguồn: ${p.data.source||"Unknown"}`,src:"bot"}],()=>{},()=>{})}
@@ -3058,20 +3061,22 @@ async function renderAcct(){const el=$("#acct");if(!el)return;
      <label class="field">Tên bot (không bắt buộc)<input id="botNick" maxlength="40" placeholder="Ví dụ: Bot họ Lê Thanh Hóa"></label>
      <div id="botFocus" class="chips" style="margin:0"><label class="chip"><input type="checkbox" value="word" checked> 📖 Từ điển</label><label class="chip"><input type="checkbox" value="event" checked> 📜 Lịch sử</label></div>
      <div class="btns"><button class="btn primary" id="botCreate">🤖 Tạo bot</button></div>`
-   :`<div class="botst"><div><b>${esc(botName(b,ps))}</b><small>Lần chạy gần nhất: ${b.lastRun||"chưa chạy"}</small></div><span><b>${b.stats?.v||0}</b><small>đã kiểm</small></span><span><b>${b.stats?.p||0}</b><small>đã đề xuất</small></span><span><b>${b.stats?.m||0}</b><small>vào thư viện</small></span></div>
+   :`<div class="botst"><div><b>${esc(botName(b,ps))}</b><small>AI: ${esc(aiLabel(botAiId(b)))} · lần chạy gần nhất: ${b.lastRun||"chưa chạy"}</small></div><span><b>${b.stats?.v||0}</b><small>đã kiểm</small></span><span><b>${b.stats?.p||0}</b><small>đã đề xuất</small></span><span><b>${b.stats?.m||0}</b><small>vào thư viện</small></span></div>
      <div class="btns"><button class="btn primary" id="botRun" ${acct.running?"disabled":""}>${acct.running?"⏳ Bot đang chạy...":"▶️ Chạy bot ngay"}</button><label class="chip"><input type="checkbox" id="botAutoCk" ${b.auto?"checked":""}> Tự chạy mỗi ngày khi mở app</label></div>
      <div class="chips" style="margin:0"><label class="chip"><input type="checkbox" data-bfocus="word" ${(b.focus||[]).includes("word")?"checked":""}> 📖 Từ điển</label><label class="chip"><input type="checkbox" data-bfocus="event" ${(b.focus||[]).includes("event")?"checked":""}> 📜 Lịch sử</label></div>
+     ${window.SGP?`<label class="field">🧠 AI của bot<select id="botAi">${Object.keys(SGP.providers).map(i=>`<option value="${i}" ${i===botAiId(b)?"selected":""} ${(SGP._have||[]).includes(i)?"":"disabled"}>${esc(SGP.providers[i].name)} · ${esc(SGP.providers[i].by)}${(SGP._have||[]).includes(i)?"":" (chưa bật)"}</option>`).join("")}</select></label><p class="src">Nên để các bot dùng hãng AI khác nhau: một mục được AI của hãng khác xác nhận thì đáng tin hơn.</p>`:""}
      ${(acct.log.length?acct.log:b.log||[]).length?`<div class="botlog" aria-live="polite">${(acct.log.length?acct.log:b.log).slice(-14).map(l=>`<div>${esc(l)}</div>`).join("")}</div>`:""}
      <p class="src">Bot chạy bằng Claude ${window.SGP?"qua máy chủ của app":"dưới tài khoản của bạn"}. Bot chỉ chạy khi bạn mở app; nếu đã cho phép dùng Claude, bot tự chạy một lần mỗi ngày.</p>`;
   if(acctTab==="ex"){const L=acct.props.slice(0,80);body=`<p class="src">Cập nhật trực tiếp. Mỗi đề xuất cần ${BOT_NEED} bot khác xác nhận “đúng” và không bot nào báo “sai” thì mới vào thư viện. 2 bot báo sai thì bị loại.${acct.canEdit?" Bạn là biên tập viên nên có thể duyệt tay.":""}</p>`+(L.length?L.map(p=>{const t=propTally(p);return`<div class="prop ${p.status}"><div class="ph"><span class="pk">${p.kind==="word"?"📖":"📜"}</span><b>${esc(p.kind==="word"?p.data.w:p.data.year+" · "+p.data.title)}</b><span class="pst">${p.status==="merged"?"✓ Đã vào thư viện":p.status==="rejected"?"✗ Bị loại":`Chờ: ${t.ok}/${BOT_NEED} đúng${t.no?`, ${t.no} sai`:""}`}</span></div>
       <p>${esc(p.kind==="word"?`${p.data.pos?"("+p.data.pos+") ":""}${p.data.meaning}${p.data.en?" · "+p.data.en:""}`:p.data.desc)}</p>
-      <small>Đề xuất bởi ${esc(botName(acct.bots.find(x=>x.id===p.by)||{id:p.by},ps))}${p.data.source?` · Nguồn: ${/^https?:/.test(p.data.source)?`<a href="${esc(p.data.source)}" target="_blank" rel="noopener">${esc(p.data.source.replace(/^https?:\/\//,"").slice(0,50))}</a>`:esc(p.data.source)}`:""}</small>
-      ${Object.entries(p.votes||{}).map(([u,v])=>`<small class="vt ${v.v}">${v.v==="ok"?"✓":v.v==="no"?"✗":"?"} ${esc(botName(acct.bots.find(x=>x.id===u)||{id:u},ps))}: ${esc(v.label)}${v.note?" · "+esc(v.note):""}</small>`).join("")}
+      <small>Đề xuất bởi ${esc(botName(acct.bots.find(x=>x.id===p.by)||{id:p.by},ps))}${p.ai?` (${esc(aiLabel(p.ai))})`:""}${p.data.source?` · Nguồn: ${/^https?:/.test(p.data.source)?`<a href="${esc(p.data.source)}" target="_blank" rel="noopener">${esc(p.data.source.replace(/^https?:\/\//,"").slice(0,50))}</a>`:esc(p.data.source)}`:""}</small>
+      ${Object.entries(p.votes||{}).map(([u,v])=>`<small class="vt ${v.v}">${v.v==="ok"?"✓":v.v==="no"?"✗":"?"} ${esc(botName(acct.bots.find(x=>x.id===u)||{id:u},ps))}${v.ai?` (${esc(aiLabel(v.ai))})`:""}: ${esc(v.label)}${v.note?" · "+esc(v.note):""}</small>`).join("")}
       ${p.status==="pending"&&acct.canEdit?`<div class="btns" style="margin:0"><button class="btn ghost sm" data-pok="${p.id}">✓ Duyệt vào thư viện</button><button class="btn ghost sm" data-pno="${p.id}">✗ Loại</button></div>`:""}</div>`}).join(""):`<p class="src">Chưa có đề xuất nào. Tạo bot và bấm “Chạy bot ngay” để bắt đầu.</p>`)}
-  if(acctTab==="net")body=acct.bots.length?`<div class="botnet">${acct.bots.map(x=>`<div class="bn ${x.id===acct.uid?"me":""}"><img alt="" src="${esc(ps[x.id]?.avatarUrl||"")}"><div><b>${esc(botName(x,ps))}${x.id===acct.uid?" (bạn)":""}</b><small>Chạy gần nhất: ${x.lastRun||"chưa"} · kiểm ${x.stats?.v||0} · đề xuất ${x.stats?.p||0} · vào thư viện ${x.stats?.m||0}</small></div></div>`).join("")}</div><p class="src">Mỗi người được chia sẻ app này có thể tạo bot. Càng nhiều bot, dữ liệu được kiểm chéo càng nhiều lần.</p>`:`<p class="src">Chưa có bot nào.</p>`;
+  if(acctTab==="net")body=acct.bots.length?`<div class="botnet">${acct.bots.map(x=>`<div class="bn ${x.id===acct.uid?"me":""}"><img alt="" src="${esc(ps[x.id]?.avatarUrl||"")}"><div><b>${esc(botName(x,ps))}${x.id===acct.uid?" (bạn)":""}</b><small>AI: ${esc(aiLabel(botAiId(x)))} · chạy gần nhất: ${x.lastRun||"chưa"} · kiểm ${x.stats?.v||0} · đề xuất ${x.stats?.p||0} · vào thư viện ${x.stats?.m||0}</small></div></div>`).join("")}</div><p class="src">Mỗi người được chia sẻ app này có thể tạo bot. Càng nhiều bot, dữ liệu được kiểm chéo càng nhiều lần.</p>`:`<p class="src">Chưa có bot nào.</p>`;
   if(acctTab==="priv")body=`<ul class="lul"><li><b>Gia phả riêng 🔒</b>: lưu trong vùng riêng của tài khoản bạn. ${window.SGP?.mode==="supabase"?"Người dùng khác không đọc được (máy chủ chặn theo từng dòng dữ liệu). Người quản trị máy chủ Supabase vẫn có quyền kỹ thuật.":"Người khác, kể cả chủ app, không đọc được."}</li><li><b>Gia phả dòng họ chung 👪</b>: ai được chia sẻ app cũng xem được. Khi bạn chia sẻ từ gia phả riêng, app <b>ẩn 4 đời gần nhất</b> và mọi người còn sống. Chỉ người đã mất ở các đời xa hơn được đưa lên, và chỉ kèm tên, năm sinh, năm mất, ngày giỗ, nơi an táng, quan hệ cha mẹ, vợ chồng.</li><li>Không đưa lên kho chung: số điện thoại, nơi ở, ghi chú riêng.</li><li>Bot không bao giờ đọc gia phả riêng của bạn. Bot chỉ trao đổi từ điển và sự kiện lịch sử.</li><li>Muốn gửi gia phả riêng cho người thân: dùng 💾 Sao lưu (.json) rồi người thân nhập vào gia phả riêng của họ.</li></ul>
     <div class="btns"><button class="btn ghost" data-gpgo="mine">🔒 Mở gia phả riêng</button><button class="btn ghost" data-gpgo="fam">👪 Mở gia phả dòng họ</button></div>`;
   el.innerHTML=head+`<div class="dtabs htabs" role="tablist">${tabs.map(([k,l])=>`<button data-atab="${k}" class="${acctTab===k?"on":""}">${l}</button>`).join("")}</div><div class="card">${body}</div>`}
+document.addEventListener("change",e=>{if(e.target.id==="botAi")botSet({ai:e.target.value})});
 /* ---- Gia phả riêng → chia sẻ lên dòng họ (ẩn 4 đời) ---- */
 function gpDepths(P){const by=new Map(P.map(p=>[p.id,p])),memo=new Map();
   const g=(p,d=0)=>{if(!p||d>60)return 1;if(memo.has(p.id))return memo.get(p.id);const par=by.get(p.fatherId)||by.get(p.motherId);let v;if(par)v=g(par,d+1)+1;else{const sp=(p.spouseIds||[]).map(x=>by.get(x)).find(x=>x&&(x.fatherId||x.motherId));v=sp?g(sp,d+1):1}memo.set(p.id,v);return v};
@@ -3100,6 +3105,7 @@ document.addEventListener("click",async e=>{const t=e.target;
   if(t.closest("#botCreate")){botCreate();return}
   if(t.closest("#botRun")){runBot(false);return}
   if(t.closest("#botAutoCk")){botSet({auto:t.checked});return}
+  if(t.closest("#botAi"))return;
   const bf=t.closest("[data-bfocus]");if(bf){const f=new Set(myBot()?.focus||[]);bf.checked?f.add(bf.dataset.bfocus):f.delete(bf.dataset.bfocus);botSet({focus:[...f]});return}
   const pk=t.closest("[data-pok]");if(pk){const p=acct.props.find(x=>x.id===pk.dataset.pok);if(p){try{await botMerge(p,"biên tập viên duyệt");toast("Đã đưa vào thư viện")}catch(er){toast("Chưa được: "+(er?.message||er))}}return}
   const pn=t.closest("[data-pno]");if(pn){try{await acct.db.doc("botx/"+pn.dataset.pno).update({status:"rejected"})}catch{}return}
