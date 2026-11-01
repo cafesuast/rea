@@ -575,14 +575,27 @@ body{-webkit-font-smoothing:antialiased;letter-spacing:-.01em}
 .gssix{position:absolute;left:16px;top:52px;width:min(320px,calc(100vw - 32px));z-index:80}
 .upmenu.asdrop{top:112px;left:50%;right:auto;transform:translateX(-50%);width:min(720px,calc(100vw - 32px))}
 @media (max-width:760px){#gpbar .lg{display:none}.gsbar{padding:6px 10px}.upmenu.asdrop{top:104px}}
+.profrow{display:flex;align-items:center;gap:10px;width:100%;padding:10px 8px;margin:4px 0 2px;border-radius:12px;background:var(--panel);box-shadow:var(--shadow);text-align:left;color:var(--fg)}
+.profrow:hover{background:var(--panel-2)}.profrow .pn{flex:1;min-width:0;display:flex;flex-direction:column}.profrow .pn b{font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.profrow .pn small{color:var(--muted);font-size:12px}.profrow .gl{color:var(--muted);width:16px;height:16px}
+.pav{width:40px;height:40px;border-radius:50%;flex:none;object-fit:cover;display:grid;place-items:center;background:var(--accent);color:#fff;font-weight:600;font-size:17px}
+.ini{background:var(--accent);color:#fff;font-weight:600;display:grid;place-items:center}.avl.ini{font-size:24px}.acctchip .av.ini{font-size:14px}
+.setg{display:flex;flex-direction:column;gap:2px;padding:4px 0 10px;border-bottom:1px solid var(--line)}.setg:last-child{border-bottom:0}.setg h3{margin:6px 0 4px;font-size:15px}
+.setrow{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:8px 0;min-height:44px}.setrow.col{flex-direction:column;align-items:stretch;gap:6px}.setrow span{display:flex;flex-direction:column}.setrow small{color:var(--muted);font-size:12.5px;line-height:1.5}
+.setseg{align-self:flex-start;max-width:100%;flex-wrap:wrap}.setseg button{flex:none;padding:0 12px}
+.tgl{appearance:none;-webkit-appearance:none;width:51px;height:31px;border-radius:999px;background:var(--line);position:relative;flex:none;cursor:pointer;transition:background .2s}
+.tgl::after{content:"";position:absolute;top:2px;left:2px;width:27px;height:27px;border-radius:50%;background:#fff;box-shadow:0 2px 4px rgba(0,0,0,.2);transition:transform .2s}
+.tgl:checked{background:#34c759}.tgl:checked::after{transform:translateX(20px)}
+.setrow input[type=range]{width:100%;accent-color:var(--accent)}
+#sgpSet{box-shadow:none;padding:0;background:transparent}
 </style>
 
 <div class="app" id="app">
   <aside class="side" aria-label="Điều hướng">
     <div class="brand"><span class="mark">GP</span><b>Siêu GiaPha chat<small>Từ điển · Gia phả · Lịch sử</small></b>
       <button class="icon-btn" id="hideNav" title="Thu gọn" aria-label="Thu gọn thanh bên"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M9 4v16"/></svg></button></div>
+    <button class="profrow acctgo" id="profRow" aria-label="Tài khoản và cài đặt"><span class="pav" id="profAv">👤</span><span class="pn"><b id="profName">Tài khoản</b><small>Hồ sơ, bot, cài đặt</small></span><svg class="gl" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></button>
     <div id="secnav"></div>
-    <button class="nav acctgo" data-view="acct"><span class="ni" aria-hidden="true">👤</span>Tài khoản & Bot</button>
+    <button class="nav acctgo" data-view="acct"><span class="ni" aria-hidden="true">👤</span>Tài khoản & Cài đặt</button>
     <button class="nav helpgo" data-view="help"><span class="ni" aria-hidden="true">📘</span>Hướng dẫn · nghe đọc</button>
     <button class="add-main" data-add><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>Thêm từ mới</button>
     <div class="stats" id="stats"></div>
@@ -1263,7 +1276,7 @@ async function initStore(){
 
 /* ===== Giao diện ===== */
 let view=ls.get("view","giapha"),sel=null,letter=ls.get("letter",""),limit=200;
-const titles={chat:"Trò chuyện",giapha:"Gia phả",look:"Tra cứu",review:"Kiểm duyệt",import:"Nhập dữ liệu",easy:"Dễ dùng · Tiếng Anh giao tiếp",lessons:"Bài học tiếng Việt",roots:"Dòng họ & Lịch sử",plan:"Kế hoạch 1–2 triệu từ",notebook:"Sổ tay của tôi",help:"Hướng dẫn",acct:"Tài khoản & Bot"};
+const titles={chat:"Trò chuyện",giapha:"Gia phả",look:"Tra cứu",review:"Kiểm duyệt",import:"Nhập dữ liệu",easy:"Dễ dùng · Tiếng Anh giao tiếp",lessons:"Bài học tiếng Việt",roots:"Dòng họ & Lịch sử",plan:"Kế hoạch 1–2 triệu từ",notebook:"Sổ tay của tôi",help:"Hướng dẫn",acct:"Tài khoản & Cài đặt"};
 const VIEWS=Object.keys(titles);
 function changed(){words.sort((a,b)=>collT.compare(a.w,b.w));byIdMap=new Map(words.map(w=>[w.id,w]));if(sel&&!byId(sel))closeDetail();renderSide();renderView();if(sel)renderDetail()}
 function renderSide(){
@@ -1274,7 +1287,7 @@ function renderSide(){
   $("#cAll").textContent=n.toLocaleString("vi-VN");$("#cRaw").textContent=(n-ok).toLocaleString("vi-VN");
   $("#syncState").textContent=mode==="db"?"● Đã đồng bộ":mode==="local"?"Bản xem thử":"Đang tải...";
 }
-function show(v){view=v;ls.set("view",v);if(!["giapha","roots"].includes(v))ls.set("lastTu",v);if(!VIEWS.includes(v))v=view="chat";VIEWS.forEach(k=>$("#v-"+k).hidden=k!==v);$$("[data-view]").forEach(b=>b.classList.toggle("on",b.dataset.view===v));$("#viewTitle").innerHTML=esc(titles[v])+(v==="chat"?"<small>Hỏi nghĩa, cách dùng, so sánh vùng miền và thế hệ</small>":"");$("#app").classList.remove("drawer");renderTab();renderView();if(v==="help"||v==="acct")$("#viewTitle").textContent=v==="help"?"📘 Hướng dẫn":"👤 Tài khoản & Bot";else{const s=curSec(),k=curSlot();$("#viewTitle").textContent=(s==="gp"?"Gia phả · ":"Từ điển · ")+SEC[s].slots.find(x=>x[0]===k)[2]}}
+function show(v){view=v;ls.set("view",v);if(!["giapha","roots"].includes(v))ls.set("lastTu",v);if(!VIEWS.includes(v))v=view="chat";VIEWS.forEach(k=>$("#v-"+k).hidden=k!==v);$$("[data-view]").forEach(b=>b.classList.toggle("on",b.dataset.view===v));$("#viewTitle").innerHTML=esc(titles[v])+(v==="chat"?"<small>Hỏi nghĩa, cách dùng, so sánh vùng miền và thế hệ</small>":"");$("#app").classList.remove("drawer");renderTab();renderView();if(v==="help"||v==="acct")$("#viewTitle").textContent=v==="help"?"📘 Hướng dẫn":"👤 Tài khoản & Cài đặt";else{const s=curSec(),k=curSlot();$("#viewTitle").textContent=(s==="gp"?"Gia phả · ":"Từ điển · ")+SEC[s].slots.find(x=>x[0]===k)[2]}}
 function renderView(){({chat:renderChat,look:renderLook,review:renderReview,import:()=>{},easy:renderEasy,lessons:renderLessons,roots:renderRoots,giapha:renderGiapha,plan:renderPlan,notebook:renderNotebook,help:renderHelp,acct:renderAcct})[view]()}
 function fmt(v){return esc(v).replace(/(^|[\s(·,;:])\/([^/\s<>][^/<>]*?)\//g,'$1<span class="ipa">/$2/</span>').replace(/`(Fact|Inference|Unknown)`/g,'<span class="lab $1">$1</span>').replace(/\*([^*<>]+)\*/g,"<i>$1</i>").replace(/`([^`<>]+)`/g,"<code>$1</code>")}
 function badges(w){return`${w.level===10?'<span class="tag t10">10 tầng</span>':w.level===7?'<span class="tag">7 tầng</span>':'<span class="tag">INDEX</span>'}${w.status!=="RAW"?'<span class="tag ok">Đã duyệt</span>':""}${w.unk?`<span class="tag unk">${w.unk} Unknown</span>`:""}`}
@@ -1578,7 +1591,7 @@ $("#formScrim").onclick=e=>{if(e.target.id==="formScrim")$("#formScrim").hidden=
 $("#hideNav").onclick=()=>{$("#app").classList.add("navless");$("#app").classList.remove("drawer")};
 $("#showNav").onclick=()=>{const a=$("#app");if(innerWidth<=760){a.classList.remove("navless");a.classList.add("drawer")}else a.classList.toggle("navless")};
 $("#drawerScrim").onclick=()=>$("#app").classList.remove("drawer");
-$("#themeBtn").onclick=()=>{const r=document.documentElement;const dark=r.dataset.theme?r.dataset.theme==="dark":matchMedia("(prefers-color-scheme: dark)").matches;r.dataset.theme=dark?"light":"dark"};
+$("#themeBtn").onclick=()=>{const r=document.documentElement;const dark=r.dataset.theme?r.dataset.theme==="dark":matchMedia("(prefers-color-scheme: dark)").matches;r.dataset.theme=dark?"light":"dark";ls.set("theme",r.dataset.theme)};
 const inp=$("#input");function autosize(){inp.style.height="auto";inp.style.height=Math.min(inp.scrollHeight,140)+"px";$("#send").disabled=!inp.value.trim()}
 inp.oninput=autosize;inp.onkeydown=e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();send(inp.value)}};$("#send").onclick=()=>send(inp.value);
 /* ===== Ma trận 5 trục (Oxford Standard) ===== */
@@ -2985,11 +2998,15 @@ async function acctInit(){
   on(()=>acct.db.collection("bots"),s=>{acct.bots=s.docs.map(d=>({...d.data(),id:d.id}));if(view==="acct")renderAcct();renderAcctChip()});
   if(acct.uid)setTimeout(botAuto,6000);
 }
-function renderAcctChip(){const c=$("#acctChip");if(!c)return;
+function iniOf(n){return(String(n||"?").trim().split(/\s+/).pop()||"?").slice(0,1).toUpperCase()}
+function avHTML(url,name,cls,id){const ia=id?` id="${id}"`:"";return url?`<img${ia} class="${cls}" alt="" src="${esc(url)}" data-ini="${esc(iniOf(name))}">`:`<span${ia} class="${cls} ini">${esc(iniOf(name))}</span>`}
+document.addEventListener("error",e=>{const t=e.target;if(t.tagName==="IMG"&&t.dataset&&t.dataset.ini!==undefined){const sp=document.createElement("span");sp.className=t.className+" ini";if(t.id)sp.id=t.id;sp.textContent=t.dataset.ini;t.replaceWith(sp)}},true);
+function renderProfRow(){const n=$("#profName"),a=$("#profAv");if(!n||!a)return;if(!acct.uid){n.textContent="Khách";a.outerHTML=`<span class="pav ini" id="profAv">👤</span>`;return}n.textContent=acct.me?.name||"Tài khoản của tôi";a.outerHTML=avHTML(acct.me?.avatarUrl,acct.me?.name,"pav","profAv")}
+function renderAcctChip(){renderProfRow();const c=$("#acctChip");if(!c)return;
   if(!acct.ready){c.textContent="";return}
   if(!acct.uid){c.innerHTML=`<span class="av">👤</span><span class="an">Khách</span>`;c.title="Chưa đăng nhập: mở trang trong Claude bằng tài khoản của bạn";return}
   const b=myBot();const pend=acct.props.filter(p=>p.status==="pending"&&p.by!==acct.uid&&!(p.votes||{})[acct.uid]).length;
-  c.innerHTML=`<img class="av" alt="" src="${esc(acct.me?.avatarUrl||"")}"><span class="an">${b?"🤖 ":""}${esc(acct.me?.name||"Tài khoản")}</span>${pend?`<span class="count">${pend}</span>`:""}`;c.title="Tài khoản và bot của bạn"}
+  c.innerHTML=`${avHTML(acct.me?.avatarUrl,acct.me?.name,"av")}<span class="an">${b?"🤖 ":""}${esc(acct.me?.name||"Tài khoản")}</span>${pend?`<span class="count">${pend}</span>`:""}`;c.title="Tài khoản và bot của bạn"}
 function botName(b,ps){return b?.nick||("Bot của "+(ps?.[b?.id]?.name||"một thành viên"))}
 async function botCreate(){if(!acct.db||!acct.uid){toast("Mở trang trong Claude và đăng nhập để tạo bot.");return}
   const nick=($("#botNick")?.value||"").trim().slice(0,40);const focus=$$("#botFocus input:checked").map(x=>x.value);
@@ -3048,14 +3065,14 @@ async function botMergeReady(){let n=0;
     if(t.ok>=BOT_NEED&&!t.no){try{await botMerge(p,`${t.ok} bot xác nhận`);n++;botLog(`➕ Vào thư viện: ${p.kind==="word"?p.data.w:p.data.year+" "+p.data.title}`)}catch(e){botLog("Chưa đưa vào được: "+(e?.message||e))}}
     else if(t.no>=2){try{await acct.db.doc("botx/"+p.id).update({status:"rejected"});botLog(`Loại: ${p.kind==="word"?p.data.w:p.data.title}`)}catch{}}}
   return n}
-let acctTab=ls.get("acctTab","bot");
+let acctTab=ls.get("acctTab2","set");
 async function renderAcct(){const el=$("#acct");if(!el)return;
   const ids=[...new Set([...acct.bots.map(b=>b.id),...acct.props.map(p=>p.by)])];const ps=acct.user&&ids.length?await acct.user.profiles(ids).catch(()=>({})):{};
   if(view!=="acct")return;const b=myBot();
   const SA=window.SGP,SB=SA?.mode==="supabase";
-  const head=(SA?SA.settingsCard():"")+(!acct.uid?SA?"":`<div class="card"><h3>🔐 Đăng nhập</h3><p>Siêu GiaPha chat dùng chính <b>tài khoản Claude</b> của bạn để đăng nhập, không cần mật khẩu riêng. Hãy mở trang này trong Claude (claude.ai hoặc app Claude) bằng tài khoản của bạn.</p><p class="src">Đang ở chế độ khách: xem được dữ liệu mẫu, chưa có gia phả riêng và chưa có bot.</p></div>`
-   :`<div class="card acard"><img class="avl" alt="" src="${esc(acct.me?.avatarUrl||"")}"><div><h3>${esc(acct.me?.name||"Tài khoản của bạn")}</h3><p class="src">${SA?"Đã đăng nhập":"Đã đăng nhập bằng tài khoản Claude"}${acct.me?.isOwner&&!SA?" · chủ app":acct.canEdit?" · biên tập viên":""}. ${SB?"Gia phả riêng 🔒 của bạn chỉ mình bạn xem được trong app; chỉ người quản trị máy chủ có quyền kỹ thuật truy cập cơ sở dữ liệu.":SA?"Dữ liệu lưu trên máy này.":"Gia phả riêng 🔒 của bạn chỉ mình bạn xem được, kể cả chủ app cũng không đọc được."}</p></div></div>`);
-  const tabs=[["bot","🤖 Bot của tôi"],["ex",`🔁 Trao đổi (${acct.props.filter(p=>p.status==="pending").length})`],["net",`🌐 Mạng bot (${acct.bots.length})`],["priv","🔒 Bảo mật"]];
+  const head=(!acct.uid?SA?"":`<div class="card"><h3>🔐 Đăng nhập</h3><p>Siêu GiaPha chat dùng chính <b>tài khoản Claude</b> của bạn để đăng nhập, không cần mật khẩu riêng. Hãy mở trang này trong Claude (claude.ai hoặc app Claude) bằng tài khoản của bạn.</p><p class="src">Đang ở chế độ khách: xem được dữ liệu mẫu, chưa có gia phả riêng và chưa có bot.</p></div>`
+   :`<div class="card acard">${avHTML(acct.me?.avatarUrl,acct.me?.name,"avl")}<div><h3>${esc(acct.me?.name||"Tài khoản của bạn")}</h3><p class="src">${SA?"Đã đăng nhập":"Đã đăng nhập bằng tài khoản Claude"}${acct.me?.isOwner&&!SA?" · chủ app":acct.canEdit?" · biên tập viên":""}. ${SB?"Gia phả riêng 🔒 của bạn chỉ mình bạn xem được trong app; chỉ người quản trị máy chủ có quyền kỹ thuật truy cập cơ sở dữ liệu.":SA?"Dữ liệu lưu trên máy này.":"Gia phả riêng 🔒 của bạn chỉ mình bạn xem được, kể cả chủ app cũng không đọc được."}</p></div></div>`);
+  const tabs=[["set","⚙️ Cài đặt"],["bot","🤖 Bot"],["ex",`🔁 Trao đổi (${acct.props.filter(p=>p.status==="pending").length})`],["net",`🌐 Mạng bot (${acct.bots.length})`],["priv","🔒 Bảo mật"]];
   let body="";
   if(acctTab==="bot")body=!acct.uid?`<p class="src">Đăng nhập để có bot riêng.</p>`:!b?`<h3>Tạo bot của bạn</h3><p>Mỗi tài khoản có một bot. Mỗi ngày bot tự kiểm chứng đề xuất của bot khác, đề xuất mục mới, và đưa vào thư viện chung những mục đã được ít nhất ${BOT_NEED} bot khác xác nhận đúng.</p>
      <label class="field">Tên bot (không bắt buộc)<input id="botNick" maxlength="40" placeholder="Ví dụ: Bot họ Lê Thanh Hóa"></label>
@@ -3073,10 +3090,29 @@ async function renderAcct(){const el=$("#acct");if(!el)return;
       ${Object.entries(p.votes||{}).map(([u,v])=>`<small class="vt ${v.v}">${v.v==="ok"?"✓":v.v==="no"?"✗":"?"} ${esc(botName(acct.bots.find(x=>x.id===u)||{id:u},ps))}${v.ai?` (${esc(aiLabel(v.ai))})`:""}: ${esc(v.label)}${v.note?" · "+esc(v.note):""}</small>`).join("")}
       ${p.status==="pending"&&acct.canEdit?`<div class="btns" style="margin:0"><button class="btn ghost sm" data-pok="${p.id}">✓ Duyệt vào thư viện</button><button class="btn ghost sm" data-pno="${p.id}">✗ Loại</button></div>`:""}</div>`}).join(""):`<p class="src">Chưa có đề xuất nào. Tạo bot và bấm “Chạy bot ngay” để bắt đầu.</p>`)}
   if(acctTab==="net")body=acct.bots.length?`<div class="botnet">${acct.bots.map(x=>`<div class="bn ${x.id===acct.uid?"me":""}"><img alt="" src="${esc(ps[x.id]?.avatarUrl||"")}"><div><b>${esc(botName(x,ps))}${x.id===acct.uid?" (bạn)":""}</b><small>AI: ${esc(aiLabel(botAiId(x)))} · chạy gần nhất: ${x.lastRun||"chưa"} · kiểm ${x.stats?.v||0} · đề xuất ${x.stats?.p||0} · vào thư viện ${x.stats?.m||0}</small></div></div>`).join("")}</div><p class="src">Mỗi người được chia sẻ app này có thể tạo bot. Càng nhiều bot, dữ liệu được kiểm chéo càng nhiều lần.</p>`:`<p class="src">Chưa có bot nào.</p>`;
+  if(acctTab==="set"){const th=ls.get("theme","auto"),ss=ls.get("startSec","");const sw=(id,on,l,sub)=>`<label class="setrow"><span><b>${l}</b>${sub?`<small>${sub}</small>`:""}</span><input type="checkbox" class="tgl" data-set="${id}" ${on?"checked":""}></label>`;const seg=(id,cur,opts)=>`<div class="dtabs setseg" role="radiogroup">${opts.map(([v,l])=>`<button data-setv="${id}:${v}" class="${cur===v?"on":""}" role="radio" aria-checked="${cur===v}">${l}</button>`).join("")}</div>`;
+    body=`${SA?SA.settingsCard():`<div class="setg"><h3>🧠 AI</h3><div class="setrow"><span><b>Claude</b><small>Có sẵn khi mở app trong Claude, dùng tài khoản Claude của bạn. Bản web của app chọn được 7 hãng: Claude, ChatGPT, Gemini, Grok, DeepSeek, Mistral, Qwen.</small></span></div></div>`}
+    <div class="setg"><h3>🎨 Giao diện</h3><div class="setrow col"><b>Màu</b>${seg("theme",th,[["auto","Tự động"],["light","Sáng"],["dark","Tối"]])}</div>
+      <div class="setrow col"><b>Mở app ở</b>${seg("startSec",ss||"last",[["last","Chỗ đang xem"],["gp","🌳 Gia phả"],["td","📖 Từ điển"]])}</div>
+      ${sw("big",a11y.big,"Chữ lớn","Dễ đọc cho người cao tuổi")}</div>
+    <div class="setg"><h3>🔊 Đọc và nghe</h3>${sw("autoRead",a11y.autoRead,"Tự đọc to câu trả lời","")}
+      <div class="setrow col"><b>Tốc độ đọc: ${Number(a11y.rate||1).toFixed(1)}×</b><input type="range" min="0.6" max="1.4" step="0.1" value="${a11y.rate||1}" data-setr="rate" aria-label="Tốc độ đọc"></div>
+      <div class="setrow col"><b>Môi trường</b>${seg("env",a11y.env,[["auto","Tự động"],["normal","Bình thường"],["quiet","Yên tĩnh"],["noisy","Ồn ào"]])}</div>
+      ${sw("vib",a11y.vib,"Rung khi chạm","Trên điện thoại hỗ trợ rung")}${sw("autoNote",a11y.autoNote,"Tự lưu từ đã xem vào Sổ tay","")}</div>
+    ${myBot()?`<div class="setg"><h3>🤖 Bot</h3>${sw("botAuto",myBot().auto,"Bot tự chạy mỗi ngày","Khi bạn mở app và đã cho phép dùng AI")}</div>`:""}
+    <div class="setg"><h3>💾 Dữ liệu</h3><div class="btns" style="margin:0"><button class="btn ghost" data-slot="gp:more">Sao lưu gia phả</button><button class="btn ghost" data-slot="td:more">Xuất từ điển, sổ tay</button><button class="btn ghost helpgo">📘 Hướng dẫn</button><button class="btn ghost" id="setReset">Đặt lại cài đặt trên máy này</button></div></div>`}
   if(acctTab==="priv")body=`<ul class="lul"><li><b>Gia phả riêng 🔒</b>: lưu trong vùng riêng của tài khoản bạn. ${window.SGP?.mode==="supabase"?"Người dùng khác không đọc được (máy chủ chặn theo từng dòng dữ liệu). Người quản trị máy chủ Supabase vẫn có quyền kỹ thuật.":"Người khác, kể cả chủ app, không đọc được."}</li><li><b>Gia phả dòng họ chung 👪</b>: ai được chia sẻ app cũng xem được. Khi bạn chia sẻ từ gia phả riêng, app <b>ẩn 4 đời gần nhất</b> và mọi người còn sống. Chỉ người đã mất ở các đời xa hơn được đưa lên, và chỉ kèm tên, năm sinh, năm mất, ngày giỗ, nơi an táng, quan hệ cha mẹ, vợ chồng.</li><li>Không đưa lên kho chung: số điện thoại, nơi ở, ghi chú riêng.</li><li>Bot không bao giờ đọc gia phả riêng của bạn. Bot chỉ trao đổi từ điển và sự kiện lịch sử.</li><li>Muốn gửi gia phả riêng cho người thân: dùng 💾 Sao lưu (.json) rồi người thân nhập vào gia phả riêng của họ.</li></ul>
     <div class="btns"><button class="btn ghost" data-gpgo="mine">🔒 Mở gia phả riêng</button><button class="btn ghost" data-gpgo="fam">👪 Mở gia phả dòng họ</button></div>`;
   el.innerHTML=head+`<div class="dtabs htabs" role="tablist">${tabs.map(([k,l])=>`<button data-atab="${k}" class="${acctTab===k?"on":""}">${l}</button>`).join("")}</div><div class="card">${body}</div>`}
-document.addEventListener("change",e=>{if(e.target.id==="botAi")botSet({ai:e.target.value})});
+document.addEventListener("change",e=>{if(e.target.id==="botAi")botSet({ai:e.target.value});
+  const st=e.target.closest?.("[data-set]");if(st){const k=st.dataset.set;if(k==="botAuto")botSet({auto:st.checked});else{a11y[k]=st.checked;saveA11y()}toast("Đã lưu");return}
+  const sr=e.target.closest?.("[data-setr]");if(sr){a11y[sr.dataset.setr]=+sr.value;saveA11y();renderAcct()}});
+function applyTheme(){const th=ls.get("theme","auto"),r=document.documentElement;if(th==="auto")delete r.dataset.theme;else r.dataset.theme=th}
+applyTheme();
+document.addEventListener("click",e=>{const v=e.target.closest("[data-setv]");if(v){const [k,val]=v.dataset.setv.split(":");
+    if(k==="theme"){ls.set("theme",val);applyTheme()}else if(k==="startSec")ls.set("startSec",val==="last"?"":val);else if(k==="env"){a11y.env=val;saveA11y()}
+    renderAcct();toast("Đã lưu");return}
+  if(e.target.closest("#setReset")){if(confirm("Đặt lại cài đặt giao diện, đọc to và các lựa chọn đã nhớ trên máy này? Dữ liệu gia phả, từ điển không bị xóa.")){["a11y","theme","startSec","acctTab2","gpsrc2","gpSlot","guideSeen","gtab"].forEach(k=>{try{localStorage.removeItem("stdien:"+k)}catch{}});location.reload()}}});
 /* ---- Gia phả riêng → chia sẻ lên dòng họ (ẩn 4 đời) ---- */
 function gpDepths(P){const by=new Map(P.map(p=>[p.id,p])),memo=new Map();
   const g=(p,d=0)=>{if(!p||d>60)return 1;if(memo.has(p.id))return memo.get(p.id);const par=by.get(p.fatherId)||by.get(p.motherId);let v;if(par)v=g(par,d+1)+1;else{const sp=(p.spouseIds||[]).map(x=>by.get(x)).find(x=>x&&(x.fatherId||x.motherId));v=sp?g(sp,d+1):1}memo.set(p.id,v);return v};
@@ -3101,7 +3137,7 @@ async function gpMoveToMine(list){const db=acct.db;if(!db||!acct.uid){toast("C�
   toast(`Đã chuyển ${n} người vào gia phả riêng của bạn.`)}
 document.addEventListener("click",async e=>{const t=e.target;
   if(t.closest("#acctChip")||t.closest(".acctgo")){show("acct");return}
-  const at=t.closest("[data-atab]");if(at){acctTab=at.dataset.atab;ls.set("acctTab",acctTab);renderAcct();return}
+  const at=t.closest("[data-atab]");if(at){acctTab=at.dataset.atab;ls.set("acctTab2",acctTab);renderAcct();return}
   if(t.closest("#botCreate")){botCreate();return}
   if(t.closest("#botRun")){runBot(false);return}
   if(t.closest("#botAutoCk")){botSet({auto:t.checked});return}
@@ -3222,6 +3258,7 @@ document.addEventListener("keydown",e=>{if(e.key==="Escape"&&gsSixOpen)gsSix(fal
 (()=>{const u=$("#upBtn");if(u)u.innerHTML=gly("spark");const h=$("#helpBtn");if(h){h.innerHTML=gly("help");h.removeAttribute("style")}})();
 
 if(!GP_SUB[gpSlot])gpSlot="chat";renderNav();acctInit();gsSync();
+{const ss=ls.get("startSec","");if(ss)view=ss==="gp"?"giapha":"chat"}
 initNotebook();clanInit();show(view);renderSide();initStore();
 (async()=>{try{sample=window.claude?.use?await window.claude.use("sample"):null}catch{sample=null}if(view==="chat")renderChat()})();
 </script>

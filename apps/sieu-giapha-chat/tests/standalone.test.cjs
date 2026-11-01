@@ -55,7 +55,7 @@ for(const [W,H,nm] of [[1280,860,'d'],[390,820,'m']]){
    await p.evaluate(()=>gpApi.put('m1',{name:'Bà Nội Riêng',gender:'f',birth:'1940',spouseIds:[]}));await p.waitForTimeout(300);
    const row=await p.evaluate(a=>Object.keys(__sbdb.docs).find(k=>k.startsWith('data/users/'+a+'/fam/people/')),A);if(!row)fail('private row');
    const v=await p.evaluate(async()=>{const s=await window.claude.use('sample');return s.json('kiểm')});if(v.verdict!=='ok'||!aiAuth.includes('tok-'+A))fail('ai via function');
-   await p.evaluate(()=>show('acct'));await p.waitForTimeout(300);await p.click('#botCreate');await p.waitForTimeout(300);
+   await p.evaluate(()=>show('acct'));await p.waitForTimeout(300);await p.evaluate(()=>{acctTab='bot';renderAcct()});await p.waitForTimeout(250);await p.click('#botCreate');await p.waitForTimeout(300);
    await p.selectOption('#botAi','gemini');await p.waitForTimeout(300);const bai=await p.evaluate(a=>__sbdb.docs['bots/'+a]?.data?.ai,A);if(bai!=='gemini')fail('bot ai '+bai);
    const dis=await p.evaluate(()=>[...document.querySelectorAll('#botAi option')].filter(o=>o.disabled).length);if(dis!==4)fail('disabled providers '+dis);
    await p.evaluate(()=>{sample=null});await p.evaluate(async()=>{sample=await window.claude.use('sample')});await p.evaluate(()=>runBot(false));await p.waitForFunction(()=>!acct.running);if(aiProv!=='gemini')fail('bot used '+aiProv);
