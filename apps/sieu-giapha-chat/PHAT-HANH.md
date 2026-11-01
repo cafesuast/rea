@@ -17,7 +17,7 @@ Siêu GiaPha gồm hai app song song, dùng chung một cơ sở dữ liệu:
 
 ## Việc chủ sở hữu cần làm trước khi mở bán
 
-1. Điền tên pháp nhân và email hỗ trợ: đặt `window.SGP_OPERATOR={name:"…",contact:"…"}` trong `web/config.js` (bản web) hoặc sửa mặc định trong `index.html`.
+1. Tên pháp nhân và email hỗ trợ đã điền: ConanST, cafesuast@gmail.com. Muốn đổi thì đặt `window.SGP_OPERATOR={name:"…",contact:"…"}` trong `web/config.js` (bản web) hoặc sửa mặc định trong `index.html`.
 2. Nhờ luật sư rà Điều khoản và chính sách dữ liệu cá nhân, nhất là phần thu phí và chuyển dữ liệu ra nước ngoài.
 3. Tạo Supabase riêng theo `CAI-DAT.md`. Không đặt khóa bí mật (service_role, khóa Claude API) vào mã nguồn.
 4. Bản trong Claude dùng cơ sở dữ liệu mới, tách hẳn khỏi bản thử nghiệm.
